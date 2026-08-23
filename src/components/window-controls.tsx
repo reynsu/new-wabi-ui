@@ -159,6 +159,16 @@ function useFloatingWindow(content: ReactNode) {
   return { isOpen: pipWindow !== null, open, close, supported, portal };
 }
 
+/* ───────────────────────── Botones ───────────────────────── */
+
+/** Cada control es un botón suelto con su propia superficie, no tres iconos
+ *  dentro de una píldora compartida. `tertiary` aporta el anillo de 1px que lo
+ *  delimita, y rounded-full lo vuelve circular — que es la convención para
+ *  controles de ventana. Es el único punto donde el componente se aparta a
+ *  propósito del sistema de formas: shape.button daría 8px en modo "rounded",
+ *  y acá el círculo es parte de la identidad del control. */
+const CONTROL_CLASS = "rounded-full";
+
 /* ───────────────────────── Botón del sidebar ───────────────────────── */
 
 /** Aparte para que el hook sólo corra cuando se pide el botón: useSidebar()
@@ -185,8 +195,9 @@ function SidebarControl({ _index }: { _index?: number }) {
       label={visible ? "Ocultar panel lateral" : "Mostrar panel lateral"}
     >
       <Button
-        variant="ghost"
+        variant="tertiary"
         size="icon"
+        className={CONTROL_CLASS}
         aria-label={visible ? "Ocultar panel lateral" : "Mostrar panel lateral"}
         aria-pressed={visible}
         onClick={toggleSidebar}
@@ -229,10 +240,7 @@ function WindowControls({
   return (
     <>
       <div
-        className={cn(
-          "inline-flex rounded-full bg-surface-3 p-1 shadow-surface-2",
-          className
-        )}
+        className={cn("inline-flex", className)}
       >
         <TravelTooltip side={tooltipSide} size={size}>
           {sidebar ? <SidebarControl /> : null}
@@ -247,7 +255,7 @@ function WindowControls({
             }
           >
             <Button
-              variant="ghost"
+              variant="tertiary"
               size="icon"
               aria-label={
                 fullscreen.isFullscreen
@@ -259,7 +267,7 @@ function WindowControls({
               // no emite eventos de puntero, así que su tooltip —el único lugar
               // donde dice por qué no se puede— sería inalcanzable.
               aria-disabled={!fullscreen.supported}
-              className={cn(!fullscreen.supported && "opacity-50")}
+              className={cn(CONTROL_CLASS, !fullscreen.supported && "opacity-50")}
               onClick={fullscreen.supported ? fullscreen.toggle : undefined}
             >
               {fullscreen.isFullscreen ? <Minimize2 /> : <Maximize2 />}
@@ -277,7 +285,7 @@ function WindowControls({
               }
             >
               <Button
-                variant="ghost"
+                variant="tertiary"
                 size="icon"
                 aria-label={
                   floating.isOpen
@@ -286,7 +294,7 @@ function WindowControls({
                 }
                 aria-pressed={floating.isOpen}
                 aria-disabled={!floating.supported}
-                className={cn(!floating.supported && "opacity-50")}
+                className={cn(CONTROL_CLASS, !floating.supported && "opacity-50")}
                 onClick={
                   !floating.supported
                     ? undefined
