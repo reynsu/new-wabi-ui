@@ -5,6 +5,7 @@ import {
   MessageSquare,
   Moon,
   Bell,
+  LayoutPanelTop,
   MousePointer2,
   PanelsTopLeft,
   Sliders,
@@ -39,6 +40,7 @@ import { SystemSection } from "@/sections/SystemSection";
 import { TravelTooltipSection } from "@/sections/TravelTooltipSection";
 import { SileoSection } from "@/sections/SileoSection";
 import { WindowControlsSection } from "@/sections/WindowControlsSection";
+import { WorkspacePanelSection } from "@/sections/WorkspacePanelSection";
 
 /* El sidebar separa lo que viene del registry de lo que escribimos nosotros.
    Es la misma división que en el disco: components/ui/ es espejo del registry
@@ -60,6 +62,7 @@ const GROUPS = [
     pages: [
       { id: "travel-tooltip", label: "TravelTooltip", icon: MousePointer2, count: 1, render: () => <TravelTooltipSection /> },
       { id: "window-controls", label: "WindowControls", icon: PanelsTopLeft, count: 1, render: () => <WindowControlsSection /> },
+      { id: "workspace-panel", label: "WorkspacePanel", icon: LayoutPanelTop, count: 1, render: () => <WorkspacePanelSection /> },
     ],
   },
 ] as const;
@@ -116,7 +119,7 @@ export default function App() {
 
         <SidebarFooter>
           <p className="px-2 py-1 text-[12px] text-muted-foreground">
-            24 del registry + 2 propios + Sileo
+            24 del registry + 3 propios + Sileo
           </p>
         </SidebarFooter>
       </Sidebar>
