@@ -4,12 +4,15 @@ import {
   Layers,
   MessageSquare,
   Moon,
+  Bell,
   MousePointer2,
   PanelsTopLeft,
   Sliders,
   Sun,
   TextCursorInput,
 } from "lucide-react";
+
+import { Toaster } from "sileo";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -34,6 +37,7 @@ import { InputsSection } from "@/sections/InputsSection";
 import { SurfacesSection } from "@/sections/SurfacesSection";
 import { SystemSection } from "@/sections/SystemSection";
 import { TravelTooltipSection } from "@/sections/TravelTooltipSection";
+import { SileoSection } from "@/sections/SileoSection";
 import { WindowControlsSection } from "@/sections/WindowControlsSection";
 
 /* El sidebar separa lo que viene del registry de lo que escribimos nosotros.
@@ -48,6 +52,7 @@ const GROUPS = [
       { id: "surfaces", label: "Superficies", icon: Layers, count: 5, render: () => <SurfacesSection /> },
       { id: "agent", label: "Agente", icon: MessageSquare, count: 4, render: () => <AgentSection /> },
       { id: "system", label: "Sistema", icon: Boxes, count: 4, render: () => <SystemSection /> },
+      { id: "sileo", label: "Sileo", icon: Bell, count: 1, render: () => <SileoSection /> },
     ],
   },
   {
@@ -111,7 +116,7 @@ export default function App() {
 
         <SidebarFooter>
           <p className="px-2 py-1 text-[12px] text-muted-foreground">
-            24 del registry + 2 propios
+            24 del registry + 2 propios + Sileo
           </p>
         </SidebarFooter>
       </Sidebar>
@@ -133,6 +138,15 @@ export default function App() {
           <div className="mx-auto max-w-3xl px-6 py-10">{active.render()}</div>
         </div>
       </SidebarInset>
+
+      {/* theme explícito y no "system": la app alterna el tema con la clase
+          .dark en <html>, mientras que "system" seguiría al sistema operativo
+          y quedaría desincronizado del toggle de la cabecera. */}
+      <Toaster
+        position="bottom-right"
+        offset={16}
+        theme={dark ? "dark" : "light"}
+      />
     </SidebarProvider>
   );
 }

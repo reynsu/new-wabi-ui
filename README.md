@@ -4,6 +4,8 @@ Proyecto React con el design system [Fluid Functionalism](https://www.fluidfunct
 instalado completo: los **24 componentes**, 9 libs y 3 hooks, sobre primitivas
 **Base UI**.
 
+Suma [Sileo](https://sileo.aaryan.design) para los toasts.
+
 Vite 8 · React 19 · TypeScript · Tailwind v4 · shadcn CLI
 
 ---
@@ -127,6 +129,27 @@ npm run fix:fluid
 
 Es idempotente: si ya está aplicado, no hace nada. Si algún día agregás un
 router, apuntá ese shim a su `Link`.
+
+---
+
+## Toasts (Sileo)
+
+`sileo` es un paquete de npm aparte del registry — toasts con física de
+resortes. El `Toaster` se monta una vez en [`src/App.tsx`](src/App.tsx) y desde
+cualquier lado se dispara con `sileo.success({ title })`.
+
+Dos cosas que conviene saber:
+
+- **`theme` va explícito**, atado al toggle de la cabecera. Su modo `"system"`
+  sigue al sistema operativo, y acá el tema lo decide la clase `.dark` en
+  `<html>` — quedaría desincronizado.
+- **Trae `motion` v12 como dependencia**, un segundo motor de animación junto al
+  `framer-motion` v13 que usan los componentes del registry. Conviven sin
+  chocar, pero el bundle sube ~53 kB gzip. Si eso pesa más que los toasts,
+  desinstalarlo es un `npm rm sileo` y borrar la página del showcase.
+
+Su CSS se inyecta solo en `document.head`, así que no hay import de estilos que
+mantener.
 
 ---
 
