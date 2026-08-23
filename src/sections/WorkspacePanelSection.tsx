@@ -50,7 +50,7 @@ export function WorkspacePanelSection() {
 
       <Section
         title="Hover"
-        hint="Una pestaña inactiva revela su silueta al hover, y no es simétrica: se abre hacia abajo sólo por el lado que mira a la activa, encajando contra ella, y cierra el otro con una esquina redondeada. Cambiá de pestaña y el lado de la curva se invierte. La activa no reacciona al hover: ya está seleccionada."
+        hint="Una pestaña inactiva se rellena con un rectángulo redondeado; el botón del sidebar, igual. La activa no reacciona al hover: ya está seleccionada, y darle un estado más sólo agrega ruido."
       >
         <WorkspacePanel tabs={TABS} defaultValue="avatars" className="h-[18rem]" />
       </Section>
