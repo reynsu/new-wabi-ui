@@ -18,16 +18,23 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import {
-  Maximize2,
-  Minimize2,
+  MoreHorizontal,
   PanelLeftClose,
   PanelLeftOpen,
   PanelRightClose,
   PanelRightOpen,
   PictureInPicture2,
+  SquarePen,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import {
+  DropdownContent,
+  DropdownMenu,
+  DropdownSeparator,
+  DropdownTrigger,
+} from "@/components/ui/dropdown";
+import { MenuItem } from "@/components/ui/menu-item";
 import { useSidebar } from "@/components/ui/sidebar";
 import { TravelTooltip, TravelTooltipItem } from "@/components/travel-tooltip";
 import { cn } from "@/lib/utils";
@@ -208,6 +215,79 @@ function SidebarControl({ _index }: { _index?: number }) {
   );
 }
 
+/* ───────────────────────── Botón "Más…" ───────────────────────── */
+
+interface MoreControlProps {
+  fullscreen: ReturnType<typeof useFullscreen>;
+  floating: ReturnType<typeof useFloatingWindow>;
+  hasFloating: boolean;
+  extraItems?: (startIndex: number) => ReactNode;
+  _index?: number;
+}
+
+function MoreControl({
+  fullscreen,
+  floating,
+  hasFloating,
+  extraItems,
+  _index,
+}: MoreControlProps) {
+  const [open, setOpen] = useState(false);
+
+  // El menú se despliega justo donde iría la píldora, así que mientras está
+  // abierto el item se silencia en vez de dibujar los dos encima.
+  let i = 0;
+  return (
+    <DropdownMenu open={open} onOpenChange={setOpen}>
+      <TravelTooltipItem _index={_index} label="Más…" suppressed={open}>
+        <DropdownTrigger
+          render={
+            <Button
+              variant="tertiary"
+              size="icon"
+              className={CONTROL_CLASS}
+              aria-label="Más opciones"
+            />
+          }
+        >
+          <MoreHorizontal />
+        </DropdownTrigger>
+      </TravelTooltipItem>
+
+      <DropdownContent side="bottom" align="start">
+        <MenuItem
+          index={i++}
+          label={
+            fullscreen.isFullscreen
+              ? "Salir de pantalla completa"
+              : "Pantalla completa"
+          }
+          disabled={!fullscreen.supported}
+          onSelect={fullscreen.toggle}
+        />
+        {hasFloating && (
+          <MenuItem
+            index={i++}
+            label={
+              floating.isOpen
+                ? "Cerrar ventana flotante"
+                : "Usar ventana flotante"
+            }
+            disabled={!floating.supported}
+            onSelect={floating.isOpen ? floating.close : floating.open}
+          />
+        )}
+        {extraItems && (
+          <>
+            <DropdownSeparator />
+            {extraItems(i)}
+          </>
+        )}
+      </DropdownContent>
+    </DropdownMenu>
+  );
+}
+
 /* ───────────────────────── WindowControls ───────────────────────── */
 
 interface WindowControlsProps {
@@ -219,8 +299,13 @@ interface WindowControlsProps {
   /** Contenido de la ventana flotante. Sin esto el botón no se renderiza:
    *  una ventana vacía no le sirve a nadie. */
   floatingContent?: ReactNode;
-  /** De qué lado abre el tooltip compartido. @default "bottom" */
-  tooltipSide?: "top" | "bottom";
+  /** Acción del primer botón. Sin esto, ese botón no se renderiza. */
+  onCompose?: () => void;
+  /** Etiqueta del primer botón. @default "Nueva nota" */
+  composeLabel?: string;
+  /** Items extra para el menú "Más…". Recibe el índice desde el que seguir,
+   *  porque MenuItem los necesita contiguos para su resalte por proximidad. */
+  moreItems?: (startIndex: number) => ReactNode;
   /** Fija la barra a un escalón de la escalera de tamaños. */
   size?: SizeVariant;
   className?: string;
@@ -230,7 +315,9 @@ function WindowControls({
   sidebar = true,
   fullscreenTarget,
   floatingContent,
-  tooltipSide = "bottom",
+  onCompose,
+  composeLabel = "Nueva nota",
+  moreItems,
   size,
   className,
 }: WindowControlsProps) {
@@ -239,40 +326,23 @@ function WindowControls({
 
   return (
     <>
-      <div
-        className={cn("inline-flex", className)}
-      >
-        <TravelTooltip side={tooltipSide} size={size}>
-          {sidebar ? <SidebarControl /> : null}
-
-          <TravelTooltipItem
-            label={
-              fullscreen.supported
-                ? fullscreen.isFullscreen
-                  ? "Salir de pantalla completa"
-                  : "Pantalla completa"
-                : "Pantalla completa no disponible"
-            }
-          >
-            <Button
-              variant="tertiary"
-              size="icon"
-              aria-label={
-                fullscreen.isFullscreen
-                  ? "Salir de pantalla completa"
-                  : "Pantalla completa"
-              }
-              aria-pressed={fullscreen.isFullscreen}
-              // aria-disabled y no el atributo disabled: un botón deshabilitado
-              // no emite eventos de puntero, así que su tooltip —el único lugar
-              // donde dice por qué no se puede— sería inalcanzable.
-              aria-disabled={!fullscreen.supported}
-              className={cn(CONTROL_CLASS, !fullscreen.supported && "opacity-50")}
-              onClick={fullscreen.supported ? fullscreen.toggle : undefined}
-            >
-              {fullscreen.isFullscreen ? <Minimize2 /> : <Maximize2 />}
-            </Button>
-          </TravelTooltipItem>
+      <div className={cn("inline-flex", className)}>
+        {/* side="bottom" fijo: estos controles viven en la barra superior de
+            una ventana, donde hacia arriba no hay lugar. */}
+        <TravelTooltip side="bottom" size={size}>
+          {onCompose ? (
+            <TravelTooltipItem label={composeLabel}>
+              <Button
+                variant="tertiary"
+                size="icon"
+                className={CONTROL_CLASS}
+                aria-label={composeLabel}
+                onClick={onCompose}
+              >
+                <SquarePen />
+              </Button>
+            </TravelTooltipItem>
+          ) : null}
 
           {floatingContent != null ? (
             <TravelTooltipItem
@@ -287,6 +357,7 @@ function WindowControls({
               <Button
                 variant="tertiary"
                 size="icon"
+                className={cn(CONTROL_CLASS, !floating.supported && "opacity-50")}
                 aria-label={
                   floating.isOpen
                     ? "Cerrar ventana flotante"
@@ -294,7 +365,6 @@ function WindowControls({
                 }
                 aria-pressed={floating.isOpen}
                 aria-disabled={!floating.supported}
-                className={cn(CONTROL_CLASS, !floating.supported && "opacity-50")}
                 onClick={
                   !floating.supported
                     ? undefined
@@ -307,6 +377,15 @@ function WindowControls({
               </Button>
             </TravelTooltipItem>
           ) : null}
+
+          <MoreControl
+            fullscreen={fullscreen}
+            floating={floating}
+            hasFloating={floatingContent != null}
+            extraItems={moreItems}
+          />
+
+          {sidebar ? <SidebarControl /> : null}
         </TravelTooltip>
       </div>
 

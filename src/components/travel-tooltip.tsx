@@ -426,6 +426,10 @@ interface TravelTooltipItemProps {
   label: string;
   /** El trigger. Un único elemento — recibe los handlers y aria-describedby. */
   children: ReactElement;
+  /** Silencia este item: no abre con hover ni con foco, y cierra si estaba
+   *  abierto. Para triggers que despliegan algo debajo —un menú— donde la
+   *  píldora se superpondría al popup. */
+  suppressed?: boolean;
   /** @internal Lo asigna TravelTooltip. */
   _index?: number;
 }
@@ -433,6 +437,7 @@ interface TravelTooltipItemProps {
 function TravelTooltipItem({
   label,
   children,
+  suppressed = false,
   _index = 0,
 }: TravelTooltipItemProps) {
   const { register, activate, deactivate, activeIndex, open, tooltipId, enabled } =
@@ -444,7 +449,13 @@ function TravelTooltipItem({
     return () => register(_index, null);
   }, [register, _index, label]);
 
-  const isActive = open && activeIndex === _index;
+  // Al silenciarse hay que cerrar lo que ya estaba abierto: el menú se
+  // despliega bajo el cursor, así que no va a llegar ningún mouseleave.
+  useEffect(() => {
+    if (suppressed) deactivate(_index);
+  }, [suppressed, deactivate, _index]);
+
+  const isActive = open && !suppressed && activeIndex === _index;
 
   const child = children as ReactElement<Record<string, unknown>>;
   const childProps = child.props;
@@ -465,7 +476,7 @@ function TravelTooltipItem({
     // Los handlers se componen, no se reemplazan: un onMouseEnter del consumidor
     // tiene que seguir corriendo.
     onMouseEnter: (e: React.MouseEvent) => {
-      activate(_index, false);
+      if (!suppressed) activate(_index, false);
       (childProps.onMouseEnter as ((e: React.MouseEvent) => void) | undefined)?.(e);
     },
     onMouseLeave: (e: React.MouseEvent) => {
@@ -474,7 +485,7 @@ function TravelTooltipItem({
     },
     // El foco abre sin esperar: quien navega con teclado ya declaró su intención.
     onFocus: (e: React.FocusEvent) => {
-      activate(_index, true);
+      if (!suppressed) activate(_index, true);
       (childProps.onFocus as ((e: React.FocusEvent) => void) | undefined)?.(e);
     },
     onBlur: (e: React.FocusEvent) => {
