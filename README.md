@@ -1,32 +1,184 @@
-# React + TypeScript + Vite
+# new-wabi-ui
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Proyecto React con el design system [Fluid Functionalism](https://www.fluidfunctionalism.com)
+instalado completo: los **24 componentes**, 9 libs y 3 hooks, sobre primitivas
+**Base UI**.
 
-Currently, two official plugins are available:
+Vite 8 · React 19 · TypeScript · Tailwind v4 · shadcn CLI
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## Levantar el proyecto
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Necesitás **Node `^20.19` o `>=22.12`** (lo pide Vite 8).
 
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+```bash
+npm run dev
+```
+
+Queda en http://localhost:5173 con HMR.
+
+## Scripts
+
+| comando | qué hace |
+|---|---|
+| `npm run dev` | servidor de desarrollo |
+| `npm run build` | `tsc -b` y después el build de producción a `dist/` |
+| `npm run preview` | sirve el `dist/` ya construido |
+| `npm run lint` | oxlint — **no pasa limpio**, ver abajo |
+| `npm run fix:fluid` | reaplica el parche de `next/link` — ver abajo |
+
+### Sobre `npm run lint`
+
+Hoy tira **3 errores y 169 warnings**, y los 172 están en código del registry
+(`components/ui`, `lib`, `hooks`). En código propio — `App.tsx`, `main.tsx`,
+`sections/` — hay **cero**.
+
+Son cosas como hooks llamados condicionalmente en `ask-user-questions.tsx` o
+deps no memoizadas: decisiones del autor de la librería, no del proyecto. Como
+el registry copia el código fuente a tu repo, el linter lo trata como tuyo.
+
+Si querés que el comando sirva de puerta de calidad, excluí los directorios
+vendorizados en `.oxlintrc.json` en vez de ir a arreglar componentes que el
+próximo `shadcn add --overwrite` te va a pisar.
+
+## Estructura
+
+```
+src/
+  components/ui/    los 24 componentes + 6 módulos internos (ver abajo)
+  lib/              springs, size/shape/surface/icon context, elevated, utils
+  hooks/            use-proximity-hover, use-touch-primary, use-merge-split
+  sections/         la demo que ejercita todos los componentes
+  index.css         tokens del tema + estilos vendorizados (ver abajo)
+  main.tsx          los providers del sistema
+```
+
+`src/sections/` es sólo demo — importa los 24 componentes. Si armás la app de
+verdad, borralo.
+
+### Por qué hay 30 archivos y no 24
+
+Seis no son componentes públicos, son módulos que otros items arrastran:
+
+| archivo | viene con |
+|---|---|
+| `menu-item.tsx` | `dropdown` |
+| `sidebar-core.tsx`, `sidebar-menu.tsx` | `sidebar` |
+| `scroll-area.tsx` | la página de sistema *Scrollbars* |
+| `file-thumbnail.tsx` | `chat-message` e `input-message` |
+| `mobile-drawer.tsx` | item propio, sin página de docs |
+
+Para comprobar que están los 24:
+
+```bash
+curl -s https://www.fluidfunctionalism.com/r/registry.json | \
+  node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{
+    const items=JSON.parse(s).items.filter(i=>i.type==="registry:ui");
+    const fs=require("fs").readdirSync("src/components/ui");
+    const falta=items.flatMap(i=>i.files.map(f=>require("path").basename(f.target||f.path)))
+      .filter((f,i,a)=>a.indexOf(f)===i && !fs.includes(f));
+    console.log(falta.length?"faltan: "+falta.join(", "):"están todos");
+  })'
+```
+
+---
+
+## Agregar componentes
+
+El registry `@fluid` ya está dado de alta en `components.json`.
+
+```bash
+npx shadcn@latest add @fluid/base/<nombre>
+```
+
+**Usá siempre el prefijo `base/`.** El registry publica dos sabores de cada
+componente y este proyecto está entero sobre Base UI: pedir `@fluid/<nombre>`
+a secas trae la versión Radix y te mezcla las primitivas.
+
+Ojo con el grafo de dependencias: los 11 componentes que no tienen gemelo Base
+UI (`input-message`, `color-picker`, `input-copy`, `ask-user-questions`, …)
+declaran dependencia del `button`/`tooltip`/`slider` **Radix**. Si instalás uno
+de esos, te pisa los archivos con la versión Radix — reinstalá el `base/`
+encima:
+
+```bash
+npx shadcn@latest add @fluid/base/button @fluid/base/tooltip @fluid/base/slider -y --overwrite
+```
+
+Para verificar que no se coló Radix:
+
+```bash
+grep -rl '@radix-ui' src/ ; echo "(sin salida = todo Base UI)"
+```
+
+### Después de cada `--overwrite`
+
+`card.tsx` viene compilado para Next.js e importa `next/link`, que no resuelve
+en Vite. El parche:
+
+```bash
+npm run fix:fluid
+```
+
+Es idempotente: si ya está aplicado, no hace nada. Si algún día agregás un
+router, apuntá ese shim a su `Link`.
+
+---
+
+## Los cuatro sistemas
+
+Están cableados en [`src/main.tsx`](src/main.tsx). Los componentes los leen por
+contexto, no hace falta pasarles nada.
+
+- **motion** — `MotionConfig reducedMotion="user"` y los tres springs de
+  `lib/springs`: `fast` para hover, `moderate` para dropdowns y tabs, `slow`
+  para diálogos. La salida siempre es un escalón más rápida que la entrada.
+- **sizes** — `SizeProvider`, escalera de 36px (default) y 28px (compact). La
+  densidad es una decisión de región: envolvés un bloque en su propio
+  `<SizeProvider size="compact">` y todo lo de adentro la sigue, menús
+  portaleados incluidos.
+- **surfaces** — `SurfaceProvider` más `Elevated` y los tokens
+  `--surface-1…8`. Cada capa sube un escalón sobre el sustrato que la
+  contiene, así un popover dentro de un diálogo sigue siendo legible.
+- **scrollbars** — `ScrollArea` más las utilidades `scroll-fade`,
+  `scroll-fade-x` y `scroll-divider` de `index.css`.
+
+Se suman `ShapeProvider` (radios) y `TooltipProvider`, que los componentes dan
+por presentes.
+
+---
+
+## Estilos vendorizados en `index.css`
+
+**No borres los bloques del final de `src/index.css` aunque parezcan de más.**
+
+El registry no instala varios estilos que sus componentes sí asumen: viven en
+el `globals.css` del sitio de docs y hay que copiarlos a mano. Están al final
+del archivo, cada bloque con un comentario de dónde salió:
+
+- los tokens de interacción `--hover`, `--active`, `--selected`,
+  `--destructive-light`, `--focus-ring` y el damero del ColorPicker. Sin ellos
+  Tailwind no llega a generar `bg-hover` ni `bg-active`, y **todo el resalte
+  por proximidad de la librería pinta transparente**;
+- las utilidades `scroll-fade`, `scroll-fade-x`, `scroll-divider` y
+  `scrollbar-hide`;
+- el anillo `:focus-visible`, que lee el `--shape-input-radius` que publica
+  `ShapeProvider` sobre `<html>`;
+- `html.transitioning`, el crossfade al cambiar de forma;
+- scrollbars nativos, `color-scheme` y el fondo sobre `<html>`.
+
+Aparte, los `@keyframes` del spinner del Button están a nivel top-level y no
+dentro de `@theme`: ahí Tailwind v4 los descarta, porque el componente aplica
+la animación con un `style` inline que el compilador no ve.
+
+## Tema
+
+El tema oscuro se activa con la clase `.dark` en `<html>`; el toggle está en el
+header de la demo. A diferencia del sitio de docs, este proyecto no sigue al
+sistema operativo — si lo querés, el cambio va en el `useState` del toggle
+leyendo `matchMedia`, no en el CSS.
