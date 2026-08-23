@@ -167,6 +167,49 @@ Un `openTab` con un id ya abierto no duplica: lo enfoca. Y al cerrar la activa
 el relevo pasa a su vecina. La referencia completa de props está en la página
 del showcase.
 
+### El panel dentro del sistema de superficies
+
+La barra de pestañas se queda en el sustrato donde lo pongas y el plano —
+pestaña activa y contenido, que son la misma superficie— sube dos escalones,
+que es lo que el panel vuelve a publicar por `SurfaceProvider`: un popover
+abierto dentro de una pestaña sigue subiendo desde ahí y no desde el sustrato
+del panel.
+
+Ese plano lleva fondo **y** sombra. En oscuro lo despega el color, pero en
+claro la escalera está aplanada en blanco desde el escalón 3, así que la línea
+que separa la barra del contenido la dibuja entera el anillo de la sombra —
+sin él, `#FAFAFA` contra `#FFFFFF` no se distingue.
+
+Todo eso —el plano de la activa, sus dos esquinas cóncavas y su canto— no vive
+en la pestaña sino en **una sola capa que se desplaza**. Al cambiar de pestaña
+no aparece y desaparece: viaja, con el spring `moderate` de `lib/springs`, y
+el cambio se lee como un movimiento del selector. Las pestañas quedan limpias,
+sólo con su etiqueta y su hover, y el selector pasa por debajo. Se anima `left`
+y `width` y no un `transform` porque una escala deformaría el redondeo de las
+esquinas y los arcos; los rects salen del mismo hook con el que se mide el
+indicador de `tabs` del registry.
+
+De ahí sale el canto de la silueta, que es lo que hace legible la forma de la
+pestaña: corre por la barra, sube por el arco de la esquina cóncava y sigue
+por el costado y el techo de la activa. En el piso de la activa no hay canto —
+ahí la pestaña no termina, sigue en el contenido, y para eso monta 1px sobre
+el plano y tapa el anillo.
+
+**Las tres líneas caen siempre en la banda de 1px de afuera del relleno**, que
+es donde el anillo del plano ya corría; si una cayera adentro, el empalme se
+notaría corrido medio pixel. Por eso el canto es un anillo `inset` sobre una
+capa 1px más grande que la pestaña —y con 1px más de radio, para quedar
+concéntrico— y el arco se traza medio pixel adentro del círculo de la mordida,
+que en una concavidad es el lado de la barra.
+
+Los cortes están atados entre sí, no elegidos a ojo: el costado del canto baja
+hasta `TAB_RADIUS - BAR_GAP` por encima del pie de la pestaña, que es
+exactamente donde arranca el arco. Un pixel antes abre un hueco; uno después,
+lo pisa. El canto va en su propia capa porque la máscara que lo corta recorta
+todo lo que el elemento pinta, y la pestaña además pinta su fondo; las
+esquinas cóncavas van en SVG porque su arco no sólo se rellena, también se
+traza.
+
 ---
 
 ## Toasts (Sileo)
