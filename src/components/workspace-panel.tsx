@@ -57,9 +57,10 @@ interface WorkspacePanelProps {
 /* ────────────────── Esquinas cóncavas de la pestaña ────────────────── */
 
 /**
- * La forma de pestaña es de TODAS las pestañas, no sólo de la activa: arriba
- * redondeada y abajo abriéndose hacia la barra con un cuarto de círculo
- * recortado a cada lado. Lo que cambia con el estado es sólo el relleno.
+ * La activa se abre hacia la barra por sus dos lados. Una inactiva sólo por el
+ * lado que mira a la activa: ese borde encaja contra ella, mientras que el que
+ * da al resto de la barra se cierra con una esquina redondeada normal. Por eso
+ * la silueta de una pestaña inactiva no es simétrica.
  *
  * Cada esquina es un cuadrado al que un radial-gradient como mask le quita un
  * cuarto de círculo; puesto al lado de la pestaña, ese recorte dibuja la curva.
@@ -173,7 +174,11 @@ function WorkspacePanel({
     [value, onValueChange]
   );
 
-  const activeTab = tabs.find((t) => t.id === active) ?? tabs[0];
+  const activeIndex = Math.max(
+    0,
+    tabs.findIndex((t) => t.id === active)
+  );
+  const activeTab = tabs[activeIndex] ?? tabs[0];
 
   return (
     <div
@@ -191,9 +196,14 @@ function WorkspacePanel({
       >
         <SidebarToggle compact={compact} />
 
-        {tabs.map((tab) => {
+        {tabs.map((tab, index) => {
           const isActive = tab.id === active;
           const Icon = tab.icon;
+          // La activa se abre por los dos lados; una inactiva sólo por el que
+          // da a la activa: a su derecha si la activa está a la derecha, y al
+          // revés. Ese borde encaja contra ella; el otro se cierra redondeado.
+          const concaveLeft = isActive || index > activeIndex;
+          const concaveRight = isActive || index < activeIndex;
           return (
             <button
               key={tab.id}
@@ -217,15 +227,17 @@ function WorkspacePanel({
                     // activo, y el relleno no se despega del fondo.
                     "text-muted-foreground hover:bg-active hover:text-foreground"
               )}
-              // Sólo arriba: abajo la silueta la continúan las esquinas
-              // cóncavas, en cualquier estado.
+              // Abajo sólo se redondea el lado sin curva: donde la hay, la
+              // silueta la continúa la esquina cóncava.
               style={{
                 borderTopLeftRadius: TAB_RADIUS,
                 borderTopRightRadius: TAB_RADIUS,
+                borderBottomLeftRadius: concaveLeft ? 0 : TAB_RADIUS,
+                borderBottomRightRadius: concaveRight ? 0 : TAB_RADIUS,
               }}
             >
-              <ConcaveCorner side="left" active={isActive} />
-              <ConcaveCorner side="right" active={isActive} />
+              {concaveLeft && <ConcaveCorner side="left" active={isActive} />}
+              {concaveRight && <ConcaveCorner side="right" active={isActive} />}
 
               {Icon && (
                 <span
