@@ -27,6 +27,17 @@ function Placeholder({ title }: { title: string }) {
   );
 }
 
+/** Bloque de código. El registry no trae uno, y para cuatro ejemplos no vale
+ *  la pena más que esto: monospace sobre surface-2 y scroll horizontal propio,
+ *  para que una línea larga no ensanche la página. */
+function Snippet({ children }: { children: string }) {
+  return (
+    <pre className="overflow-x-auto rounded-xl bg-surface-2 p-4 text-[12px] leading-relaxed shadow-surface-1">
+      <code className="font-mono">{children.trim()}</code>
+    </pre>
+  );
+}
+
 const TABS = [
   { id: "models", label: "3D Models", icon: Box, content: <Placeholder title="3D Models" /> },
   { id: "avatars", label: "Avatars", icon: UserCircle2, content: <Placeholder title="Avatars" /> },
@@ -152,6 +163,111 @@ export function WorkspacePanelSection() {
         hint="Una pestaña inactiva se rellena con un rectángulo redondeado; el botón del sidebar, igual. La activa no reacciona al hover: ya está seleccionada, y darle un estado más sólo agrega ruido."
       >
         <WorkspacePanel tabs={TABS} defaultValue="avatars" className="h-[18rem]" />
+      </Section>
+
+      <Section
+        title="Cómo se usa · suelto"
+        hint="Sin provider, el panel recibe sus pestañas por props. Sirve cuando son fijas y sólo las conoce quien lo renderiza."
+      >
+        <Snippet>{`import { WorkspacePanel } from "@/components/workspace-panel";
+import { Box, UserCircle2 } from "lucide-react";
+
+const TABS = [
+  { id: "models",  label: "3D Models", icon: Box,         content: <Models /> },
+  { id: "avatars", label: "Avatars",   icon: UserCircle2, content: <Avatars /> },
+];
+
+<WorkspacePanel tabs={TABS} className="h-full" />`}</Snippet>
+
+        <p className="text-[13px] text-muted-foreground">
+          Para que además se puedan cerrar, el array pasa a estado y el panel
+          avisa por <code>onTabClose</code> — no es dueño de la lista, sólo la
+          dibuja:
+        </p>
+
+        <Snippet>{`const [tabs, setTabs] = useState(TABS);
+
+<WorkspacePanel
+  tabs={tabs}
+  onTabClose={(id) => setTabs((t) => t.filter((x) => x.id !== id))}
+/>`}</Snippet>
+      </Section>
+
+      <Section
+        title="Cómo se usa · con provider"
+        hint="Cuando cualquier parte de la app tiene que poder abrir una pestaña. El provider sube el estado, y así nadie necesita pasarse callbacks por props hasta llegar al panel."
+      >
+        <p className="text-[13px] text-muted-foreground">
+          Una vez, lo más arriba que tenga sentido:
+        </p>
+        <Snippet>{`import { WorkspaceProvider } from "@/components/workspace-context";
+
+<WorkspaceProvider defaultTabs={[INICIAL]}>
+  <App />
+</WorkspaceProvider>`}</Snippet>
+
+        <p className="text-[13px] text-muted-foreground">
+          Donde el panel se dibuja — normalmente uno solo, al lado del sidebar:
+        </p>
+        <Snippet>{`import { WorkspaceOutlet } from "@/components/workspace-context";
+
+<WorkspaceOutlet className="h-full" />`}</Snippet>
+
+        <p className="text-[13px] text-muted-foreground">
+          Y desde cualquier componente por debajo del provider, sin importar
+          cuán lejos esté del panel:
+        </p>
+        <Snippet>{`import { useWorkspace } from "@/components/workspace-context";
+import { FileText } from "lucide-react";
+
+function AbrirDocumento({ doc }) {
+  const { openTab } = useWorkspace();
+
+  return (
+    <button
+      onClick={() =>
+        openTab({
+          id: "doc-" + doc.id,
+          label: doc.nombre,
+          icon: FileText,
+          content: <Documento id={doc.id} />,
+        })
+      }
+    >
+      Abrir
+    </button>
+  );
+}`}</Snippet>
+      </Section>
+
+      <Section
+        title="Referencia"
+        hint="Lo que expone cada pieza."
+      >
+        <Snippet>{`WorkspaceTab
+  id        string          único y estable — con él se resuelve la activa
+  label     string
+  icon?     IconComponent   cualquier icono de lucide sirve
+  content   ReactNode       lo que se muestra abajo
+
+WorkspacePanel
+  tabs            WorkspaceTab[]
+  value?          string          activa (controlado)
+  defaultValue?   string          activa inicial; sólo se lee al montar
+  onValueChange?  (id) => void
+  onTabClose?     (id) => void    sin esto no se renderiza el botón de cerrar
+  size?           "default" | "compact"
+
+WorkspaceProvider
+  defaultTabs?      WorkspaceTab[]
+  defaultActiveId?  string
+
+useWorkspace()
+  tabs          WorkspaceTab[]
+  activeId      string | undefined
+  openTab       (tab, { focus? }) => void   id repetido: enfoca, no duplica
+  closeTab      (id) => void                si era la activa, pasa a la vecina
+  activateTab   (id) => void`}</Snippet>
       </Section>
 
       <Section

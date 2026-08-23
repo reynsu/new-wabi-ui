@@ -132,6 +132,43 @@ router, apuntá ese shim a su `Link`.
 
 ---
 
+## Componentes propios
+
+Los de `src/components/` (fuera de `ui/`) son nuestros: ningún `shadcn add` los
+toca. Cada uno tiene su página en el showcase, bajo *Componentes propios*.
+
+| componente | qué es |
+|---|---|
+| `TravelTooltip` | un tooltip compartido por un grupo: al pasar de un trigger al vecino se traslada en vez de reaparecer |
+| `WindowControls` | la barra que controla ventana y sidebar — pantalla completa, ventana flotante, panel lateral |
+| `WorkspacePanel` | el marco de contenido con pestañas conectadas que va al lado del sidebar |
+
+### Pestañas desde cualquier parte
+
+`WorkspacePanel` no es dueño de sus pestañas: recibe `tabs` y avisa por
+`onTabClose`. Para que cualquier punto de la app pueda abrir una sin pasarse
+callbacks por props, está `WorkspaceProvider`:
+
+```tsx
+// una vez, arriba del todo
+<WorkspaceProvider defaultTabs={[INICIAL]}>
+  <App />
+</WorkspaceProvider>
+
+// donde el panel se dibuja, normalmente uno solo
+<WorkspaceOutlet className="h-full" />
+
+// desde cualquier componente por debajo del provider
+const { openTab } = useWorkspace();
+openTab({ id: "doc-42", label: "Documento", icon: FileText, content: <Doc /> });
+```
+
+Un `openTab` con un id ya abierto no duplica: lo enfoca. Y al cerrar la activa
+el relevo pasa a su vecina. La referencia completa de props está en la página
+del showcase.
+
+---
+
 ## Toasts (Sileo)
 
 `sileo` es un paquete de npm aparte del registry — toasts con física de
