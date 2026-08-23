@@ -104,6 +104,7 @@ function SidebarToggle({ compact }: { compact: boolean }) {
       aria-label={visible ? "Ocultar panel lateral" : "Mostrar panel lateral"}
       aria-pressed={visible}
       onClick={toggleSidebar}
+      style={{ borderRadius: TAB_RADIUS }}
       className={cn(
         "group relative inline-flex shrink-0 items-center justify-center",
         "cursor-pointer outline-none transition-colors duration-80",
@@ -111,7 +112,7 @@ function SidebarToggle({ compact }: { compact: boolean }) {
         "focus-visible:ring-1 focus-visible:ring-[color:var(--focus-ring,#6B97FF)]",
         // El relleno del hover es un rectángulo redondeado más ancho que el
         // círculo de reposo — es lo que se ve en la referencia.
-        "rounded-lg hover:bg-hover",
+        "hover:bg-active",
         compact ? "h-7 w-9" : "h-8 w-11"
       )}
     >
@@ -190,7 +191,10 @@ function WorkspacePanel({
                   ? // La activa comparte fondo con el contenido y sólo redondea
                     // arriba: abajo se continúa en el panel.
                     "bg-surface-3 text-foreground font-medium"
-                  : "rounded-lg text-muted-foreground hover:bg-hover hover:text-foreground"
+                  : // --active (10% blanco) y no --hover (6%): sobre la barra,
+                    // el 6% cae en #232323, a dos puntos del #252525 del tab
+                    // activo, y el relleno no se despega del fondo.
+                    "text-muted-foreground hover:bg-active hover:text-foreground"
               )}
               style={
                 isActive
@@ -198,7 +202,9 @@ function WorkspacePanel({
                       borderTopLeftRadius: TAB_RADIUS,
                       borderTopRightRadius: TAB_RADIUS,
                     }
-                  : undefined
+                  : // Mismo radio que la activa: dos redondeos distintos en la
+                    // misma fila se notan.
+                    { borderRadius: TAB_RADIUS }
               }
             >
               {isActive && <ConcaveCorner side="left" />}
