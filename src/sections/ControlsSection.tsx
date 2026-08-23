@@ -1,16 +1,5 @@
 import { useState } from "react";
-import {
-  Bell,
-  Palette,
-  PanelRight,
-  PenSquare,
-  MoreHorizontal,
-  Rocket,
-  Search,
-  Sparkles,
-  Users,
-  Copy,
-} from "lucide-react";
+import { Bell, Palette, Rocket, Search, Sparkles, Users } from "lucide-react";
 
 import {
   Accordion,
@@ -38,7 +27,6 @@ import { Switch } from "@/components/ui/switch";
 import { TabItem, TabPanel, Tabs, TabsList } from "@/components/ui/tabs";
 import { TabsSubtle, TabsSubtleItem, TabsSubtlePanel } from "@/components/ui/tabs-subtle";
 import { Tooltip } from "@/components/ui/tooltip";
-import { TravelTooltip, TravelTooltipItem } from "@/components/travel-tooltip";
 import { Row, Section } from "./Shared";
 
 const BADGE_COLORS = ["green", "amber", "rose", "blue", "violet", "teal"] as const;
@@ -158,38 +146,6 @@ export function ControlsSection() {
             <MenuItem index={0} label="Más reciente" checked={menuChecked === 0} onSelect={() => setMenuChecked(0)} />
             <MenuItem index={1} label="Alfabético" checked={menuChecked === 1} onSelect={() => setMenuChecked(1)} />
           </Dropdown>
-        </div>
-      </Section>
-
-      <Section
-        title="TravelTooltip"
-        hint="Componente propio, no del registry. Una sola píldora para todo el grupo: al pasar de un botón al vecino se traslada y ajusta su ancho al texto nuevo en vez de desaparecer y reaparecer. El caret llega antes que el cuerpo."
-      >
-        <div className="flex w-full justify-end pb-16">
-          <div className="rounded-full bg-surface-3 p-1 shadow-surface-2">
-            <TravelTooltip side="bottom">
-              <TravelTooltipItem label="Nueva nota">
-                <Button variant="ghost" size="icon" aria-label="Nueva nota">
-                  <PenSquare />
-                </Button>
-              </TravelTooltipItem>
-              <TravelTooltipItem label="Usar ventana flotante">
-                <Button variant="ghost" size="icon" aria-label="Usar ventana flotante">
-                  <Copy />
-                </Button>
-              </TravelTooltipItem>
-              <TravelTooltipItem label="Más…">
-                <Button variant="ghost" size="icon" aria-label="Más opciones">
-                  <MoreHorizontal />
-                </Button>
-              </TravelTooltipItem>
-              <TravelTooltipItem label="Alternar panel lateral">
-                <Button variant="ghost" size="icon" aria-label="Alternar panel lateral">
-                  <PanelRight />
-                </Button>
-              </TravelTooltipItem>
-            </TravelTooltip>
-          </div>
         </div>
       </Section>
 

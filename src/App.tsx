@@ -1,5 +1,14 @@
 import { useState } from "react";
-import { Boxes, Layers, MessageSquare, Moon, Sliders, Sun, TextCursorInput } from "lucide-react";
+import {
+  Boxes,
+  Layers,
+  MessageSquare,
+  Moon,
+  MousePointer2,
+  Sliders,
+  Sun,
+  TextCursorInput,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -23,14 +32,33 @@ import { ControlsSection } from "@/sections/ControlsSection";
 import { InputsSection } from "@/sections/InputsSection";
 import { SurfacesSection } from "@/sections/SurfacesSection";
 import { SystemSection } from "@/sections/SystemSection";
+import { TravelTooltipSection } from "@/sections/TravelTooltipSection";
 
-const PAGES = [
-  { id: "controls", label: "Controles", icon: Sliders, count: 12, render: () => <ControlsSection /> },
-  { id: "inputs", label: "Entradas", icon: TextCursorInput, count: 5, render: () => <InputsSection /> },
-  { id: "surfaces", label: "Superficies", icon: Layers, count: 5, render: () => <SurfacesSection /> },
-  { id: "agent", label: "Agente", icon: MessageSquare, count: 4, render: () => <AgentSection /> },
-  { id: "system", label: "Sistema", icon: Boxes, count: 4, render: () => <SystemSection /> },
+/* El sidebar separa lo que viene del registry de lo que escribimos nosotros.
+   Es la misma división que en el disco: components/ui/ es espejo del registry
+   y se puede reinstalar entero, components/ es nuestro. */
+const GROUPS = [
+  {
+    label: "Showcase",
+    pages: [
+      { id: "controls", label: "Controles", icon: Sliders, count: 11, render: () => <ControlsSection /> },
+      { id: "inputs", label: "Entradas", icon: TextCursorInput, count: 5, render: () => <InputsSection /> },
+      { id: "surfaces", label: "Superficies", icon: Layers, count: 5, render: () => <SurfacesSection /> },
+      { id: "agent", label: "Agente", icon: MessageSquare, count: 4, render: () => <AgentSection /> },
+      { id: "system", label: "Sistema", icon: Boxes, count: 4, render: () => <SystemSection /> },
+    ],
+  },
+  {
+    label: "Componentes propios",
+    pages: [
+      { id: "travel-tooltip", label: "TravelTooltip", icon: MousePointer2, count: 1, render: () => <TravelTooltipSection /> },
+    ],
+  },
 ] as const;
+
+// El spread evita que flatMap reciba las tuplas readonly que deja `as const`,
+// que no tipa bien contra su firma.
+const PAGES = GROUPS.flatMap((g) => [...g.pages]);
 
 export default function App() {
   const [page, setPage] = useState<(typeof PAGES)[number]["id"]>("controls");
@@ -57,28 +85,30 @@ export default function App() {
         </SidebarHeader>
 
         <SidebarContent>
-          <SidebarGroup>
-            <SidebarGroupLabel>Showcase</SidebarGroupLabel>
-            <SidebarMenu>
-              {PAGES.map((p) => (
-                <SidebarMenuItem key={p.id}>
-                  <SidebarMenuButton
-                    icon={p.icon}
-                    isActive={p.id === page}
-                    onClick={() => setPage(p.id)}
-                  >
-                    {p.label}
-                  </SidebarMenuButton>
-                  <SidebarMenuBadge>{p.count}</SidebarMenuBadge>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroup>
+          {GROUPS.map((group) => (
+            <SidebarGroup key={group.label}>
+              <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+              <SidebarMenu>
+                {group.pages.map((p) => (
+                  <SidebarMenuItem key={p.id}>
+                    <SidebarMenuButton
+                      icon={p.icon}
+                      isActive={p.id === page}
+                      onClick={() => setPage(p.id)}
+                    >
+                      {p.label}
+                    </SidebarMenuButton>
+                    <SidebarMenuBadge>{p.count}</SidebarMenuBadge>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroup>
+          ))}
         </SidebarContent>
 
         <SidebarFooter>
           <p className="px-2 py-1 text-[12px] text-muted-foreground">
-            30 componentes · Base UI
+            24 del registry + 1 propio
           </p>
         </SidebarFooter>
       </Sidebar>
