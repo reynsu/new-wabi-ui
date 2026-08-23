@@ -31,22 +31,24 @@ Queda en http://localhost:5173 con HMR.
 | `npm run dev` | servidor de desarrollo |
 | `npm run build` | `tsc -b` y después el build de producción a `dist/` |
 | `npm run preview` | sirve el `dist/` ya construido |
-| `npm run lint` | oxlint — **no pasa limpio**, ver abajo |
+| `npm run lint` | oxlint sobre el código propio — ver abajo qué queda afuera |
 | `npm run fix:fluid` | reaplica el parche de `next/link` — ver abajo |
 
 ### Sobre `npm run lint`
 
-Hoy tira **3 errores y 169 warnings**, y los 172 están en código del registry
-(`components/ui`, `lib`, `hooks`). En código propio — `App.tsx`, `main.tsx`,
-`sections/` — hay **cero**.
+Para que sirva de puerta de calidad, el `ignorePatterns` de `.oxlintrc.json`
+deja afuera los tres directorios que instala el registry: `components/ui/`,
+`lib/` y `hooks/`.
 
-Son cosas como hooks llamados condicionalmente en `ask-user-questions.tsx` o
-deps no memoizadas: decisiones del autor de la librería, no del proyecto. Como
-el registry copia el código fuente a tu repo, el linter lo trata como tuyo.
+No es esconder la basura debajo de la alfombra. Ahí adentro había **3 errores y
+169 warnings** — hooks llamados condicionalmente en `ask-user-questions.tsx`,
+deps no memoizadas, refs leídos en render — que son decisiones del autor de la
+librería, no del proyecto. Como el registry copia el código fuente al repo, el
+linter lo trataba como nuestro; arreglarlo ahí sería trabajo que el próximo
+`shadcn add --overwrite` pisa.
 
-Si querés que el comando sirva de puerta de calidad, excluí los directorios
-vendorizados en `.oxlintrc.json` en vez de ir a arreglar componentes que el
-próximo `shadcn add --overwrite` te va a pisar.
+Quedan tres warnings en código propio — dos en `travel-tooltip.tsx`, uno en
+`workspace-context.tsx` — que hasta ahora estaban enterrados en el ruido.
 
 ## Estructura
 
