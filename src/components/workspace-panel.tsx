@@ -29,6 +29,12 @@ import type { IconComponent } from "@/lib/icon-context";
  *  Un solo número: si difieren, la curva se nota partida en la unión. */
 const TAB_RADIUS = 12;
 
+/** Separación entre pestañas. Cada esquina cóncava sobresale TAB_RADIUS a su
+ *  lado, así que con menos que el doble las cajas de dos vecinas se solapan y
+ *  sus rellenos se apilan: en esa franja el resultado lo decide el orden del
+ *  DOM, no el diseño. */
+const TAB_GAP = TAB_RADIUS * 2;
+
 interface WorkspaceTab {
   id: string;
   label: string;
@@ -48,18 +54,29 @@ interface WorkspacePanelProps {
   className?: string;
 }
 
-/* ────────────────── Esquinas cóncavas de la pestaña activa ────────────────── */
+/* ────────────────── Esquinas cóncavas de la pestaña ────────────────── */
 
 /**
- * Cada esquina es un cuadrado del color del contenido al que se le recorta un
- * cuarto de círculo. Puestos a los lados de la pestaña, ese recorte es el que
- * dibuja la curva que baja hacia la barra.
+ * La forma de pestaña es de TODAS las pestañas, no sólo de la activa: arriba
+ * redondeada y abajo abriéndose hacia la barra con un cuarto de círculo
+ * recortado a cada lado. Lo que cambia con el estado es sólo el relleno.
  *
- * El color sale de --surface-3 y no de una clase, porque el mask necesita que
- * el propio pseudo-elemento tenga fondo: con `bg-surface-3` de Tailwind y un
- * mask encima el resultado es el mismo, pero queda ilegible en el markup.
+ * Cada esquina es un cuadrado al que un radial-gradient como mask le quita un
+ * cuarto de círculo; puesto al lado de la pestaña, ese recorte dibuja la curva.
+ *
+ * La activa se rellena con el color del contenido, así que va en un style
+ * inline. La inactiva se rellena sólo en hover, y ahí conviene la clase: el
+ * `group` del botón la activa junto con el fondo de la pestaña, y al componer
+ * las dos el mismo 10% sobre la misma barra, no queda costura entre el cuerpo
+ * y sus esquinas.
  */
-function ConcaveCorner({ side }: { side: "left" | "right" }) {
+function ConcaveCorner({
+  side,
+  active,
+}: {
+  side: "left" | "right";
+  active: boolean;
+}) {
   const mask =
     side === "left"
       ? `radial-gradient(circle at 0 0, transparent ${TAB_RADIUS}px, #000 ${TAB_RADIUS}px)`
@@ -68,16 +85,19 @@ function ConcaveCorner({ side }: { side: "left" | "right" }) {
   const style: CSSProperties = {
     width: TAB_RADIUS,
     height: TAB_RADIUS,
-    backgroundColor: "var(--surface-3)",
     maskImage: mask,
     WebkitMaskImage: mask,
     [side === "left" ? "left" : "right"]: -TAB_RADIUS,
+    ...(active ? { backgroundColor: "var(--surface-3)" } : null),
   } as CSSProperties;
 
   return (
     <span
       aria-hidden
-      className="pointer-events-none absolute bottom-0"
+      className={cn(
+        "pointer-events-none absolute bottom-0 transition-colors duration-80",
+        !active && "bg-transparent group-hover:bg-active"
+      )}
       style={style}
     />
   );
@@ -166,7 +186,8 @@ function WorkspacePanel({
           del contenido: si sobra un pixel, las esquinas cóncavas no cierran. */}
       <div
         role="tablist"
-        className={cn("flex shrink-0 items-end gap-1 px-2", compact ? "pt-1.5" : "pt-2")}
+        style={{ gap: TAB_GAP }}
+        className={cn("flex shrink-0 items-end px-2", compact ? "pt-1.5" : "pt-2")}
       >
         <SidebarToggle compact={compact} />
 
@@ -196,19 +217,15 @@ function WorkspacePanel({
                     // activo, y el relleno no se despega del fondo.
                     "text-muted-foreground hover:bg-active hover:text-foreground"
               )}
-              style={
-                isActive
-                  ? {
-                      borderTopLeftRadius: TAB_RADIUS,
-                      borderTopRightRadius: TAB_RADIUS,
-                    }
-                  : // Mismo radio que la activa: dos redondeos distintos en la
-                    // misma fila se notan.
-                    { borderRadius: TAB_RADIUS }
-              }
+              // Sólo arriba: abajo la silueta la continúan las esquinas
+              // cóncavas, en cualquier estado.
+              style={{
+                borderTopLeftRadius: TAB_RADIUS,
+                borderTopRightRadius: TAB_RADIUS,
+              }}
             >
-              {isActive && <ConcaveCorner side="left" />}
-              {isActive && <ConcaveCorner side="right" />}
+              <ConcaveCorner side="left" active={isActive} />
+              <ConcaveCorner side="right" active={isActive} />
 
               {Icon && (
                 <span
