@@ -1,7 +1,12 @@
 import { useState } from "react";
-import { Box, Compass, RotateCcw, UserCircle2 } from "lucide-react";
+import { Box, Compass, FileText, Plus, RotateCcw, UserCircle2 } from "lucide-react";
 
 import { WorkspacePanel } from "@/components/workspace-panel";
+import {
+  WorkspaceOutlet,
+  WorkspaceProvider,
+  useWorkspace,
+} from "@/components/workspace-context";
 import { Button } from "@/components/ui/button";
 import { SizeProvider } from "@/lib/size-context";
 import { Section } from "./Shared";
@@ -54,9 +59,68 @@ function CerrablePanel() {
   );
 }
 
+/** Vive FUERA del panel y ni siquiera es hermano suyo: sólo comparte el
+ *  provider. Es todo lo que hace falta para abrir una pestaña desde cualquier
+ *  punto del árbol. */
+function BarraDeAcciones() {
+  const { openTab, tabs, activeId } = useWorkspace();
+  const [n, setN] = useState(1);
+
+  return (
+    <div className="flex flex-wrap items-center gap-3">
+      <Button
+        leadingIcon={Plus}
+        size="compact"
+        onClick={() => {
+          openTab({
+            id: `doc-${n}`,
+            label: `Documento ${n}`,
+            icon: FileText,
+            content: <Placeholder title={`Documento ${n}`} />,
+          });
+          setN((v) => v + 1);
+        }}
+      >
+        Abrir documento
+      </Button>
+
+      <Button
+        variant="tertiary"
+        size="compact"
+        onClick={() =>
+          openTab({
+            id: "avatars",
+            label: "Avatars",
+            icon: UserCircle2,
+            content: <Placeholder title="Avatars" />,
+          })
+        }
+      >
+        Abrir Avatars
+      </Button>
+
+      <span className="text-[12px] text-muted-foreground">
+        {tabs.length} abiertas · activa: <code>{activeId ?? "—"}</code>
+      </span>
+    </div>
+  );
+}
+
 export function WorkspacePanelSection() {
   return (
     <div className="flex flex-col gap-14">
+      <Section
+        title="Abrir desde cualquier parte"
+        hint="Con WorkspaceProvider las pestañas suben al nivel de la app. Los botones de abajo no están dentro del panel — sólo comparten el provider — y abren pestañas llamando a openTab() del hook useWorkspace(). «Abrir Avatars» usa siempre el mismo id: no duplica, sólo la enfoca."
+      >
+        <WorkspaceProvider defaultTabs={[TABS[0]]}>
+          <div className="flex flex-col gap-4">
+            <BarraDeAcciones />
+            <WorkspaceOutlet className="h-[18rem]" />
+          </div>
+        </WorkspaceProvider>
+      </Section>
+
       <Section
         title="Cerrar pestañas"
         hint="Al pasar el cursor sobre una pestaña aparece su botón de cerrar — sólo si queda más de una, porque cerrar la última dejaría el panel vacío. Si cerrás la activa, el relevo lo toma su vecina: la de la derecha, o la de la izquierda si era la última. El botón ocupa su sitio desde el principio, invisible: si apareciera recién al hover, la pestaña cambiaría de ancho y la fila saltaría bajo el cursor."
