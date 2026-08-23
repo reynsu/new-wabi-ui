@@ -5,6 +5,7 @@ import {
   MessageSquare,
   Moon,
   MousePointer2,
+  PanelsTopLeft,
   Sliders,
   Sun,
   TextCursorInput,
@@ -33,6 +34,7 @@ import { InputsSection } from "@/sections/InputsSection";
 import { SurfacesSection } from "@/sections/SurfacesSection";
 import { SystemSection } from "@/sections/SystemSection";
 import { TravelTooltipSection } from "@/sections/TravelTooltipSection";
+import { WindowControlsSection } from "@/sections/WindowControlsSection";
 
 /* El sidebar separa lo que viene del registry de lo que escribimos nosotros.
    Es la misma división que en el disco: components/ui/ es espejo del registry
@@ -52,6 +54,7 @@ const GROUPS = [
     label: "Componentes propios",
     pages: [
       { id: "travel-tooltip", label: "TravelTooltip", icon: MousePointer2, count: 1, render: () => <TravelTooltipSection /> },
+      { id: "window-controls", label: "WindowControls", icon: PanelsTopLeft, count: 1, render: () => <WindowControlsSection /> },
     ],
   },
 ] as const;
@@ -108,7 +111,7 @@ export default function App() {
 
         <SidebarFooter>
           <p className="px-2 py-1 text-[12px] text-muted-foreground">
-            24 del registry + 1 propio
+            24 del registry + 2 propios
           </p>
         </SidebarFooter>
       </Sidebar>

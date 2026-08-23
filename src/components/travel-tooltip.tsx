@@ -287,11 +287,15 @@ const TravelTooltip = forwardRef<HTMLDivElement, TravelTooltipProps>(
       [register, activate, deactivate, activeIndex, open, tooltipId, enabled]
     );
 
-    const indexedChildren = Children.map(children, (child, i) =>
+    // Contador propio en vez del índice que da Children.map: un hijo
+    // condicional que resuelve a null dejaría un hueco en la numeración, y los
+    // labels y la geometría se indexan por estos números.
+    let slot = 0;
+    const indexedChildren = Children.map(children, (child) =>
       // Igual que TabsList: inyectar _index en un <div> dispara el warning de
       // prop desconocida de React, así que sólo se toca a los componentes.
       isValidElement(child) && typeof child.type !== "string"
-        ? cloneElement(child, { _index: i } as Record<string, unknown>)
+        ? cloneElement(child, { _index: slot++ } as Record<string, unknown>)
         : child
     );
 
