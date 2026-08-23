@@ -1,6 +1,8 @@
-import { Box, Compass, UserCircle2 } from "lucide-react";
+import { useState } from "react";
+import { Box, Compass, RotateCcw, UserCircle2 } from "lucide-react";
 
 import { WorkspacePanel } from "@/components/workspace-panel";
+import { Button } from "@/components/ui/button";
 import { SizeProvider } from "@/lib/size-context";
 import { Section } from "./Shared";
 
@@ -26,9 +28,42 @@ const TABS = [
   { id: "scenes", label: "Scenes", icon: Compass, content: <Placeholder title="Scenes" /> },
 ];
 
+/** El panel no es dueño de sus pestañas: avisa con onTabClose y quien lo usa
+ *  las saca del array. Acá ese array es estado local. */
+function CerrablePanel() {
+  const [abiertas, setAbiertas] = useState(TABS);
+
+  return (
+    <div className="flex flex-col items-start gap-3">
+      <WorkspacePanel
+        tabs={abiertas}
+        onTabClose={(id) => setAbiertas((t) => t.filter((x) => x.id !== id))}
+        className="h-[18rem] w-full"
+      />
+      {abiertas.length < TABS.length && (
+        <Button
+          variant="tertiary"
+          size="compact"
+          leadingIcon={RotateCcw}
+          onClick={() => setAbiertas(TABS)}
+        >
+          Restaurar las {TABS.length}
+        </Button>
+      )}
+    </div>
+  );
+}
+
 export function WorkspacePanelSection() {
   return (
     <div className="flex flex-col gap-14">
+      <Section
+        title="Cerrar pestañas"
+        hint="Al pasar el cursor sobre una pestaña aparece su botón de cerrar — sólo si queda más de una, porque cerrar la última dejaría el panel vacío. El botón ocupa su sitio desde el principio, invisible: si apareciera recién al hover, la pestaña cambiaría de ancho y la fila saltaría bajo el cursor."
+      >
+        <CerrablePanel />
+      </Section>
+
       <Section
         title="El panel"
         hint="Va al lado del sidebar y muestra el contenido de la app. La pestaña activa no es una píldora suelta: comparte fondo con el área de abajo y las une un par de esquinas cóncavas, así queda claro que el contenido es el de esa pestaña."

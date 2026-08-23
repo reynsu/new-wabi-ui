@@ -18,7 +18,13 @@ import {
   type CSSProperties,
   type ReactNode,
 } from "react";
-import { PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen } from "lucide-react";
+import {
+  PanelLeftClose,
+  PanelLeftOpen,
+  PanelRightClose,
+  PanelRightOpen,
+  X,
+} from "lucide-react";
 
 import { useSidebar } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
@@ -43,6 +49,10 @@ interface WorkspacePanelProps {
   /** Pestaña activa inicial (no controlado). Por defecto, la primera. */
   defaultValue?: string;
   onValueChange?: (id: string) => void;
+  /** Cierra una pestaña. El componente no es dueño del array, así que sólo
+   *  avisa: quien lo usa la saca de `tabs`. Sin este callback no hay botón de
+   *  cerrar — no tendría nada que hacer. */
+  onTabClose?: (id: string) => void;
   /** Fija el panel a un escalón de la escalera de tamaños. */
   size?: SizeVariant;
   className?: string;
@@ -136,6 +146,7 @@ function WorkspacePanel({
   value,
   defaultValue,
   onValueChange,
+  onTabClose,
   size,
   className,
 }: WorkspacePanelProps) {
@@ -153,7 +164,14 @@ function WorkspacePanel({
     [value, onValueChange]
   );
 
+  // Resuelta y no el id crudo: al cerrar la pestaña activa, `active` queda
+  // apuntando a un id que ya no está en `tabs`. Comparando contra esto, el
+  // reemplazo queda marcado en vez de mostrarse el contenido de tabs[0] sin
+  // ninguna pestaña seleccionada.
   const activeTab = tabs.find((t) => t.id === active) ?? tabs[0];
+
+  // Cerrar sólo tiene sentido si queda algo detrás.
+  const closable = onTabClose != null && tabs.length > 1;
 
   return (
     <div
@@ -171,22 +189,18 @@ function WorkspacePanel({
         <SidebarToggle compact={compact} />
 
         {tabs.map((tab) => {
-          const isActive = tab.id === active;
+          const isActive = tab.id === activeTab?.id;
           const Icon = tab.icon;
           return (
-            <button
+            // Contenedor y no <button>: el botón de cerrar es otro botón, y
+            // anidarlos es HTML inválido. Como hermanos, cada uno conserva su
+            // semántica nativa y el wrapper aporta la forma y el hover.
+            <div
               key={tab.id}
-              type="button"
-              role="tab"
-              aria-selected={isActive}
-              onClick={() => select(tab.id)}
               className={cn(
                 "group relative inline-flex shrink-0 items-center",
-                "cursor-pointer outline-none transition-colors duration-80",
-                "focus-visible:ring-1 focus-visible:ring-[color:var(--focus-ring,#6B97FF)]",
-                compact
-                  ? "h-7 gap-1.5 px-2.5 text-[12px]"
-                  : "h-8 gap-2 px-3 text-[13px]",
+                "transition-colors duration-80",
+                compact ? "h-7 text-[12px]" : "h-8 text-[13px]",
                 isActive
                   ? // La activa comparte fondo con el contenido y sólo redondea
                     // arriba: abajo se continúa en el panel.
@@ -210,19 +224,63 @@ function WorkspacePanel({
               {isActive && <ConcaveCorner side="left" />}
               {isActive && <ConcaveCorner side="right" />}
 
-              {Icon && (
-                <span
+              <button
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                onClick={() => select(tab.id)}
+                className={cn(
+                  "relative inline-flex h-full items-center bg-transparent",
+                  "cursor-pointer outline-none",
+                  "focus-visible:ring-1 focus-visible:ring-[color:var(--focus-ring,#6B97FF)]",
+                  compact ? "gap-1.5 pl-2.5" : "gap-2 pl-3",
+                  // Sin botón de cerrar, el padding derecho lo pone la propia
+                  // pestaña.
+                  closable ? "pr-1" : compact ? "pr-2.5" : "pr-3"
+                )}
+                style={{ borderRadius: TAB_RADIUS }}
+              >
+                {Icon && (
+                  <span
+                    className={cn(
+                      "relative flex items-center justify-center",
+                      "[&_svg]:stroke-[1.5] group-hover:[&_svg]:stroke-2 [&_svg]:transition-[stroke-width] [&_svg]:duration-80",
+                      compact ? "[&_svg]:h-3.5 [&_svg]:w-3.5" : "[&_svg]:h-4 [&_svg]:w-4"
+                    )}
+                  >
+                    <Icon />
+                  </span>
+                )}
+                <span className="relative whitespace-nowrap">{tab.label}</span>
+              </button>
+
+              {closable && (
+                // Siempre en el layout, invisible hasta el hover: si apareciera
+                // recién entonces, la pestaña cambiaría de ancho y la fila
+                // entera saltaría bajo el cursor.
+                <button
+                  type="button"
+                  aria-label={`Cerrar ${tab.label}`}
+                  onClick={() => onTabClose?.(tab.id)}
                   className={cn(
-                    "relative flex items-center justify-center",
-                    "[&_svg]:stroke-[1.5] group-hover:[&_svg]:stroke-2 [&_svg]:transition-[stroke-width] [&_svg]:duration-80",
-                    compact ? "[&_svg]:h-3.5 [&_svg]:w-3.5" : "[&_svg]:h-4 [&_svg]:w-4"
+                    "relative mr-1 inline-flex items-center justify-center",
+                    "cursor-pointer rounded-md outline-none",
+                    "opacity-0 transition-opacity duration-80 pointer-events-none",
+                    // El foco también lo revela: si no, con teclado se llega a
+                    // un botón que no se ve.
+                    "group-hover:pointer-events-auto group-hover:opacity-100",
+                    "focus-visible:pointer-events-auto focus-visible:opacity-100",
+                    "focus-visible:ring-1 focus-visible:ring-[color:var(--focus-ring,#6B97FF)]",
+                    "text-muted-foreground hover:bg-active hover:text-foreground",
+                    compact
+                      ? "h-4 w-4 [&_svg]:h-2.5 [&_svg]:w-2.5"
+                      : "h-5 w-5 [&_svg]:h-3 [&_svg]:w-3"
                   )}
                 >
-                  <Icon />
-                </span>
+                  <X />
+                </button>
               )}
-              <span className="relative whitespace-nowrap">{tab.label}</span>
-            </button>
+            </div>
           );
         })}
       </div>
