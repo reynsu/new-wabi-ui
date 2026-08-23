@@ -173,6 +173,22 @@ function WorkspacePanel({
   // Cerrar sólo tiene sentido si queda algo detrás.
   const closable = onTabClose != null && tabs.length > 1;
 
+  const closeTab = useCallback(
+    (id: string) => {
+      // Al cerrar la activa hay que pasarle el relevo a una vecina: la de la
+      // derecha, y si era la última la de la izquierda — la convención de
+      // navegadores y editores. Se elige antes de avisar al padre porque
+      // después la pestaña ya no está en `tabs` para saber quién la seguía.
+      if (id === activeTab?.id) {
+        const i = tabs.findIndex((t) => t.id === id);
+        const vecina = tabs[i + 1] ?? tabs[i - 1];
+        if (vecina) select(vecina.id);
+      }
+      onTabClose?.(id);
+    },
+    [activeTab?.id, tabs, select, onTabClose]
+  );
+
   return (
     <div
       className={cn(
@@ -261,7 +277,7 @@ function WorkspacePanel({
                 <button
                   type="button"
                   aria-label={`Cerrar ${tab.label}`}
-                  onClick={() => onTabClose?.(tab.id)}
+                  onClick={() => closeTab(tab.id)}
                   className={cn(
                     "relative mr-1 inline-flex items-center justify-center",
                     "cursor-pointer rounded-md outline-none",

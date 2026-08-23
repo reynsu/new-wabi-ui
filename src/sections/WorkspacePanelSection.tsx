@@ -59,7 +59,7 @@ export function WorkspacePanelSection() {
     <div className="flex flex-col gap-14">
       <Section
         title="Cerrar pestañas"
-        hint="Al pasar el cursor sobre una pestaña aparece su botón de cerrar — sólo si queda más de una, porque cerrar la última dejaría el panel vacío. El botón ocupa su sitio desde el principio, invisible: si apareciera recién al hover, la pestaña cambiaría de ancho y la fila saltaría bajo el cursor."
+        hint="Al pasar el cursor sobre una pestaña aparece su botón de cerrar — sólo si queda más de una, porque cerrar la última dejaría el panel vacío. Si cerrás la activa, el relevo lo toma su vecina: la de la derecha, o la de la izquierda si era la última. El botón ocupa su sitio desde el principio, invisible: si apareciera recién al hover, la pestaña cambiaría de ancho y la fila saltaría bajo el cursor."
       >
         <CerrablePanel />
       </Section>
