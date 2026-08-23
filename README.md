@@ -36,9 +36,9 @@ Queda en http://localhost:5173 con HMR.
 
 ### Sobre `npm run lint`
 
-Para que sirva de puerta de calidad, el `ignorePatterns` de `.oxlintrc.json`
-deja afuera los tres directorios que instala el registry: `components/ui/`,
-`lib/` y `hooks/`.
+Pasa limpio. Para que sirva de puerta de calidad, el `ignorePatterns` de
+`.oxlintrc.json` deja afuera los tres directorios que instala el registry:
+`components/ui/`, `lib/` y `hooks/`.
 
 No es esconder la basura debajo de la alfombra. Ahí adentro había **3 errores y
 169 warnings** — hooks llamados condicionalmente en `ask-user-questions.tsx`,
@@ -47,8 +47,10 @@ librería, no del proyecto. Como el registry copia el código fuente al repo, el
 linter lo trataba como nuestro; arreglarlo ahí sería trabajo que el próximo
 `shadcn add --overwrite` pisa.
 
-Quedan tres warnings en código propio — dos en `travel-tooltip.tsx`, uno en
-`workspace-context.tsx` — que hasta ahora estaban enterrados en el ruido.
+En código propio quedan tres avisos silenciados uno por uno, cada uno con el
+motivo escrito al lado: la composición de refs de `travel-tooltip.tsx` (dos) y
+el `useWorkspace` que viaja con su provider en `workspace-context.tsx`. Si
+aparece un aviso nuevo, es de verdad.
 
 ## Estructura
 

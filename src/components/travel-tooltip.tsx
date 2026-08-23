@@ -463,6 +463,9 @@ function TravelTooltipItem({
   // avisa por consola, así que se toma de props.
   const childRef = childProps.ref as React.Ref<HTMLElement> | undefined;
 
+  // El linter ve un ref manipulado en render; es la composición de refs de
+  // siempre, que sólo corre cuando React monta el nodo.
+  // oxlint-disable-next-line react/refs
   return cloneElement(child, {
     // Se compone con el ref que el consumidor ya hubiera puesto en su trigger,
     // en vez de pisarlo.
@@ -470,6 +473,9 @@ function TravelTooltipItem({
       nodeRef.current = node;
       if (typeof childRef === "function") childRef(node);
       else if (childRef && typeof childRef === "object") {
+        // Escribir el `.current` del ref ajeno es justamente reenviarlo, no
+        // mutar un prop.
+        // oxlint-disable-next-line react/immutability
         (childRef as { current: HTMLElement | null }).current = node;
       }
     },

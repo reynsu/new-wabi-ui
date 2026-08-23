@@ -150,5 +150,8 @@ function WorkspaceOutlet(props: WorkspaceOutletProps) {
   );
 }
 
+// `useWorkspace` vive al lado de su provider a propósito: separarlo sólo para
+// contentar al fast refresh partiría el módulo en dos por nada.
+// oxlint-disable-next-line react/only-export-components
 export { WorkspaceProvider, WorkspaceOutlet, useWorkspace };
 export type { WorkspaceContextValue, WorkspaceProviderProps, WorkspaceOutletProps };
