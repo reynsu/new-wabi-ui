@@ -99,7 +99,12 @@
     --color-destructive-light: var(--destructive-light);
 }
 
-:root {
+/* `.light` acompaña a `.dark` para poder anidar un tema: un subárbol marcado
+   vuelve a los valores claros aunque el <html> esté en oscuro. Comparte el
+   bloque con :root en vez de duplicar los tokens, así no se desincronizan.
+   Lo usa LoginBlock, que se pinta en su propio tema dentro del showcase. */
+:root,
+.light {
     --background: oklch(1 0 0);
     --foreground: oklch(0.145 0 0);
     --card: oklch(1 0 0);

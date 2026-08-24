@@ -6,7 +6,12 @@ import {
   Moon,
   Bell,
   LayoutPanelTop,
+  ListFilter,
+  LogIn,
   MousePointer2,
+  PanelTop,
+  IdCard,
+  Smartphone,
   PanelsTopLeft,
   Sliders,
   Sun,
@@ -34,7 +39,12 @@ import {
 import { Tooltip } from "@/components/ui/tooltip";
 import { AgentSection } from "@/sections/AgentSection";
 import { ControlsSection } from "@/sections/ControlsSection";
+import { FilterMenuSection } from "@/sections/FilterMenuSection";
 import { InputsSection } from "@/sections/InputsSection";
+import { InsetDialogSection } from "@/sections/InsetDialogSection";
+import { LoginBlockSection } from "@/sections/LoginBlockSection";
+import { MobileActionConfirmationSection } from "@/sections/MobileActionConfirmationSection";
+import { PeekCardSection } from "@/sections/PeekCardSection";
 import { SurfacesSection } from "@/sections/SurfacesSection";
 import { SystemSection } from "@/sections/SystemSection";
 import { TravelTooltipSection } from "@/sections/TravelTooltipSection";
@@ -60,9 +70,22 @@ const GROUPS = [
   {
     label: "Componentes propios",
     pages: [
+      { id: "filter-menu", label: "FilterMenu", icon: ListFilter, count: 4, render: () => <FilterMenuSection /> },
+      { id: "inset-dialog", label: "InsetDialog", icon: PanelTop, count: 2, render: () => <InsetDialogSection /> },
+      { id: "mobile-action-confirmation", label: "MobileActionConfirmation", icon: Smartphone, count: 3, render: () => <MobileActionConfirmationSection /> },
+      { id: "peek-card", label: "PeekCard", icon: IdCard, count: 4, render: () => <PeekCardSection /> },
       { id: "travel-tooltip", label: "TravelTooltip", icon: MousePointer2, count: 1, render: () => <TravelTooltipSection /> },
       { id: "window-controls", label: "WindowControls", icon: PanelsTopLeft, count: 1, render: () => <WindowControlsSection /> },
       { id: "workspace-panel", label: "WorkspacePanel", icon: LayoutPanelTop, count: 1, render: () => <WorkspacePanelSection /> },
+    ],
+  },
+  /* Un block no es un componente: no resuelve una pieza sino una pantalla
+     entera, armada con las piezas de los dos grupos de arriba. Por eso va en
+     su propio grupo y no al final de "Componentes propios". */
+  {
+    label: "Blocks Propios",
+    pages: [
+      { id: "login-block", label: "LoginBlock", icon: LogIn, count: 1, render: () => <LoginBlockSection /> },
     ],
   },
 ] as const;
@@ -119,7 +142,7 @@ export default function App() {
 
         <SidebarFooter>
           <p className="px-2 py-1 text-[12px] text-muted-foreground">
-            24 del registry + 3 propios + Sileo
+            24 del registry + 7 propios + 1 block + Sileo
           </p>
         </SidebarFooter>
       </Sidebar>
