@@ -18,12 +18,12 @@ function AtlasflowMark() {
   );
 }
 
-const WRONG_CREDENTIALS = "Email o contraseña inválidos";
+const WRONG_CREDENTIALS = "Invalid email or password";
 
 const COPY = {
-  title: "Bienvenido a Atlasflow",
+  title: "Welcome to Atlasflow",
   description:
-    "Atlasflow compila, despliega y corre tu aplicación sobre infraestructura que operamos nosotros, rápida y confiable desde tu primer usuario hasta el millón.",
+    "Atlasflow builds, deploys and runs your application on infrastructure we operate ourselves, fast and reliable from your first user to your millionth.",
 };
 
 export function LoginBlockSection() {
@@ -88,7 +88,7 @@ export function LoginBlockSection() {
     <div className="flex flex-col gap-14">
       <Section
         title="LoginBlock"
-        hint="Una pantalla de acceso entera: plano de marca a la izquierda, la única columna accionable a la derecha. Mide su contenedor con container queries, así que el marco de acá abajo y una pantalla completa son el mismo código."
+        hint="A whole sign-in screen: the brand plane on the left, the only actionable column on the right. It measures its container with container queries, so the frame below and a full screen are the same code."
       >
         <div className="flex flex-col gap-4">
           {/* El block está pensado para ocupar una pantalla; el marco le da una
@@ -98,12 +98,12 @@ export function LoginBlockSection() {
               {block}
             </div>
             <div className="absolute right-3 top-3">
-              <Tooltip content="Abrir en pantalla completa">
+              <Tooltip content="Open full screen">
                 <Button
                   ref={opener}
                   variant="secondary"
                   size="icon-compact"
-                  aria-label="Abrir en pantalla completa"
+                  aria-label="Open full screen"
                   onClick={() => setFullscreen(true)}
                 >
                   <Maximize2 />
@@ -114,7 +114,7 @@ export function LoginBlockSection() {
 
           <div className="flex flex-wrap items-center gap-3">
             <Button variant="tertiary" size="compact" onClick={attempt} disabled={pending}>
-              Simular intento fallido
+              Simulate a failed attempt
             </Button>
             <Button
               variant="ghost"
@@ -122,25 +122,25 @@ export function LoginBlockSection() {
               onClick={() => setError(null)}
               disabled={!error}
             >
-              Descartar el error
+              Dismiss the error
             </Button>
             <p className="text-[12px] text-muted-foreground">
-              El selector de tema del plano pinta sólo el block — probalo con la
-              app en el tema contrario.
+              The plane's theme selector paints the block only — try it with the
+              app in the opposite theme.
             </p>
           </div>
         </div>
       </Section>
 
       <Section
-        title="Angosto"
-        hint="Por debajo de los 672px de contenedor el plano de marca se retira y queda la columna de acceso sola. No es que se achique: en una columna de teléfono el plano competiría con el formulario."
+        title="Narrow"
+        hint="Below 672px of container the brand plane withdraws and the sign-in column is left on its own. It isn't that it shrinks: in a phone-width column the plane would compete with the form."
       >
         <div className="h-[560px] w-[360px] overflow-hidden rounded-xl bg-surface-1 shadow-surface-2">
           <LoginBlock
             logo={<AtlasflowMark />}
             title={COPY.title}
-            description="Atlasflow compila, despliega y corre tu aplicación."
+            description="Atlasflow builds, deploys and runs your application."
             defaultTheme="dark"
           />
         </div>
@@ -155,17 +155,17 @@ export function LoginBlockSection() {
         <div
           role="dialog"
           aria-modal="true"
-          aria-label="LoginBlock a pantalla completa"
+          aria-label="LoginBlock full screen"
           className="fixed inset-0 z-50 bg-surface-1"
         >
           {block}
           <div className="absolute right-4 top-4">
-            <Tooltip content="Cerrar — Esc">
+            <Tooltip content="Close — Esc">
               <Button
                 autoFocus
                 variant="secondary"
                 size="icon-compact"
-                aria-label="Cerrar la pantalla completa"
+                aria-label="Close full screen"
                 onClick={close}
               >
                 <X />

@@ -1,57 +1,58 @@
 "use client";
 
 /**
- * InsetDialog — el diálogo con el contenido embutido en su propia tarjeta.
+ * InsetDialog — the dialog with its content inset into a card of its own.
  *
- * El `Dialog` del registry apoya todo sobre un solo plano: cabecera, contenido
- * y pie comparten fondo, y lo que separa las tres zonas es el aire. Acá el
- * contenido se levanta en una tarjeta y lo que queda alrededor —cabecera y
- * pie— es el marco que la sostiene. Sirve cuando el contenido es una pieza en
- * sí misma (una lista larga, una tabla, un registro que corre, el paso de una
- * secuencia) y el marco es lo estable: título arriba, acciones abajo, y en el
- * medio algo que se mueve.
+ * The registry's `Dialog` rests everything on a single plane: header, content
+ * and footer share a background, and what separates the three zones is air.
+ * Here the content is lifted into a card and what's left around it —header and
+ * footer— is the frame that holds it. It's useful when the content is a piece
+ * in its own right (a long list, a table, a log that scrolls, one step of a
+ * sequence) and the frame is what's stable: title on top, actions at the
+ * bottom, and something moving in between.
  *
- * Es la base de diálogo de los componentes propios: `MobileActionConfirmation`
- * es un `InsetDialog` anclado al piso.
+ * It's the dialog base for the in-house components: `MobileActionConfirmation`
+ * is an `InsetDialog` anchored to the floor.
  *
- * Cinco decisiones que conviene no deshacer sin mirar el resto:
+ * Five decisions worth not undoing without looking at the rest:
  *
- * 1. **El diálogo no sube: baja su marco.** La tarjeta se queda en el escalón
- *    de siempre —sustrato + 4, el mismo que publica hacia adentro el diálogo
- *    del registry—, así que un popover abierto adentro sigue subiendo desde
- *    donde subía. Lo que se corre es la bandeja, cuatro escalones para abajo.
- *    Al revés —bandeja en su lugar y tarjeta más arriba— no se puede: en claro
- *    la escalera está aplanada en blanco desde el escalón 3, así que los dos
- *    planos quedarían del mismo color. Abajo es donde al tema claro todavía le
- *    queda recorrido: #FAFAFA contra #FFFFFF.
+ * 1. **The dialog doesn't climb: it lowers its frame.** The card stays on the
+ *    usual step —substrate + 4, the same one the registry's dialog publishes
+ *    inwards—, so a popover opened inside keeps rising from where it used to
+ *    rise. What moves is the tray, four steps down. The other way around —tray
+ *    in place and card higher— can't be done: in light the ladder is flattened
+ *    to white from step 3 up, so both planes would end up the same colour.
+ *    Downwards is where the light theme still has room to move: #FAFAFA against
+ *    #FFFFFF.
  *
- * 2. **La bandeja toma su fondo de un escalón y su sombra de otro.** El fondo
- *    baja al pie de la escalera pero la sombra pesa la de un diálogo, que es
- *    la que la despega del velo. Es la misma separación entre fondo y peso que
- *    usa el `FilterMenu` con `Elevated`.
+ * 2. **The tray takes its background from one step and its shadow from
+ *    another.** The background drops to the foot of the ladder but the shadow
+ *    weighs a dialog's, which is what lifts it off the veil. It's the same
+ *    split between background and weight that `FilterMenu` uses with
+ *    `Elevated`.
  *
- * 3. **La tarjeta lleva el anillo y no la sombra entera.** No flota: está
- *    embutida. En oscuro la despega el color —#333333 sobre #171717— y en
- *    claro, donde los dos son casi el mismo blanco, la línea la dibuja entera
- *    el anillo de `shadow-surface-2`. Sin él, #FFFFFF contra #FAFAFA se
- *    distingue apenas.
+ * 3. **The card carries the ring and not the whole shadow.** It doesn't float:
+ *    it's inset. In dark, colour lifts it —#333333 over #171717— and in light,
+ *    where both are almost the same white, the line is drawn entirely by
+ *    `shadow-surface-2`'s ring. Without it, #FFFFFF against #FAFAFA is barely
+ *    distinguishable.
  *
- * 4. **Dos anclas, dos escalones de motion.** Centrado es un diálogo y entra
- *    con `spring.slow`, el escalón de los diálogos. Anclado al piso es una
- *    hoja y va con `moderate`, que está críticamente amortiguado: una hoja
- *    pegada al borde que rebota se va abajo de la pantalla y vuelve. Es el
- *    mismo motivo por el que lo usa el `MobileDrawer`.
+ * 4. **Two anchors, two motion steps.** Centred it's a dialog and comes in with
+ *    `spring.slow`, the dialogs' step. Anchored to the floor it's a sheet and
+ *    goes with `moderate`, which is critically damped: a sheet stuck to the
+ *    edge that bounces goes off the bottom of the screen and comes back. It's
+ *    the same reason `MobileDrawer` uses it.
  *
- * 5. **La X se queda en `right-3 top-3`.** Es la esquina de todos los diálogos
- *    de la app; correrla al carril de la bandeja haría que este cierre en un
- *    lugar distinto que el resto. En vez de moverla, la cabecera le deja el
- *    carril libre y lo que va a la derecha del título arranca antes.
+ * 5. **The × stays at `right-3 top-3`.** It's the corner of every dialog in the
+ *    app; moving it to the tray's rail would put this close in a different
+ *    place from the rest. Instead of moving it, the header leaves the rail free
+ *    and whatever goes to the right of the title starts earlier.
  *
- * Del portal al popup es el mismo baile que hace el `DialogContent` del
- * registry —velo, `transitionStatus` para que la salida se vea entera,
- * escotilla `container`, anchos de la escalera—, con las dos cosas que el suyo
- * no expone y que esta base necesita: el ancla al piso y el clic afuera que no
- * cierra.
+ * From the portal to the popup it's the same dance the registry's
+ * `DialogContent` does —veil, `transitionStatus` so the exit is seen in full,
+ * the `container` escape hatch, the ladder's widths—, with the two things its
+ * own doesn't expose and this base needs: the anchor to the floor and the click
+ * outside that doesn't close.
  */
 
 import {
@@ -77,35 +78,46 @@ import { useShape } from "@/lib/shape-context";
 import { useSize } from "@/lib/size-context";
 import { spring } from "@/lib/springs";
 import { SURFACE_BG, SURFACE_SHADOW } from "@/lib/surface-classes";
-import { CARD_SHADOW, useInsetMetrics } from "@/lib/inset-metrics";
 import { SurfaceProvider, useSurface } from "@/lib/surface-context";
 import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
-// Medidas
+// Measurements
 // ---------------------------------------------------------------------------
 
-/** Escalones que baja la bandeja respecto de la tarjeta. Cuatro es lo que hace
- *  falta para que en claro caiga del blanco plano (escalón 3 para arriba) a la
- *  parte de la escalera donde todavía hay gris. */
+/** Steps the tray drops relative to the card. Four is what it takes for it to
+ *  fall, in light, from the flat white (step 3 and up) to the part of the
+ *  ladder where there's still some grey. */
 const TRAY_DROP = 4;
 
-/** El carril que la cabecera le deja a la X: los 12px del ancla, más su caja
- *  de 28px, más aire. */
+/** The card's shadow, fixed. It doesn't follow its step because it doesn't
+ *  float: all it needs is the ring that cuts it out against the tray. */
+const CARD_SHADOW = 2;
+
+/** The lane the header leaves for the ×: the anchor's 12px, plus its 28px box,
+ *  plus air. */
 const CLOSE_LANE = 48;
 
-/** Aire entre una bandeja anclada al piso y el borde de la pantalla. */
+/** Air between a floor-anchored tray and the edge of the screen. */
 const FLOOR_INSET = 16;
 
-/** Los anchos del diálogo del registry: la escalera lo angosta un escalón en
- *  regiones compactas — el ancho, no el relleno. */
+/** The registry dialog's widths: the ladder narrows it by one step in compact
+ *  regions — the width, not the padding. */
 const MAX_WIDTH = {
   sm: { default: 400, compact: 360 },
   lg: { default: 540, compact: 480 },
 } as const;
 
-/** Props que framer redefine con otra firma: no pueden viajar desde el payload
- *  de Base UI hasta un `motion.div`. */
+/** The tray's air around the card, and the extra inset the header and footer
+ *  take so the title doesn't start flush against the edge. */
+function useInsetMetrics() {
+  const compact = useSize().variant === "compact";
+  const pad = compact ? 12 : 16;
+  return { pad, rail: pad / 2, compact };
+}
+
+/** Props framer redefines with a different signature: they can't travel from
+ *  Base UI's payload into a `motion.div`. */
 type MotionSafeDivProps = Omit<
   HTMLAttributes<HTMLDivElement>,
   | "onDrag"
@@ -117,22 +129,22 @@ type MotionSafeDivProps = Omit<
 >;
 
 // ---------------------------------------------------------------------------
-// Raíz
+// Root
 // ---------------------------------------------------------------------------
 
 interface InsetDialogProps {
   open?: boolean;
   defaultOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
-  /** Atrapa el foco y bloquea el scroll de atrás. Apagalo para mostrarlo
-   *  dentro de un marco, junto con `container` en el content. */
+  /** Traps focus and blocks the scroll behind it. Switch it off to show the
+   *  dialog inside a frame, together with `container` on the content. */
   modal?: boolean;
-  /** El clic afuera no cierra. Un diálogo así suele ser una superficie de
-   *  trabajo —una lista larga, un registro que corre— o una pregunta que hay
-   *  que contestar, y no algo que se descarta al pasar: perderlo por un clic
-   *  al costado es perder el lugar donde se estaba. El `Dialog` del registry
-   *  no expone esta perilla de Base UI, y es una de las dos razones por las
-   *  que esta base va sobre la primitiva y no sobre la suya. */
+  /** Clicking outside doesn't close. A dialog like this is usually a working
+   *  surface —a long list, a log that scrolls— or a question that has to be
+   *  answered, and not something you dismiss in passing: losing it to a click
+   *  off to the side is losing the place you were in. The registry's `Dialog`
+   *  doesn't expose this Base UI knob, and it's one of the two reasons this
+   *  base sits on the primitive and not on theirs. */
   disablePointerDismissal?: boolean;
   children?: ReactNode;
 }
@@ -164,25 +176,25 @@ const InsetDialogTitle = DialogTitle;
 const InsetDialogDescription = DialogDescription;
 
 // ---------------------------------------------------------------------------
-// La bandeja
+// The tray
 // ---------------------------------------------------------------------------
 
 interface InsetDialogContentProps extends HTMLAttributes<HTMLDivElement> {
   size?: "sm" | "lg";
-  /** Dónde se para la bandeja. Centrado es un diálogo; al piso es una hoja, y
-   *  ahí el aire de abajo respeta la barra de gestos del teléfono. */
+  /** Where the tray stands. Centred it's a dialog; on the floor it's a sheet,
+   *  and there the air below respects the phone's gesture bar. */
   placement?: "center" | "bottom";
-  /** La X de cierre. Por default sí cuando está centrado y no cuando va al
-   *  piso: una hoja anclada suele traer sus dos salidas en el pie, y una X
-   *  arriba sería una tercera. */
+  /** The close ×. On by default when centred and off when it goes to the
+   *  floor: an anchored sheet usually carries its two exits in the footer, and
+   *  an × on top would be a third. */
   showClose?: boolean;
-  /** Marco al que se portalea, para mostrarlo dentro de una región acotada.
-   *  Va con `<InsetDialog modal={false}>`; el marco tiene que ser `relative` y
+  /** The frame it's portalled into, to show it inside a bounded region. It goes
+   *  with `<InsetDialog modal={false}>`; the frame has to be `relative` and
    *  `overflow: hidden`. */
   container?: HTMLElement | null;
-  /** Qué recibe el foco al abrir. Sin esto, el primer tabulable. */
+  /** What takes focus on open. Without this, the first tabbable. */
   initialFocus?: boolean | RefObject<HTMLElement | null>;
-  /** Adónde vuelve el foco al cerrar. */
+  /** Where focus returns on close. */
   finalFocus?: boolean | RefObject<HTMLElement | null>;
 }
 
@@ -205,9 +217,9 @@ const InsetDialogContent = forwardRef<HTMLDivElement, InsetDialogContentProps>(
     const XIcon = useIcon("x");
     const shape = useShape();
     const compact = useSize().variant === "compact";
-    // El sustrato de acá afuera: la tarjeta sube los 4 de siempre y la bandeja
-    // sale del mismo número, así las dos se mueven juntas si el diálogo se
-    // abre sobre un sustrato más alto.
+    // The substrate out here: the card climbs the usual 4 and the tray comes
+    // from the same number, so both move together if the dialog opens over a
+    // higher substrate.
     const substrate = useSurface();
     const card = Math.min(substrate + 4, 8);
     const tray = Math.max(card - TRAY_DROP, 1);
@@ -216,9 +228,9 @@ const InsetDialogContent = forwardRef<HTMLDivElement, InsetDialogContentProps>(
     const withClose = showClose ?? !floor;
     const tier = floor ? spring.moderate : spring.slow;
 
-    // Sin `if (!open) return null`: `DialogPrimitive.Popup` se desmonta solo y
-    // espera a que la animación de salida termine —la ve por
-    // `element.getAnimations()`— antes de sacarse del DOM.
+    // No `if (!open) return null`: `DialogPrimitive.Popup` unmounts on its own
+    // and waits for the exit animation to finish —it sees it through
+    // `element.getAnimations()`— before taking itself out of the DOM.
     const popup = (
       <DialogPrimitive.Popup
         ref={ref}
@@ -230,9 +242,9 @@ const InsetDialogContent = forwardRef<HTMLDivElement, InsetDialogContentProps>(
             popupProps as HTMLAttributes<HTMLDivElement>;
           return (
             <motion.div
-              // Primero lo de Base UI (rol, refs, data attrs)…
+              // Base UI's first (role, refs, data attrs)…
               {...(rest as MotionSafeDivProps)}
-              // …y después lo del consumidor, que aterriza en la bandeja.
+              // …and the consumer's after, which lands on the tray.
               {...(props as MotionSafeDivProps)}
               className={cn(
                 floor
@@ -241,8 +253,9 @@ const InsetDialogContent = forwardRef<HTMLDivElement, InsetDialogContentProps>(
                       container ? "absolute" : "fixed",
                       "left-1/2 top-1/2 z-50 w-[calc(100%-2rem)]"
                     ),
-                // `p-0` y `flex-col`: acá el relleno no es del diálogo sino de
-                // cada zona, y la tarjeta llega hasta el canto menos su aire.
+                // `p-0` and `flex-col`: here the padding doesn't belong to the
+                // dialog but to each zone, and the card reaches the edge minus
+                // its air.
                 "flex max-h-[85%] flex-col overflow-hidden p-0 focus:outline-none",
                 SURFACE_BG[tray],
                 SURFACE_SHADOW[card],
@@ -271,10 +284,10 @@ const InsetDialogContent = forwardRef<HTMLDivElement, InsetDialogContentProps>(
               }
               transition={exiting ? tier.exit : tier}
             >
-              {/* Lo que se publica hacia adentro es el nivel de la tarjeta y no
-                  el de la bandeja: el que se movió fue el marco, y un popover
-                  abierto acá adentro tiene que seguir subiendo desde donde
-                  subía en cualquier otro diálogo. */}
+              {/* What gets published inwards is the card's level and not the
+                  tray's: the one that moved was the frame, and a popover opened
+                  in here has to keep rising from where it rose in any other
+                  dialog. */}
               <SurfaceProvider value={card}>
                 {children}
                 {withClose && (
@@ -286,7 +299,7 @@ const InsetDialogContent = forwardRef<HTMLDivElement, InsetDialogContentProps>(
                         className="absolute right-3 top-3"
                       >
                         <XIcon />
-                        <span className="sr-only">Cerrar</span>
+                        <span className="sr-only">Close</span>
                       </Button>
                     }
                   />
@@ -300,9 +313,9 @@ const InsetDialogContent = forwardRef<HTMLDivElement, InsetDialogContentProps>(
 
     return (
       <DialogPrimitive.Portal container={container ?? undefined}>
-        {/* El mismo velo que los diálogos de la librería: un negro al 40% que
-            sigue visible para quien tiene el sistema en oscuro —la variante
-            `dark:` sólo matchea la clase explícita— y sube al 80% en oscuro. */}
+        {/* The same veil as the library's dialogs: a black at 40% that stays
+            visible for anyone whose system is in dark —the `dark:` variant only
+            matches the explicit class— and goes up to 80% in dark. */}
         <DialogPrimitive.Backdrop
           render={(backdropProps, state) => {
             const exiting = state.transitionStatus === "ending";
@@ -324,9 +337,9 @@ const InsetDialogContent = forwardRef<HTMLDivElement, InsetDialogContentProps>(
         />
 
         {floor ? (
-          // La capa que ubica la hoja contra el piso. No recibe el puntero: lo
-          // único tocable de acá arriba es la hoja, y el velo de abajo tiene
-          // que seguir recibiendo el clic que Base UI escucha.
+          // The layer that places the sheet against the floor. It takes no
+          // pointer: the only touchable thing up here is the sheet, and the veil
+          // below has to keep receiving the click Base UI listens for.
           <div
             className={cn(
               container ? "absolute" : "fixed",
@@ -334,9 +347,9 @@ const InsetDialogContent = forwardRef<HTMLDivElement, InsetDialogContentProps>(
             )}
             style={{
               padding: FLOOR_INSET,
-              // El piso de un teléfono no es el borde de la pantalla: abajo
-              // está la barra de gestos. `max()` deja el aire normal donde no
-              // hay barra y lo corre hacia arriba donde sí.
+              // A phone's floor isn't the edge of the screen: the gesture bar
+              // is down there. `max()` leaves the normal air where there's no
+              // bar and pushes it up where there is.
               paddingBottom: `max(${FLOOR_INSET}px, env(safe-area-inset-bottom))`,
             }}
           >
@@ -352,17 +365,17 @@ const InsetDialogContent = forwardRef<HTMLDivElement, InsetDialogContentProps>(
 InsetDialogContent.displayName = "InsetDialogContent";
 
 // ---------------------------------------------------------------------------
-// Las tres zonas
+// The three zones
 // ---------------------------------------------------------------------------
 
 interface InsetDialogHeaderProps extends HTMLAttributes<HTMLDivElement> {
-  /** Deja libre el carril de la X. Apagalo cuando el content va con
-   *  `showClose={false}`, así el título vuelve a usar todo el ancho. */
+  /** Keeps the ×'s lane free. Switch it off when the content goes with
+   *  `showClose={false}`, so the title uses the full width again. */
   withClose?: boolean;
 }
 
-/** La zona de arriba, sobre la bandeja: título, y a la derecha lo que sea que
- *  acompañe —un contador, un estado, un identificador—. */
+/** The top zone, on the tray: the title, and to the right whatever comes with
+ *  it —a counter, a status, an identifier—. */
 function InsetDialogHeader({
   className,
   style,
@@ -385,9 +398,9 @@ function InsetDialogHeader({
   );
 }
 
-/** La zona de abajo, sobre la bandeja: el estado a la izquierda y las acciones
- *  a la derecha. Es el mismo plano que la cabecera, y por eso las dos se leen
- *  como el marco de una sola pieza. */
+/** The bottom zone, on the tray: status on the left and actions on the right.
+ *  It's the same plane as the header, which is why the two read as the frame of
+ *  a single piece. */
 function InsetDialogFooter({
   className,
   style,
@@ -409,23 +422,23 @@ function InsetDialogFooter({
 }
 
 interface InsetDialogBodyProps extends HTMLAttributes<HTMLDivElement> {
-  /** El contenido scrollea adentro de la tarjeta. Apagalo cuando lo de adentro
-   *  ya maneje su propio scroll o cuando no haya nada que scrollear. */
+  /** The content scrolls inside the card. Switch it off when what's inside
+   *  already handles its own scroll or when there's nothing to scroll. */
   scrollable?: boolean;
-  /** Clases del viewport que scrollea — ahí va el relleno del contenido, no en
-   *  la tarjeta: si el relleno estuviera afuera, el texto se cortaría contra el
-   *  canto al scrollear en vez de disolverse abajo del `scroll-fade`. */
+  /** Classes for the scrolling viewport — that's where the content's padding
+   *  goes, not on the card: with the padding outside, the text would cut against
+   *  the edge while scrolling instead of dissolving under the `scroll-fade`. */
   viewportClassName?: string;
 }
 
-/** La tarjeta: el contenido levantado sobre la bandeja. */
+/** The card: the content lifted onto the tray. */
 const InsetDialogBody = forwardRef<HTMLDivElement, InsetDialogBodyProps>(
   (
     { className, viewportClassName, scrollable = true, children, style, ...props },
     ref
   ) => {
-    // El nivel que publicó la bandeja: el de siempre para un diálogo. La
-    // tarjeta se queda ahí y no vuelve a subir — el que se movió fue el marco.
+    // The level the tray published: the usual one for a dialog. The card stays
+    // there and doesn't climb again — the one that moved was the frame.
     const level = useSurface();
     const shape = useShape();
     const { pad } = useInsetMetrics();
@@ -459,9 +472,9 @@ const InsetDialogBody = forwardRef<HTMLDivElement, InsetDialogBodyProps>(
 );
 InsetDialogBody.displayName = "InsetDialogBody";
 
-/** Un bloque de la tarjeta, con su rótulo y lo suyo a la derecha. El divisor
- *  es punteado y no lleno: adentro de la tarjeta separa zonas de la misma
- *  pieza, mientras que una línea llena leería como dos planos. */
+/** A block of the card, with its label and its own thing on the right. The
+ *  divider is dashed and not solid: inside the card it separates zones of the
+ *  same piece, whereas a solid line would read as two planes. */
 function InsetDialogGroup({
   label,
   aside,

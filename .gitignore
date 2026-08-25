@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Salida de `shadcn build` — se regenera desde registry.json
+public/r

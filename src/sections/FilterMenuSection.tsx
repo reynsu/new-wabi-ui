@@ -58,18 +58,18 @@ const dot =
   );
 
 const STATUS: FilterOption[] = [
-  { value: "nuevo", label: "Nuevo", icon: dot("#8b8b8b") },
-  { value: "conversando", label: "En conversación", icon: dot("#6b97ff") },
-  { value: "propuesta", label: "Propuesta enviada", icon: dot("#f59e0b") },
-  { value: "cliente", label: "Cliente", icon: dot("#22c55e") },
-  { value: "perdido", label: "Perdido", icon: dot("#f43f5e") },
+  { value: "nuevo", label: "New", icon: dot("#8b8b8b") },
+  { value: "conversando", label: "In conversation", icon: dot("#6b97ff") },
+  { value: "propuesta", label: "Proposal sent", icon: dot("#f59e0b") },
+  { value: "cliente", label: "Customer", icon: dot("#22c55e") },
+  { value: "perdido", label: "Lost", icon: dot("#f43f5e") },
 ];
 
 const ROLES: FilterOption[] = [
-  { value: "diseno", label: "Diseño" },
-  { value: "ingenieria", label: "Ingeniería" },
-  { value: "producto", label: "Producto" },
-  { value: "ventas", label: "Ventas" },
+  { value: "diseno", label: "Design" },
+  { value: "ingenieria", label: "Engineering" },
+  { value: "producto", label: "Product" },
+  { value: "ventas", label: "Sales" },
   { value: "data", label: "Data" },
 ];
 
@@ -88,31 +88,31 @@ const OWNERS: FilterOption[] = [
 ];
 
 const TAGS: FilterOption[] = [
-  { value: "referido", label: "Referido" },
-  { value: "evento", label: "Evento" },
+  { value: "referido", label: "Referral" },
+  { value: "evento", label: "Event" },
   { value: "inbound", label: "Inbound" },
 ];
 
 const GROUPS: FilterGroup[] = [
   {
-    label: "Atributos de la persona",
+    label: "Person attributes",
     attributes: [
-      { id: "name", label: "Nombre", icon: Contact, type: "text" },
-      { id: "email", label: "Correos", icon: AtSign, type: "text" },
-      { id: "status", label: "Estado", icon: Loader, options: STATUS },
-      { id: "note", label: "Descripción", icon: AlignLeft, type: "text" },
-      { id: "company", label: "Empresa", icon: Building2, options: COMPANIES },
-      { id: "role", label: "Puesto", icon: BriefcaseBusiness, options: ROLES },
-      { id: "phone", label: "Teléfonos", icon: Phone, type: "text" },
+      { id: "name", label: "Name", icon: Contact, type: "text" },
+      { id: "email", label: "Emails", icon: AtSign, type: "text" },
+      { id: "status", label: "Status", icon: Loader, options: STATUS },
+      { id: "note", label: "Description", icon: AlignLeft, type: "text" },
+      { id: "company", label: "Company", icon: Building2, options: COMPANIES },
+      { id: "role", label: "Role", icon: BriefcaseBusiness, options: ROLES },
+      { id: "phone", label: "Phone numbers", icon: Phone, type: "text" },
     ],
   },
   {
-    label: "Del registro",
+    label: "Of the record",
     attributes: [
       // `single`: un registro tiene un responsable, no varios. Elegir uno
       // reemplaza al anterior y el panel vuelve solo al primer nivel.
-      { id: "owner", label: "Responsable", icon: UserRound, options: OWNERS, single: true },
-      { id: "tags", label: "Etiquetas", icon: Tag, options: TAGS },
+      { id: "owner", label: "Owner", icon: UserRound, options: OWNERS, single: true },
+      { id: "tags", label: "Tags", icon: Tag, options: TAGS },
     ],
   },
 ];
@@ -131,16 +131,16 @@ interface Person {
 }
 
 const PEOPLE: Person[] = [
-  { id: "1", name: "Camila Ferreyra", email: "camila@atlasflow.io", phone: "+54 11 5544 1020", note: "Llegó por el newsletter", company: "atlasflow", role: "diseno", status: "cliente", owner: "rey", tags: ["inbound"] },
-  { id: "2", name: "Bruno Salas", email: "bruno@atlasflow.io", phone: "+54 11 5544 8871", note: "Pidió una demo del panel", company: "atlasflow", role: "ingenieria", status: "conversando", owner: "ana", tags: ["evento"] },
-  { id: "3", name: "Lucía Otero", email: "lucia@nubex.com", phone: "+34 611 220 934", note: "Nos presentó Marta", company: "nubex", role: "producto", status: "propuesta", owner: "rey", tags: ["referido"] },
-  { id: "4", name: "Martín Quiroga", email: "martin@corriente.ar", phone: "+54 341 220 118", note: "Evalúa migrar el año que viene", company: "corriente", role: "ingenieria", status: "nuevo", owner: "tomas", tags: [] },
-  { id: "5", name: "Sofía Bermúdez", email: "sofia@corriente.ar", phone: "+54 341 220 119", note: "Firmó en marzo", company: "corriente", role: "ventas", status: "cliente", owner: "ana", tags: ["referido"] },
-  { id: "6", name: "Iván Palacios", email: "ivan@marmota.dev", phone: "+56 9 8877 1122", note: "Se cayó por precio", company: "marmota", role: "data", status: "perdido", owner: "tomas", tags: ["evento"] },
-  { id: "7", name: "Renata Bianchi", email: "renata@atlasflow.io", phone: "+54 11 5544 3390", note: "Contacto técnico de la cuenta", company: "atlasflow", role: "data", status: "cliente", owner: "rey", tags: [] },
-  { id: "8", name: "Diego Miralles", email: "diego@nubex.com", phone: "+34 611 771 004", note: "Pidió el contrato marco", company: "nubex", role: "ventas", status: "propuesta", owner: "ana", tags: ["inbound"] },
-  { id: "9", name: "Paula Genovese", email: "paula@peral.app", phone: "+54 11 6600 2233", note: "Nos escribió por LinkedIn", company: "peral", role: "producto", status: "conversando", owner: "rey", tags: ["inbound"] },
-  { id: "10", name: "Andrés Lupo", email: "andres@atlasflow.io", phone: "+54 11 5544 7712", note: "Va a probar el plan libre", company: "atlasflow", role: "diseno", status: "nuevo", owner: "tomas", tags: [] },
+  { id: "1", name: "Camila Ferreyra", email: "camila@atlasflow.io", phone: "+54 11 5544 1020", note: "Came in through the newsletter", company: "atlasflow", role: "diseno", status: "cliente", owner: "rey", tags: ["inbound"] },
+  { id: "2", name: "Bruno Salas", email: "bruno@atlasflow.io", phone: "+54 11 5544 8871", note: "Asked for a demo of the panel", company: "atlasflow", role: "ingenieria", status: "conversando", owner: "ana", tags: ["evento"] },
+  { id: "3", name: "Lucía Otero", email: "lucia@nubex.com", phone: "+34 611 220 934", note: "Introduced to us by Marta", company: "nubex", role: "producto", status: "propuesta", owner: "rey", tags: ["referido"] },
+  { id: "4", name: "Martín Quiroga", email: "martin@corriente.ar", phone: "+54 341 220 118", note: "Weighing a migration next year", company: "corriente", role: "ingenieria", status: "nuevo", owner: "tomas", tags: [] },
+  { id: "5", name: "Sofía Bermúdez", email: "sofia@corriente.ar", phone: "+54 341 220 119", note: "Signed in March", company: "corriente", role: "ventas", status: "cliente", owner: "ana", tags: ["referido"] },
+  { id: "6", name: "Iván Palacios", email: "ivan@marmota.dev", phone: "+56 9 8877 1122", note: "Fell through on price", company: "marmota", role: "data", status: "perdido", owner: "tomas", tags: ["evento"] },
+  { id: "7", name: "Renata Bianchi", email: "renata@atlasflow.io", phone: "+54 11 5544 3390", note: "Technical contact for the account", company: "atlasflow", role: "data", status: "cliente", owner: "rey", tags: [] },
+  { id: "8", name: "Diego Miralles", email: "diego@nubex.com", phone: "+34 611 771 004", note: "Asked for the master agreement", company: "nubex", role: "ventas", status: "propuesta", owner: "ana", tags: ["inbound"] },
+  { id: "9", name: "Paula Genovese", email: "paula@peral.app", phone: "+54 11 6600 2233", note: "Wrote to us on LinkedIn", company: "peral", role: "producto", status: "conversando", owner: "rey", tags: ["inbound"] },
+  { id: "10", name: "Andrés Lupo", email: "andres@atlasflow.io", phone: "+54 11 5544 7712", note: "Going to try the free plan", company: "atlasflow", role: "diseno", status: "nuevo", owner: "tomas", tags: [] },
 ];
 
 /** Los atributos de texto libre miran un campo; los de lista, otro. Este mapa
@@ -216,7 +216,7 @@ function Chips({
           <span className="text-foreground">{chip.labels.value}</span>
           <button
             type="button"
-            aria-label={`Quitar ${chip.labels.attribute}: ${chip.labels.value}`}
+            aria-label={`Remove ${chip.labels.attribute}: ${chip.labels.value}`}
             onClick={() => {
               const rest = selection[chip.id].filter((v) => v !== chip.value);
               const next = { ...selection };
@@ -252,8 +252,8 @@ export function FilterMenuSection() {
   return (
     <div className="flex flex-col gap-14">
       <Section
-        title="El gesto"
-        hint="Abrí el panel y elegí un atributo: la lista se corre a sus valores sin cambiar de panel ni de ancla. Marcar un valor no cierra nada — se marcan varios de una — y la tabla de abajo se recalcula en el momento."
+        title="The gesture"
+        hint="Open the panel and pick an attribute: the list slides across to its values without changing panel or anchor. Ticking a value closes nothing — you tick several at a time — and the table below recomputes right away."
       >
         <div className="flex flex-col gap-4">
           <div className="flex flex-wrap items-center gap-2">
@@ -269,10 +269,10 @@ export function FilterMenuSection() {
             <Table size="compact">
               <TableHeader>
                 <TableRow>
-                  <TableHead>Nombre</TableHead>
-                  <TableHead>Empresa</TableHead>
-                  <TableHead>Puesto</TableHead>
-                  <TableHead>Estado</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Company</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -302,34 +302,34 @@ export function FilterMenuSection() {
             </Table>
             {!results.length && (
               <p className="px-3 py-6 text-center text-[13px] text-muted-foreground">
-                Ninguna persona pasa esos filtros
+                Nobody passes those filters
               </p>
             )}
           </div>
 
           <p className="text-[13px] text-muted-foreground">
-            {results.length} de {PEOPLE.length} personas. Entre atributos manda
-            la Y; entre los valores de un mismo atributo, la O.
+            {results.length} of {PEOPLE.length} people. Between attributes AND
+            rules; between the values of one attribute, OR.
           </p>
         </div>
       </Section>
 
       <Section
-        title="Atributos sin lista"
-        hint="Nombre, Correos, Descripción y Teléfonos son de texto libre: adentro de esos, el mismo buscador pasa a ser el campo del valor y Enter agrega lo escrito como término. Las filas de abajo son los términos puestos, y activarlas los saca."
+        title="Attributes with no list"
+        hint="Name, Emails, Description and Phone numbers are free text: inside those, the same search box becomes the value field and Enter adds what's typed as a term. The rows below are the terms already set, and activating them removes them."
       >
         <div className="flex">
           <FilterMenu
             groups={[GROUPS[0]]}
-            label="Buscar en el texto"
+            label="Search the text"
             defaultValue={{ note: ["demo"] }}
           />
         </div>
       </Section>
 
       <Section
-        title="Compacto"
-        hint="Dentro de un SizeProvider compacto bajan el botón, el buscador y las filas: 28px, texto de 12 e íconos de 14. El ancho del panel no cambia — lo fija el largo de las etiquetas, no la densidad."
+        title="Compact"
+        hint="Inside a compact SizeProvider the button, the search box and the rows step down: 28px, 12px text and 14px icons. The panel's width doesn't change — it's set by the length of the labels, not by the density."
       >
         <SizeProvider size="compact">
           <div className="flex flex-wrap items-center gap-2">
@@ -344,8 +344,8 @@ export function FilterMenuSection() {
       </Section>
 
       <Section
-        title="Contra el borde"
-        hint="Alineado al final del botón (align=&quot;end&quot;) y pegado a la derecha, que es donde suele vivir un filtro en una barra de tabla. El panel abre hacia adentro y Base UI lo da vuelta solo si no entra."
+        title="Against the edge"
+        hint="Aligned to the button's end (align=&quot;end&quot;) and pushed right, which is where a filter usually lives in a table bar. The panel opens inwards and Base UI flips it on its own if it doesn't fit."
       >
         <div className="flex justify-end">
           <FilterMenu groups={GROUPS} align="end" />

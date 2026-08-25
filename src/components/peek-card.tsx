@@ -1,48 +1,46 @@
 "use client";
 
 /**
- * PeekCard — una tarjeta con pestañas anclada a lo que la abre.
+ * PeekCard — a card with tabs anchored to whatever opens it.
  *
- * Es el escalón que falta entre el tooltip y el diálogo: más de lo que entra
- * en una píldora de una línea, menos de lo que justifica tapar la pantalla.
- * Un nombre, un ícono, un riel de `Tabs` y el cuerpo de la pestaña
- * elegida, todo pegado al elemento que lo disparó para que se lea como una
- * ampliación de ese elemento y no como una ventana nueva.
+ * It's the missing step between the tooltip and the dialog: more than fits in a
+ * one-line pill, less than justifies covering the screen. A name, an icon, a
+ * `Tabs` rail and the body of the chosen tab, all stuck to the element that
+ * fired it so it reads as an expansion of that element and not as a new window.
  *
- * Cinco decisiones que conviene no deshacer sin mirar el resto:
+ * Five decisions worth not undoing without looking at the rest:
  *
- * 1. **Un solo componente para los dos gestos.** `openOn="click"` y
- *    `openOn="hover"` son la misma tarjeta con la misma anatomía; lo único que
- *    cambia es qué la abre. Son dos componentes distintos en casi todas las
- *    librerías —popover y hover-card— y esa división obliga a mantener dos
- *    veces la misma anatomía para terminar eligiendo por el gesto, que es lo
- *    de afuera. Acá el gesto es una prop.
+ * 1. **One component for both gestures.** `openOn="click"` and
+ *    `openOn="hover"` are the same card with the same anatomy; the only thing
+ *    that changes is what opens it. They're two separate components in almost
+ *    every library —popover and hover-card— and that split forces you to
+ *    maintain the same anatomy twice only to end up choosing by the gesture,
+ *    which is the outermost thing. Here the gesture is a prop.
  *
- * 2. **El hover no se lleva el foco.** Una tarjeta que aparece porque el
- *    puntero pasó por encima no pidió el foco: moverlo ahí saca al teclado del
- *    lugar donde estaba y hace saltar el scroll. Con `openOn="hover"` el foco
- *    entra sólo cuando la abrió el teclado. Con `openOn="click"` sí entra: ahí
- *    hubo una intención explícita.
+ * 2. **Hover doesn't take focus.** A card that appears because the pointer
+ *    passed over it didn't ask for focus: moving it there takes the keyboard
+ *    away from where it was and makes the scroll jump. With `openOn="hover"`
+ *    focus only goes in when the keyboard opened it. With `openOn="click"` it
+ *    does: there was an explicit intent there.
  *
- * 3. **El contenido va embutido, igual que en `InsetDialog`.** El marco
- *    —título y pestañas arriba, pie abajo— es lo estable; el cuerpo de la
- *    pestaña se levanta en su propia tarjeta adentro de la bandeja. Es el
- *    mismo reparto que hace el diálogo propio, y acá cae solo: al cambiar de
- *    pestaña se mueve una sola cosa y todo lo que la rodea se queda quieto. El
- *    aire sale de `useInsetMetrics`, el mismo del diálogo, así las dos piezas
- *    se leen como una familia y no como dos que se parecen.
+ * 3. **It's a plain `Card`, not `InsetDialog`'s inset.** A single plane, and
+ *    what separates the title from the body and the body from the footer is
+ *    air. The registry's card is transparent and frameless on purpose —it
+ *    inherits the substrate from whatever contains it—, so here it supplies the
+ *    spacing and the padding, and the popup supplies the surface. The only
+ *    thing that steps off the plane is the tab rail, which needs to read the
+ *    step below so its active segment doesn't get lost in dark (see the comment
+ *    on the rail).
  *
- * 4. **La bandeja baja; la tarjeta se queda.** También como en `InsetDialog`:
- *    lo que se publica hacia adentro es el escalón que un popover publica
- *    siempre —sustrato + 2—, así un menú abierto acá adentro sigue subiendo
- *    desde donde subía, y el que se corre para abajo es el marco. La sombra de
- *    la bandeja queda fija en la de un popup y la de la tarjeta en la de un
- *    embutido —el anillo y una línea—: no flota, está metida adentro.
+ * 4. **It climbs any popup's two steps.** `Elevated` applies them and publishes
+ *    that level inwards, so a menu opened in here keeps rising from where it
+ *    used to rise. The shadow stays fixed at a popup's: a card weighs the same
+ *    open over the page as it does inside a dialog.
  *
- * 5. **No es modal.** La página sigue scrolleando y el positioner de Base UI
- *    sigue al ancla, así que la tarjeta viaja con su trigger en vez de quedarse
- *    flotando donde estaba. Es lo que separa una ampliación de un diálogo: si
- *    hay que bloquear la página detrás, lo que hacía falta era un `Dialog`.
+ * 5. **It isn't modal.** The page keeps scrolling and Base UI's positioner
+ *    follows the anchor, so the card travels with its trigger instead of
+ *    floating where it was. That's what separates an expansion from a dialog:
+ *    if the page behind has to be blocked, what was needed was a `Dialog`.
  */
 
 import {
@@ -59,10 +57,18 @@ import {
 import { Popover } from "@base-ui/react/popover";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { TabItem, Tabs, TabsList } from "@/components/ui/tabs";
 import { useMeasuredHeight } from "@/hooks/use-measured-height";
+import { Elevated } from "@/lib/elevated";
 import type { IconComponent } from "@/lib/icon-context";
-import { CARD_SHADOW, useInsetMetrics } from "@/lib/inset-metrics";
 import { useShape } from "@/lib/shape-context";
 import {
   SizeProvider,
@@ -71,95 +77,94 @@ import {
   type SizeVariant,
 } from "@/lib/size-context";
 import { spring, exitFallbackMs } from "@/lib/springs";
-import { SURFACE_BG, SURFACE_SHADOW } from "@/lib/surface-classes";
 import { SurfaceProvider, useSurface } from "@/lib/surface-context";
 import { cn } from "@/lib/utils";
 
 type PositionerProps = ComponentProps<typeof Popover.Positioner>;
 
-/** Escalones que sube la tarjeta sobre el sustrato: los dos de cualquier popup
- *  del sistema. La bandeja baja esos mismos dos y cae en el sustrato, igual que
- *  la de un `InsetDialog` abierto sobre la página cae en el escalón 1. */
-const CARD_RISE = 2;
+/** Steps the popup climbs over its substrate: the two of any popup in the
+ *  system. It's also the level it publishes inwards. */
+const POPUP_RISE = 2;
 
-/** La sombra de la bandeja, fija en la de un popup. No sigue a su escalón por
- *  el mismo motivo que la del `Dropdown`: una tarjeta pesa lo mismo abierta
- *  sobre la página que adentro de un diálogo, aunque su fondo siga al sustrato. */
-const TRAY_SHADOW = 3;
+/** The popup's shadow, fixed. It doesn't follow its step for the same reason
+ *  `Dropdown`'s doesn't: a card weighs the same open over the page as it does
+ *  inside a dialog, even though its background follows the substrate. */
+const POPUP_SHADOW = 3;
 
-/** El ancho, un escalón más angosto en regiones compactas — el ancho, no el
- *  relleno, como los anchos del diálogo. */
+/** The width, one step narrower in compact regions — the width, not the
+ *  padding, like the dialog's widths. */
 const WIDTH = { default: 360, compact: 320 } as const;
 
 interface PeekCardTab {
-  /** Texto de la pestaña. También es su clave, así que no se repite. */
+  /** The tab's text. It's also its key, so it isn't repeated. */
   label: string;
   icon?: IconComponent;
-  /** El cuerpo, adentro de la tarjeta embutida. Puede medir lo que quiera: el
-   *  alto lo sigue. */
+  /** The body, inside the inset card. It can be as tall as it likes: the
+   *  height follows it. */
   content: ReactNode;
 }
 
 interface PeekCardProps {
-  /** El disparador. Un único elemento — recibe los handlers y el estado de
-   *  abierto. Un `Button`, un avatar, un nombre subrayado. */
+  /** The trigger. A single element — it takes the handlers and the open state.
+   *  A `Button`, an avatar, an underlined name. */
   children: ReactElement;
   title: string;
   icon?: IconComponent;
-  /** La acción del encabezado, arriba a la derecha. Un botón corto: lo que la
-   *  tarjeta invita a hacer con lo que está mostrando. */
+  /** The header's action, at the top right. A short button: what the card
+   *  invites you to do with what it's showing. */
   action?: ReactNode;
   tabs: PeekCardTab[];
-  /** El pie, sobre la bandeja y debajo de la tarjeta. Suele ser un botón ancho
-   *  que lleva a la vista completa de lo que la tarjeta resume. */
+  /** The footer, on the tray and below the card. Usually a wide button that
+   *  leads to the full view of whatever the card summarizes. */
   footer?: ReactNode;
-  /** Qué abre la tarjeta. Con `"hover"` el clic la sigue abriendo: es lo único
-   *  que queda en un dispositivo táctil, donde no hay puntero que pase por
-   *  encima. @default "click" */
+  /** What opens the card. With `"hover"` a click still opens it: it's the only
+   *  thing left on a touch device, where there's no pointer to pass over it.
+   *  @default "click" */
   openOn?: "click" | "hover";
-  /** Espera antes de abrir por hover, en ms. Sólo con `openOn="hover"`.
+  /** Wait before opening on hover, in ms. Only with `openOn="hover"`.
    *  @default 300 */
   delay?: number;
-  /** Gracia antes de cerrar al salir, en ms. Sólo con `openOn="hover"`: da
-   *  tiempo a cruzar el hueco entre el trigger y la tarjeta. @default 120 */
+  /** Grace period before closing on leave, in ms. Only with
+   *  `openOn="hover"`: it gives time to cross the gap between the trigger and
+   *  the card. @default 120 */
   closeDelay?: number;
-  /** De qué lado del trigger se abre. Base UI la da vuelta sola si no entra.
-   *  @default "bottom" */
+  /** Which side of the trigger it opens on. Base UI flips it on its own if it
+   *  doesn't fit. @default "bottom" */
   side?: PositionerProps["side"];
-  /** Cómo se alinea contra ese lado. Arranca en `"start"` —el borde de la
-   *  tarjeta contra el borde del trigger— y no centrada: la tarjeta es mucho
-   *  más ancha que casi cualquier trigger, y centrada se le va para los dos
-   *  lados. @default "start" */
+  /** How it lines up against that side. It starts at `"start"` —the card's
+   *  edge against the trigger's edge— and not centred: the card is much wider
+   *  than almost any trigger, and centred it spills out on both sides.
+   *  @default "start" */
   align?: PositionerProps["align"];
-  /** Distancia en px entre el trigger y la tarjeta. @default 8 */
+  /** Distance in px between the trigger and the card. @default 8 */
   sideOffset?: number;
-  /** Ancho de la bandeja en px. Omitido, lo pone la escalera: 360, y 320 en una
-   *  región compacta. */
+  /** The tray's width in px. Omitted, the ladder sets it: 360, and 320 in a
+   *  compact region. */
   width?: number;
-  /** Pestaña abierta al montar, sin controlar. @default 0 */
+  /** Tab open on mount, uncontrolled. @default 0 */
   defaultTab?: number;
-  /** Pestaña abierta, controlada desde afuera. */
+  /** Open tab, controlled from outside. */
   tab?: number;
   onTabChange?: (index: number) => void;
   open?: boolean;
   defaultOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
-  /** Poné `false` cuando el trigger no sea un `<button>` nativo. Omitido, se
-   *  deduce del elemento: cualquier etiqueta HTML que no sea `button` lo apaga
-   *  sola, y un componente se asume botón. */
+  /** Set `false` when the trigger isn't a native `<button>`. Omitted, it's
+   *  deduced from the element: any HTML tag other than `button` switches it off
+   *  on its own, and a component is assumed to be a button. */
   nativeButton?: boolean;
-  /** Fija la tarjeta a un escalón de la escalera de tamaños (default 36px,
-   *  compacto 28px — ver /docs/sizes). Omitido, sigue al SizeProvider de
-   *  alrededor. */
+  /** Pins the card to a step of the size ladder (default 36px, compact 28px —
+   *  see /docs/sizes). Omitted, it follows the surrounding SizeProvider. */
   size?: SizeVariant;
-  /** Clases para la bandeja. */
+  /** Classes for the tray. */
   className?: string;
 }
 
-/** Desplazamiento del cuerpo al cambiar de pestaña, en px: entra por el lado
- *  del que viene y sale por el opuesto. Sin eso, volver a la pestaña anterior
- *  se ve igual que avanzar y el movimiento no dice nada. Son los mismos 12 del
- *  cruce de pasos de `MobileActionConfirmation`. */
+/** How far the body shifts when the tab changes, in px: it comes in from the
+ *  side it's arriving from and leaves towards the opposite one. Without that,
+ *  going back to the previous tab looks the same as moving on and the movement
+ *  says nothing. It's the same 12 as `MobileActionConfirmation`'s step
+ *  crossover. */
 const PANEL_TRAVEL = 12;
 
 function PeekCard({
@@ -190,26 +195,26 @@ function PeekCard({
   const open = openProp !== undefined ? openProp : internalOpen;
   const actionsRef = useRef<Popover.Root.Actions | null>(null);
 
-  // El índice vive acá afuera y no adentro del popup: el popup se desmonta al
-  // cerrar, así que la tarjeta reabre donde la dejaron y no siempre en la
-  // primera pestaña.
+  // The index lives out here and not inside the popup: the popup unmounts on
+  // close, so the card reopens where it was left and not always on the first
+  // tab.
   const [internalTab, setInternalTab] = useState(defaultTab);
-  // Se recorta contra la lista una sola vez, acá: el riel, el cuerpo y los ids
-  // del panel salen todos de este número. Sin recortar, un índice fuera de
-  // rango —una lista que se achica con la tarjeta abierta, un `tab` de más—
-  // deja al riel sin nada marcado mientras el cuerpo muestra la primera
-  // pestaña, y los ids apuntando a una que ya no está.
+  // It's clamped against the list once, here: the rail, the body and the
+  // panel's ids all come from this number. Unclamped, an out-of-range index —a
+  // list that shrinks with the card open, a `tab` past the end— leaves the rail
+  // with nothing marked while the body shows the first tab, and the ids
+  // pointing at one that's no longer there.
   const selected = Math.min(
     Math.max(tabProp !== undefined ? tabProp : internalTab, 0),
     Math.max(tabs.length - 1, 0)
   );
 
-  // La dirección del cruce se deriva del cambio de índice y no se escribe en el
-  // handler del riel: manejada desde afuera, la pestaña cambia sin pasar por
-  // él, y la dirección se quedaría con la del cambio anterior — volver se vería
-  // igual que avanzar. Ajustar el estado durante el render deja la dirección
-  // lista en el mismo commit que cambia el panel; en un efecto llegaría tarde,
-  // cuando la salida ya arrancó.
+  // The crossover's direction is derived from the change of index and not
+  // written in the rail's handler: driven from outside, the tab changes without
+  // going through it, and the direction would keep the previous change's —going
+  // back would look the same as moving on. Adjusting state during render leaves
+  // the direction ready in the same commit that changes the panel; in an effect
+  // it would arrive late, once the exit had already started.
   const [previous, setPrevious] = useState(selected);
   const [direction, setDirection] = useState(1);
   if (previous !== selected) {
@@ -221,15 +226,12 @@ function PeekCard({
   const shape = useShape();
   const variant = useSizeVariant(size);
   const typeScale = useTypeScale(size);
-  const { pad, rail } = useInsetMetrics(size);
   const reduceMotion = useReducedMotion() ?? false;
 
-  // El sustrato de acá afuera: la tarjeta sube los dos de siempre y la bandeja
-  // sale del mismo número, así las dos se mueven juntas si la tarjeta se abre
-  // sobre un sustrato más alto.
+  // The substrate out here. `Elevated` climbs the popup's two steps from it;
+  // the only thing that needs the raw number is the tab rail — see below, where
+  // it gets published again.
   const substrate = useSurface();
-  const card = Math.min(substrate + CARD_RISE, 8);
-  const tray = Math.max(card - CARD_RISE, 1);
 
   const [measureRef, contentHeight] = useMeasuredHeight<HTMLDivElement>();
 
@@ -249,10 +251,10 @@ function PeekCard({
     [tabProp, onTabChange],
   );
 
-  // Base UI difiere el desmontaje mientras `actionsRef` esté puesto; se libera
-  // cuando la animación de salida terminó. `onAnimationComplete` es la señal
-  // principal y este timer el respaldo para una pestaña en segundo plano, donde
-  // los callbacks por rAF se frenan.
+  // Base UI defers the unmount while `actionsRef` is set; it's released once
+  // the exit animation has finished. `onAnimationComplete` is the main signal
+  // and this timer the backup for a background tab, where rAF callbacks are
+  // throttled.
   useEffect(() => {
     if (open) return;
     const id = setTimeout(
@@ -262,16 +264,16 @@ function PeekCard({
     return () => clearTimeout(id);
   }, [open]);
 
-  // Un solo escalón para todo —la apertura, el alto de la tarjeta y el cuerpo
-  // que entra—: `moderate`, el de los popups y las pestañas, críticamente
-  // amortiguado. Así la caja y lo que lleva adentro salen y llegan juntos, como
-  // un solo movimiento; con el escalón rápido en el cuerpo, el texto quedaba
-  // quieto a mitad de camino esperando que la caja lo alcanzara.
+  // A single step for everything —the opening, the card's height and the body
+  // coming in—: `moderate`, the popups' and the tabs', critically damped. That
+  // way the box and what it carries leave and arrive together, as one movement;
+  // with the fast step on the body, the text sat still halfway waiting for the
+  // box to catch up.
   const travel = reduceMotion ? { duration: 0 } : spring.moderate;
 
-  // La opacidad es lo único que no sigue al resorte: va con las duraciones
-  // cortas del sistema —y la del que se va, más corta todavía, como toda
-  // salida— para que los dos cuerpos no se lean superpuestos durante el cruce.
+  // Opacity is the only thing that doesn't follow the spring: it goes with the
+  // system's short durations —and the outgoing one shorter still, as every exit
+  // is— so the two bodies don't read as overlapping during the crossover.
   const panelVariants = useMemo(() => {
     const enter = reduceMotion
       ? { duration: 0 }
@@ -279,8 +281,8 @@ function PeekCard({
     const exit = reduceMotion
       ? { duration: 0 }
       : { ...spring.moderate.exit, opacity: { duration: 0.06 } };
-    // Sin motion, el cuerpo aparece y desaparece en el lugar: el alto tampoco
-    // viaja, así que un desplazamiento lateral quedaría sin nada que acompañar.
+    // Without motion, the body appears and disappears in place: the height
+    // doesn't travel either, so a sideways shift would have nothing to go with.
     const offset = reduceMotion ? 0 : PANEL_TRAVEL;
     return {
       enter: (direction: number) => ({ opacity: 0, x: direction * offset }),
@@ -295,9 +297,9 @@ function PeekCard({
 
   const current = tabs[selected] ?? tabs[0];
 
-  // Un elemento HTML que no sea `button` no puede recibir las props de botón
-  // nativo; un componente sí puede terminar renderizando uno, así que se asume
-  // que lo hace salvo que digan lo contrario.
+  // An HTML element that isn't a `button` can't take the native button props;
+  // a component might well end up rendering one, so it's assumed to do so
+  // unless told otherwise.
   const isNativeButton =
     nativeButton ??
     (typeof children.type !== "string" || children.type === "button");
@@ -312,9 +314,9 @@ function PeekCard({
         className="z-50 outline-none"
       >
         <motion.div
-          // Una tarjeta que abre hacia arriba crece desde su borde de abajo
-          // —el que está pegado al trigger—, así que el origen y el desvío
-          // inicial se dan vuelta con `side`.
+          // A card that opens upwards grows from its bottom edge —the one
+          // stuck to the trigger—, so the origin and the initial offset flip
+          // with `side`.
           initial={{ opacity: 0, scale: 0.97, y: side === "top" ? 4 : -4 }}
           animate={
             open
@@ -330,109 +332,100 @@ function PeekCard({
           }}
         >
           <Popover.Popup
-            // Con hover el foco entra sólo si la abrió el teclado: el puntero
-            // no pidió nada. Con clic manda el comportamiento de Base UI, que
-            // lleva el foco al primer tabulable de adentro.
+            // On hover, focus only goes in if the keyboard opened it: the
+            // pointer asked for nothing. On click Base UI's behaviour rules,
+            // which takes focus to the first tabbable inside.
             initialFocus={
               openOn === "hover" ? (opened) => opened === "keyboard" : undefined
             }
             finalFocus={
               openOn === "hover" ? (closed) => closed === "keyboard" : undefined
             }
+            // The popup is the surface: it climbs any system popup's two
+            // steps, with the shadow fixed at a popup's —it weighs the same
+            // open over the page as inside a dialog— and publishes that level
+            // inwards, so a menu opened in here keeps rising from where it used
+            // to rise.
+            render={<Elevated offset={POPUP_RISE} shadowLevel={POPUP_SHADOW} />}
             style={{
               width: width ?? WIDTH[variant],
               maxWidth: "calc(100vw - 16px)",
             }}
             className={cn(
-              // Sin relleno propio: acá el aire es de cada zona, y la tarjeta
-              // llega hasta el canto menos el suyo.
+              // The padding is set by the `Card` inside, zone by zone.
               "flex flex-col overflow-hidden p-0 outline-none",
-              // El techo lo pone el lado donde abrió: `--available-height` es
-              // lo que Base UI midió entre el ancla y el borde. Sin esto, un
-              // cuerpo más alto que la pantalla se sale del viewport y no hay
-              // cómo llegar — la bandeja es `fixed`, así que la página no
-              // scrollea hasta ella, y el `overflow-hidden` recorta lo que
-              // sobra. Con el techo puesto, el que cede es el cuerpo: la
-              // cabecera y el pie no se mueven.
+              // The ceiling comes from the side it opened on:
+              // `--available-height` is what Base UI measured between the
+              // anchor and the edge. Without this, a body taller than the
+              // screen runs off the viewport with no way to reach it — the
+              // popup is `fixed`, so the page doesn't scroll to it, and
+              // `overflow-hidden` clips whatever is left over. With the ceiling
+              // in place, what gives is the body: the title, the rail and the
+              // footer don't move.
               "max-h-[var(--available-height)]",
-              SURFACE_BG[tray],
-              SURFACE_SHADOW[TRAY_SHADOW],
               shape.container,
               className,
             )}
           >
-            {/* Lo que se publica hacia adentro es el nivel de la tarjeta y no
-                el de la bandeja: el que se movió fue el marco, y un menú
-                abierto acá adentro tiene que seguir subiendo desde donde subía
-                en cualquier otro popup. */}
-            <SurfaceProvider value={card}>
-              {/* El `Tabs` envuelve todo el cuerpo y no sólo el riel: el riel
-                  vive en el marco y lo que eligen las pestañas, adentro de la
-                  tarjeta, así que el contexto tiene que abarcar a los dos. Se
-                  maneja por índice —`selectedIndex` / `onSelect`— que es la
-                  misma moneda que la prop `tab` de afuera. */}
+            {/* A plain `Card` and not `InsetDialog`'s inset: a single plane,
+                and what separates the zones is air. The registry's card is
+                transparent and frameless on purpose —it inherits the substrate
+                from whatever contains it—, so here it supplies the spacing and
+                the padding, and the popup supplies the surface. */}
+            <Card className="min-h-0 flex-1">
+              {/* The `Tabs` wraps the whole body and not just the rail: the
+                  rail and what the tabs select are the two ends of the same
+                  thing, so the context has to cover both. It's driven by index
+                  —`selectedIndex` / `onSelect`—, which is the same currency as
+                  the `tab` prop outside. */}
               <Tabs
                 selectedIndex={selected}
                 onSelect={handleTabChange}
-                className="flex min-h-0 flex-col"
+                className="flex min-h-0 flex-1 flex-col"
               >
-                {/* La cabecera: el nombre con su acción, y abajo las pestañas.
-                    Van en la misma zona del marco porque dicen lo mismo — qué
-                    es esto y qué parte se está mirando; lo que cambia al elegir
-                    una está en la tarjeta. */}
-                <div
-                  className="flex shrink-0 flex-col"
-                  style={{
-                    paddingInline: pad + rail,
-                    paddingTop: pad + rail,
-                    paddingBottom: pad,
-                    gap: rail,
-                  }}
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    {/* El mismo renglón que un `DialogTitle`: el rol `title`
-                        del type scale y el peso de un título. `Popover.Title`
-                        le da el `aria-labelledby` al popup, así que el lector
-                        de pantalla lo anuncia por su nombre y no como un cuadro
-                        sin etiqueta. */}
+                <CardHeader>
+                  {/* The icon goes outside the `CardTitle`: the title
+                      duplicates its children into an invisible ghost to reserve
+                      the active weight's width, and in there the glyph would be
+                      drawn twice. `Popover.Title` lends its id to the popup, so
+                      the screen reader announces it by name and not as an
+                      unlabelled box. */}
+                  <div className="flex min-w-0 items-center gap-2">
+                    {Icon && (
+                      <Icon
+                        size={typeScale.subtitle}
+                        strokeWidth={1.75}
+                        className="shrink-0 text-foreground"
+                      />
+                    )}
                     <Popover.Title
-                      className="flex min-w-0 items-center gap-2 leading-tight text-foreground"
-                      style={{
-                        fontSize: typeScale.title,
-                        fontVariationSettings: "'wght' 700",
-                      }}
+                      render={<CardTitle className="min-w-0 truncate" />}
                     >
-                      {Icon && (
-                        <Icon
-                          size={typeScale.title}
-                          strokeWidth={1.75}
-                          className="shrink-0 text-foreground"
-                        />
-                      )}
-                      <span className="truncate">{title}</span>
+                      {title}
                     </Popover.Title>
-                    {action && <div className="shrink-0">{action}</div>}
                   </div>
+                  {action && <CardAction>{action}</CardAction>}
+                </CardHeader>
 
-                  {/* El riel se pinta contra el sustrato que lee, y está
-                      apoyado en la bandeja: por eso acá adentro vuelve a
-                      publicarse el escalón de la bandeja y no el de la tarjeta.
-                      Con el de la tarjeta el segmento activo cae tres escalones
-                      más arriba, y en oscuro aterriza en el mismo valor que el
-                      riel — la pestaña elegida desaparece. Es la única parte del
-                      marco que necesita el número de abajo: lo demás publica el
-                      de la tarjeta, que es el que tiene que ver un popup abierto
-                      acá adentro.
+                <CardContent className="flex min-h-0 flex-1 flex-col gap-3">
+                  {/* The rail paints itself against the substrate it reads: its
+                      active segment lands three steps higher. Read from inside
+                      the popup —which already climbed two— it lands, in dark, on
+                      the same value as the rail and the chosen tab disappears,
+                      so here the step the popup rests on gets published again.
+                      It's the only thing that needs the number below: whatever
+                      opens on top —a menu, another popover— keeps reading the
+                      popup's.
 
-                      Las pestañas se reparten el ancho: la bandeja lo tiene
-                      fijo, y un riel más corto que su renglón se lee como algo
-                      que quedó a medio terminar. El `flex-1` va sin `min-w-0`
-                      a propósito: reparte el sobrante cuando las etiquetas
-                      entran, pero ninguna pestaña baja de lo que mide su texto
-                      —que no se corta ni se parte—, así que con etiquetas
-                      largas el riel se pasa de ancho y scrollea en vez de
-                      pisarse una a la otra. */}
-                  <SurfaceProvider value={tray}>
+                      The tabs share out the width, which the card holds fixed: a
+                      rail shorter than its line reads as something left half
+                      finished. The `flex-1` goes without `min-w-0` on purpose:
+                      it shares out the surplus when the labels fit, but no tab
+                      drops below what its text measures —which is neither
+                      truncated nor wrapped—, so with long labels the rail
+                      overflows and scrolls instead of the tabs treading on each
+                      other. */}
+                  <SurfaceProvider value={substrate}>
                     <TabsList
                       aria-label={title}
                       className="w-full overflow-x-auto scrollbar-hide"
@@ -443,14 +436,14 @@ function PeekCard({
                           value={item.label}
                           label={item.label}
                           icon={item.icon}
-                          // Los ids los ponemos nosotros porque el panel también
-                          // es nuestro (ver abajo): sin un `Tabs.Panel` de Base
-                          // UI registrado, la pestaña no tiene a qué apuntar.
+                          // We set the ids ourselves because the panel is ours
+                          // too (see below): with no Base UI `Tabs.Panel`
+                          // registered, the tab has nothing to point at.
                           id={`${idPrefix}-tab-${index}`}
-                          // Sólo la elegida: es la única cuyo panel está en el
-                          // DOM. Apuntar a los otros dos sería mandar al lector
-                          // de pantalla a ids que no existen, que es peor que no
-                          // decir nada.
+                          // Only the chosen one: it's the only one whose panel
+                          // is in the DOM. Pointing at the other two would send
+                          // the screen reader to ids that don't exist, which is
+                          // worse than saying nothing.
                           aria-controls={
                             index === selected
                               ? `${idPrefix}-panel-${index}`
@@ -461,90 +454,60 @@ function PeekCard({
                       ))}
                     </TabsList>
                   </SurfaceProvider>
-                </div>
 
-                {/* La tarjeta embutida. Sin `initial={false}` la primera apertura
-                  animaría el alto desde cero, que se ve como una tarjeta que se
-                  despliega en vez de una que aparece entera. */}
-                <motion.div
-                  className={cn(
-                    // `min-h-0` + el scroll propio son lo que hace que el techo
-                    // de la bandeja lo pague el cuerpo: el alto animado es la
-                    // medida que pide, y flexbox se la recorta cuando no entra.
-                    // El eje x sigue recortado —el panel que sale se va de
-                    // costado— y sólo el y scrollea.
-                    "relative min-h-0 overflow-x-hidden overflow-y-auto",
-                    SURFACE_BG[card],
-                    SURFACE_SHADOW[CARD_SHADOW],
-                    shape.item,
-                  )}
-                  style={{
-                    marginInline: pad,
-                    // Sin pie, el aire de abajo lo pone la tarjeta: si no, llega
-                    // pegada al canto de la bandeja y el embutido se rompe justo
-                    // donde más se nota.
-                    marginBottom: footer ? 0 : pad,
-                  }}
-                  initial={false}
-                  animate={{ height: contentHeight ?? "auto" }}
-                  transition={travel}
-                >
-                  <AnimatePresence
+                  {/* The body. Without `initial={false}` the first opening
+                      would animate the height from zero, which looks like a card
+                      unfolding instead of one appearing whole. `min-h-0` and its
+                      own scroll are what make the body pay for the popup's
+                      ceiling: the animated height is the measure it asks for,
+                      and flexbox trims it when it doesn't fit. The x axis stays
+                      clipped —the outgoing panel leaves sideways— and only y
+                      scrolls. */}
+                  <motion.div
+                    className="relative min-h-0 overflow-x-hidden overflow-y-auto"
                     initial={false}
-                    mode="popLayout"
-                    custom={direction}
+                    animate={{ height: contentHeight ?? "auto" }}
+                    transition={travel}
                   >
-                    <motion.div
-                      key={selected}
+                    <AnimatePresence
+                      initial={false}
+                      mode="popLayout"
                       custom={direction}
-                      variants={panelVariants}
-                      initial="enter"
-                      animate="center"
-                      exit="exit"
                     >
-                      {/* El panel se arma a mano en vez de con `TabPanel`: ese
-                        esconde al que no está elegido, y acá los dos tienen que
-                        seguir montados y visibles mientras dura el cruce. Los
-                        ids son los que les pusimos a las pestañas arriba, así
-                        que el `aria-controls` de cada una sigue apuntando a su
-                        panel.
-
-                        El relleno es propio y no el de `InsetDialogGroup`: ese
-                        está hecho para una tarjeta con varios bloques, y su
-                        inset, sumado al de la bandeja, le come el renglón a una
-                        columna de 360 — el mismo motivo por el que la hoja del
-                        teléfono usa el suyo. */}
-                      <div
-                        ref={measureRef}
-                        id={`${idPrefix}-panel-${selected}`}
-                        role="tabpanel"
-                        aria-labelledby={`${idPrefix}-tab-${selected}`}
-                        tabIndex={-1}
-                        className="outline-none"
-                        style={{ padding: pad }}
+                      <motion.div
+                        key={selected}
+                        custom={direction}
+                        variants={panelVariants}
+                        initial="enter"
+                        animate="center"
+                        exit="exit"
                       >
-                        {current?.content}
-                      </div>
-                    </motion.div>
-                  </AnimatePresence>
-                </motion.div>
+                        {/* The panel is built by hand instead of with
+                            `TabPanel`: that one hides whichever isn't selected,
+                            and here both have to stay mounted and visible for as
+                            long as the crossover lasts. The ids are the ones we
+                            gave the tabs above, so each tab's `aria-controls`
+                            keeps pointing at its panel. The padding is the
+                            `CardContent`'s that wraps it: the body rests on the
+                            same plane as the title. */}
+                        <div
+                          ref={measureRef}
+                          id={`${idPrefix}-panel-${selected}`}
+                          role="tabpanel"
+                          aria-labelledby={`${idPrefix}-tab-${selected}`}
+                          tabIndex={-1}
+                          className="outline-none"
+                        >
+                          {current?.content}
+                        </div>
+                      </motion.div>
+                    </AnimatePresence>
+                  </motion.div>
+                </CardContent>
 
-                {/* El pie, sobre la bandeja: el mismo plano que la cabecera, así
-                  el marco se lee de una sola pieza. */}
-                {footer && (
-                  <div
-                    className="flex shrink-0 items-center gap-2"
-                    style={{
-                      paddingInline: pad + rail,
-                      paddingTop: pad,
-                      paddingBottom: pad + rail,
-                    }}
-                  >
-                    {footer}
-                  </div>
-                )}
+                {footer && <CardFooter>{footer}</CardFooter>}
               </Tabs>
-            </SurfaceProvider>
+            </Card>
           </Popover.Popup>
         </motion.div>
       </Popover.Positioner>
@@ -556,7 +519,7 @@ function PeekCard({
       open={open}
       onOpenChange={handleOpenChange}
       actionsRef={actionsRef}
-      // Ver la decisión 5 del encabezado: la página sigue viva detrás.
+      // See decision 5 in the header: the page stays alive behind it.
       modal={false}
     >
       <Popover.Trigger
@@ -570,8 +533,8 @@ function PeekCard({
     </Popover.Root>
   );
 
-  // El `size` fija todo el compuesto —lo del trigger y lo del popup portaleado,
-  // porque el contexto de React cruza portales— a un escalón de la escalera.
+  // `size` pins the whole composite —the trigger's and the portalled popup's,
+  // because React context crosses portals— to a step of the ladder.
   return size ? <SizeProvider size={size}>{root}</SizeProvider> : root;
 }
 

@@ -26,29 +26,29 @@ export function TravelTooltipSection() {
   return (
     <div className="flex flex-col gap-14">
       <Section
-        title="El gesto"
-        hint="Pasá el cursor de un botón al vecino sin salir del grupo. La píldora no desaparece para volver a aparecer: se traslada, ajusta su ancho al texto nuevo y hace crossfade del label."
+        title="The gesture"
+        hint="Move the cursor from one button to its neighbour without leaving the group. The pill doesn't disappear only to reappear: it travels, fits its width to the new text and crossfades the label."
       >
         <div className="pb-16">
           <Toolbar>
             <TravelTooltip side="bottom">
-              <TravelTooltipItem label="Nueva nota">
-                <Button variant="ghost" size="icon" aria-label="Nueva nota">
+              <TravelTooltipItem label="New note">
+                <Button variant="ghost" size="icon" aria-label="New note">
                   <PenSquare />
                 </Button>
               </TravelTooltipItem>
-              <TravelTooltipItem label="Usar ventana flotante">
-                <Button variant="ghost" size="icon" aria-label="Usar ventana flotante">
+              <TravelTooltipItem label="Use floating window">
+                <Button variant="ghost" size="icon" aria-label="Use floating window">
                   <Copy />
                 </Button>
               </TravelTooltipItem>
-              <TravelTooltipItem label="Más…">
-                <Button variant="ghost" size="icon" aria-label="Más opciones">
+              <TravelTooltipItem label="More…">
+                <Button variant="ghost" size="icon" aria-label="More options">
                   <MoreHorizontal />
                 </Button>
               </TravelTooltipItem>
-              <TravelTooltipItem label="Alternar panel lateral">
-                <Button variant="ghost" size="icon" aria-label="Alternar panel lateral">
+              <TravelTooltipItem label="Toggle side panel">
+                <Button variant="ghost" size="icon" aria-label="Toggle side panel">
                   <PanelRight />
                 </Button>
               </TravelTooltipItem>
@@ -58,24 +58,24 @@ export function TravelTooltipSection() {
       </Section>
 
       <Section
-        title="Abriendo hacia arriba"
-        hint="side=&quot;top&quot;. El caret se da vuelta y la píldora se mide desde el borde superior del trigger."
+        title="Opening upwards"
+        hint="side=&quot;top&quot;. The caret flips and the pill is measured from the trigger's top edge."
       >
         <div className="pt-16">
           <Toolbar>
             <TravelTooltip side="top">
-              <TravelTooltipItem label="Favorito">
-                <Button variant="ghost" size="icon" aria-label="Favorito">
+              <TravelTooltipItem label="Favourite">
+                <Button variant="ghost" size="icon" aria-label="Favourite">
                   <Star />
                 </Button>
               </TravelTooltipItem>
-              <TravelTooltipItem label="Compartir con el equipo">
-                <Button variant="ghost" size="icon" aria-label="Compartir con el equipo">
+              <TravelTooltipItem label="Share with the team">
+                <Button variant="ghost" size="icon" aria-label="Share with the team">
                   <Share2 />
                 </Button>
               </TravelTooltipItem>
-              <TravelTooltipItem label="Mover a la papelera">
-                <Button variant="ghost" size="icon" aria-label="Mover a la papelera">
+              <TravelTooltipItem label="Move to trash">
+                <Button variant="ghost" size="icon" aria-label="Move to trash">
                   <Trash2 />
                 </Button>
               </TravelTooltipItem>
@@ -85,25 +85,25 @@ export function TravelTooltipSection() {
       </Section>
 
       <Section
-        title="Compacto"
-        hint="Dentro de un SizeProvider compacto la píldora baja un escalón: 20px de alto y texto de 11px, igual que el resto de los controles."
+        title="Compact"
+        hint="Inside a compact SizeProvider the pill drops a step: 20px tall and 11px text, same as the rest of the controls."
       >
         <SizeProvider size="compact">
           <div className="pb-16">
             <Toolbar>
               <TravelTooltip side="bottom">
-                <TravelTooltipItem label="Buscar">
-                  <Button variant="ghost" size="icon" aria-label="Buscar">
+                <TravelTooltipItem label="Search">
+                  <Button variant="ghost" size="icon" aria-label="Search">
                     <Search />
                   </Button>
                 </TravelTooltipItem>
-                <TravelTooltipItem label="Nueva nota">
-                  <Button variant="ghost" size="icon" aria-label="Nueva nota (compacto)">
+                <TravelTooltipItem label="New note">
+                  <Button variant="ghost" size="icon" aria-label="New note (compact)">
                     <PenSquare />
                   </Button>
                 </TravelTooltipItem>
-                <TravelTooltipItem label="Más…">
-                  <Button variant="ghost" size="icon" aria-label="Más opciones (compacto)">
+                <TravelTooltipItem label="More…">
+                  <Button variant="ghost" size="icon" aria-label="More options (compact)">
                     <MoreHorizontal />
                   </Button>
                 </TravelTooltipItem>
@@ -114,32 +114,32 @@ export function TravelTooltipSection() {
       </Section>
 
       <Section
-        title="Un solo trigger"
-        hint="Sin vecinos entre los que viajar se comporta como un tooltip común, con su espera de 200ms. Por eso el componente no necesita un modo aparte para el caso suelto."
+        title="A single trigger"
+        hint="With no neighbours to travel between it behaves like a plain tooltip, with its 200ms wait. That's why the component needs no separate mode for the lone case."
       >
         <div className="pb-16">
           <TravelTooltip side="bottom">
-            <TravelTooltipItem label="Guardar una copia en tu espacio">
-              <Button variant="secondary">Guardar copia</Button>
+            <TravelTooltipItem label="Save a copy in your space">
+              <Button variant="secondary">Save a copy</Button>
             </TravelTooltipItem>
           </TravelTooltip>
         </div>
       </Section>
 
       <Section
-        title="Contra el borde"
-        hint="Angostá la ventana hasta empujar esta barra contra el borde derecho. La píldora se frena a 8px del viewport, pero el caret se queda apuntando al botón — por eso van animados por separado."
+        title="Against the edge"
+        hint="Narrow the window until this bar is pushed against the right edge. The pill stops 8px from the viewport, but the caret keeps pointing at the button — which is why they're animated separately."
       >
         <div className="flex justify-end pb-16">
           <Toolbar>
             <TravelTooltip side="bottom">
-              <TravelTooltipItem label="Compartir con el equipo">
-                <Button variant="ghost" size="icon" aria-label="Compartir (borde)">
+              <TravelTooltipItem label="Share with the team">
+                <Button variant="ghost" size="icon" aria-label="Share (edge)">
                   <Share2 />
                 </Button>
               </TravelTooltipItem>
-              <TravelTooltipItem label="Alternar panel lateral">
-                <Button variant="ghost" size="icon" aria-label="Alternar panel (borde)">
+              <TravelTooltipItem label="Toggle side panel">
+                <Button variant="ghost" size="icon" aria-label="Toggle panel (edge)">
                   <PanelRight />
                 </Button>
               </TravelTooltipItem>

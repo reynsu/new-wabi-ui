@@ -1,0 +1,556 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "wabi",
+  "homepage": "https://reynsu.github.io/wabi-registry",
+  "items": [
+    {
+      "name": "tokens",
+      "type": "registry:theme",
+      "title": "Vendored tokens and utilities",
+      "description": "What @fluid's components take for granted but no registry item installs: the interaction tokens, the focus ring and the scroll utilities. Without this the proximity highlight paints transparent.",
+      "registryDependencies": [
+        "https://www.fluidfunctionalism.com/r/surfaces.json"
+      ],
+      "docs": "The four systems are wired once at the root: MotionConfig reducedMotion=\"user\", ShapeProvider, SizeProvider, SurfaceProvider and TooltipProvider. What this item does NOT bring, because it's the app's decision and not the components': the background on <html>, the native scrollbars and the ColorPicker's checkerboard. If you're going to nest a theme (LoginBlock paints itself light inside a dark app), duplicate the light values' selector to `:root, .light`.",
+      "cssVars": {
+        "theme": {
+          "color-hover": "var(--hover)",
+          "color-active": "var(--active)",
+          "color-selected": "var(--selected)",
+          "color-destructive-light": "var(--destructive-light)"
+        },
+        "light": {
+          "hover": "#0000000a",
+          "active": "#00000012",
+          "selected": "#d4d4d4",
+          "destructive-light": "#fef2f2",
+          "focus-ring": "#6b97ff",
+          "overlay": "0 0 0"
+        },
+        "dark": {
+          "hover": "#ffffff0f",
+          "active": "#ffffff1a",
+          "selected": "#525252",
+          "destructive-light": "#450a0a",
+          "focus-ring": "#6b97ff",
+          "overlay": "255 255 255"
+        }
+      },
+      "css": {
+        "@layer base": {
+          ":root": {
+            "color-scheme": "light"
+          },
+          ".dark": {
+            "color-scheme": "dark"
+          },
+          ":focus-visible": {
+            "outline": "1px solid var(--focus-ring, #6b97ff)",
+            "outline-offset": "2px",
+            "border-radius": "var(--shape-input-radius, 8px)"
+          },
+          "a:focus-visible": {
+            "border-radius": "2px"
+          }
+        },
+        "@property --sf-start": {
+          "syntax": "\"<number>\"",
+          "inherits": "false",
+          "initial-value": "1"
+        },
+        "@property --sf-end": {
+          "syntax": "\"<number>\"",
+          "inherits": "false",
+          "initial-value": "1"
+        },
+        "@keyframes sf-reveal-start": {
+          "0%": {
+            "--sf-start": "1"
+          },
+          "to": {
+            "--sf-start": "0"
+          }
+        },
+        "@keyframes sf-reveal-end": {
+          "0%": {
+            "--sf-end": "0"
+          },
+          "to": {
+            "--sf-end": "1"
+          }
+        },
+        ".scroll-fade, .scroll-fade-x": {
+          "--scroll-fade-size": "48px"
+        },
+        ".scroll-fade": {
+          "-webkit-mask-image": "linear-gradient(to bottom, transparent 0, #000 var(--scroll-fade-size), #000 calc(100% - var(--scroll-fade-size)), transparent 100%)",
+          "mask-image": "linear-gradient(to bottom, transparent 0, #000 var(--scroll-fade-size), #000 calc(100% - var(--scroll-fade-size)), transparent 100%)"
+        },
+        ".scroll-fade-x": {
+          "-webkit-mask-image": "linear-gradient(to right, transparent 0, #000 var(--scroll-fade-size), #000 calc(100% - var(--scroll-fade-size)), transparent 100%)",
+          "mask-image": "linear-gradient(to right, transparent 0, #000 var(--scroll-fade-size), #000 calc(100% - var(--scroll-fade-size)), transparent 100%)"
+        },
+        "@supports (animation-timeline: scroll())": {
+          ".scroll-fade": {
+            "-webkit-mask-image": "linear-gradient(to bottom, rgb(0 0 0 / var(--sf-start)) 0, #000 var(--scroll-fade-size), #000 calc(100% - var(--scroll-fade-size)), rgb(0 0 0 / var(--sf-end)) 100%)",
+            "mask-image": "linear-gradient(to bottom, rgb(0 0 0 / var(--sf-start)) 0, #000 var(--scroll-fade-size), #000 calc(100% - var(--scroll-fade-size)), rgb(0 0 0 / var(--sf-end)) 100%)",
+            "animation": "sf-reveal-start linear both, sf-reveal-end linear both",
+            "animation-timeline": "scroll(self), scroll(self)",
+            "animation-range-start": "0, calc(100% - var(--scroll-fade-size))",
+            "animation-range-end": "var(--scroll-fade-size), 100%"
+          },
+          ".scroll-fade-x": {
+            "-webkit-mask-image": "linear-gradient(to right, rgb(0 0 0 / var(--sf-start)) 0, #000 var(--scroll-fade-size), #000 calc(100% - var(--scroll-fade-size)), rgb(0 0 0 / var(--sf-end)) 100%)",
+            "mask-image": "linear-gradient(to right, rgb(0 0 0 / var(--sf-start)) 0, #000 var(--scroll-fade-size), #000 calc(100% - var(--scroll-fade-size)), rgb(0 0 0 / var(--sf-end)) 100%)",
+            "animation": "sf-reveal-start linear both, sf-reveal-end linear both",
+            "animation-timeline": "scroll(self inline), scroll(self inline)",
+            "animation-range-start": "0, calc(100% - var(--scroll-fade-size))",
+            "animation-range-end": "var(--scroll-fade-size), 100%"
+          }
+        },
+        "@keyframes sf-divider-start": {
+          "0%": {
+            "opacity": "0"
+          },
+          "to": {
+            "opacity": "1"
+          }
+        },
+        "@keyframes sf-divider-end": {
+          "0%": {
+            "opacity": "1"
+          },
+          "to": {
+            "opacity": "0"
+          }
+        },
+        "@supports (timeline-scope: --sf)": {
+          ".scroll-divider": {
+            "position": "relative",
+            "timeline-scope": "--sf-scroller",
+            "--scroll-divider-size": "48px"
+          },
+          ".scroll-divider .scroll-fade": {
+            "scroll-timeline-name": "--sf-scroller"
+          },
+          ".scroll-divider::before, .scroll-divider::after": {
+            "content": "\"\"",
+            "position": "absolute",
+            "left": "var(--scroll-divider-inset, 0)",
+            "right": "var(--scroll-divider-inset, 0)",
+            "height": "1px",
+            "background-color": "var(--border)",
+            "pointer-events": "none",
+            "opacity": "0",
+            "z-index": "1"
+          },
+          ".scroll-divider::before": {
+            "top": "0",
+            "animation": "sf-divider-start linear both",
+            "animation-timeline": "--sf-scroller",
+            "animation-range": "0 var(--scroll-divider-size)"
+          },
+          ".scroll-divider:first-child::before": {
+            "content": "none"
+          },
+          ".scroll-divider::after": {
+            "bottom": "0",
+            "animation": "sf-divider-end linear both",
+            "animation-timeline": "--sf-scroller",
+            "animation-range": "calc(100% - var(--scroll-divider-size)) 100%"
+          }
+        },
+        ".scrollbar-hide": {
+          "-ms-overflow-style": "none",
+          "scrollbar-width": "none"
+        },
+        ".scrollbar-hide::-webkit-scrollbar": {
+          "display": "none"
+        },
+        "@keyframes spinner-move": {
+          "to": {
+            "stroke-dashoffset": "-100"
+          }
+        },
+        "@keyframes spinner-dash": {
+          "0%, 100%": {
+            "stroke-dasharray": "15 85"
+          },
+          "50%": {
+            "stroke-dasharray": "40 60"
+          }
+        },
+        "html.transitioning *, html.transitioning *::before, html.transitioning *::after": {
+          "transition": "border-radius 0.18s ease-in-out, background-color 0.18s ease-in-out, color 0.18s ease-in-out, border-color 0.18s ease-in-out, fill 0.18s ease-in-out, stroke 0.18s ease-in-out !important"
+        }
+      }
+    },
+    {
+      "name": "use-measured-height",
+      "type": "registry:hook",
+      "title": "useMeasuredHeight",
+      "description": "Measures the content's real height with a ResizeObserver so it can be animated. PeekCard uses it when the tab changes.",
+      "files": [
+        {
+          "path": "src/hooks/use-measured-height.ts",
+          "type": "registry:hook"
+        }
+      ]
+    },
+    {
+      "name": "animated-empty",
+      "type": "registry:component",
+      "title": "AnimatedEmpty",
+      "description": "The empty state with the anatomy of shadcn's Empty, choreographed: the figure, the title, the description and the action come in staggered, and the exit runs backwards and faster.",
+      "dependencies": [
+        "framer-motion"
+      ],
+      "registryDependencies": [
+        "utils",
+        "@wabi/tokens",
+        "https://www.fluidfunctionalism.com/r/springs.json",
+        "https://www.fluidfunctionalism.com/r/shape-context.json",
+        "https://www.fluidfunctionalism.com/r/size-context.json",
+        "https://www.fluidfunctionalism.com/r/surface-context.json",
+        "https://www.fluidfunctionalism.com/r/surface-classes.json"
+      ],
+      "files": [
+        {
+          "path": "src/components/animated-empty.tsx",
+          "type": "registry:component"
+        }
+      ],
+      "docs": "The entry order comes from the composition: the block staggers its children and the header staggers its own, so reordering the JSX reorders the animation. The entry happens on its own; for the exit you have to wrap it in an <AnimatePresence mode=\"wait\"> and give it a key per reason for the emptiness, or the text changes inside a figure that's already in place."
+    },
+    {
+      "name": "travel-tooltip",
+      "type": "registry:component",
+      "title": "TravelTooltip",
+      "description": "One tooltip shared by a group: moving from one trigger to its neighbour, it travels instead of reappearing.",
+      "dependencies": [
+        "framer-motion"
+      ],
+      "registryDependencies": [
+        "utils",
+        "https://www.fluidfunctionalism.com/r/springs.json",
+        "https://www.fluidfunctionalism.com/r/shape-context.json",
+        "https://www.fluidfunctionalism.com/r/size-context.json",
+        "https://www.fluidfunctionalism.com/r/use-touch-primary.json"
+      ],
+      "files": [
+        {
+          "path": "src/components/travel-tooltip.tsx",
+          "type": "registry:component"
+        }
+      ]
+    },
+    {
+      "name": "inset-dialog",
+      "type": "registry:component",
+      "title": "InsetDialog",
+      "description": "The dialog with its content inset into a card of its own: header and footer share the frame's plane. It's the dialog base for the rest of the in-house components.",
+      "dependencies": [
+        "framer-motion"
+      ],
+      "registryDependencies": [
+        "utils",
+        "@wabi/tokens",
+        "https://www.fluidfunctionalism.com/r/base/button.json",
+        "https://www.fluidfunctionalism.com/r/base/dialog.json",
+        "https://www.fluidfunctionalism.com/r/base/scroll-area.json",
+        "https://www.fluidfunctionalism.com/r/springs.json",
+        "https://www.fluidfunctionalism.com/r/shape-context.json",
+        "https://www.fluidfunctionalism.com/r/size-context.json",
+        "https://www.fluidfunctionalism.com/r/icon-context.json",
+        "https://www.fluidfunctionalism.com/r/surface-context.json",
+        "https://www.fluidfunctionalism.com/r/surface-classes.json"
+      ],
+      "files": [
+        {
+          "path": "src/components/inset-dialog.tsx",
+          "type": "registry:component"
+        }
+      ],
+      "docs": "With placement=\"bottom\" it anchors to the floor and becomes a sheet: the motion step changes and the × is dropped. The tray goes four surface steps down instead of the card going up, so it needs the root's SurfaceProvider to know where to start from."
+    },
+    {
+      "name": "mobile-action-confirmation",
+      "type": "registry:component",
+      "title": "MobileActionConfirmation",
+      "description": "The sheet that confirms an action on a phone screen, and the sequence of steps when the action is more than one.",
+      "dependencies": [
+        "framer-motion"
+      ],
+      "registryDependencies": [
+        "utils",
+        "@wabi/tokens",
+        "@wabi/inset-dialog",
+        "https://www.fluidfunctionalism.com/r/base/button.json",
+        "https://www.fluidfunctionalism.com/r/springs.json",
+        "https://www.fluidfunctionalism.com/r/shape-context.json",
+        "https://www.fluidfunctionalism.com/r/size-context.json",
+        "https://www.fluidfunctionalism.com/r/icon-context.json",
+        "https://www.fluidfunctionalism.com/r/font-weight.json",
+        "https://www.fluidfunctionalism.com/r/use-touch-primary.json"
+      ],
+      "files": [
+        {
+          "path": "src/components/mobile-action-confirmation.tsx",
+          "type": "registry:component"
+        }
+      ]
+    },
+    {
+      "name": "peek-card",
+      "type": "registry:component",
+      "title": "PeekCard",
+      "description": "The card with tabs that opens stuck to whatever fires it, on click or on hover.",
+      "dependencies": [
+        "framer-motion"
+      ],
+      "registryDependencies": [
+        "utils",
+        "@wabi/tokens",
+        "@wabi/use-measured-height",
+        "https://www.fluidfunctionalism.com/r/card.json",
+        "https://www.fluidfunctionalism.com/r/base/tabs.json",
+        "https://www.fluidfunctionalism.com/r/elevated.json",
+        "https://www.fluidfunctionalism.com/r/springs.json",
+        "https://www.fluidfunctionalism.com/r/shape-context.json",
+        "https://www.fluidfunctionalism.com/r/size-context.json",
+        "https://www.fluidfunctionalism.com/r/icon-context.json",
+        "https://www.fluidfunctionalism.com/r/surface-context.json"
+      ],
+      "files": [
+        {
+          "path": "src/components/peek-card.tsx",
+          "type": "registry:component"
+        }
+      ],
+      "docs": "The registry publishes `card` compiled for Next.js: it imports next/link. Outside Next you have to swap that import for an anchor —or for your router's Link— or the build won't resolve."
+    },
+    {
+      "name": "widget",
+      "type": "registry:component",
+      "title": "Widget",
+      "description": "The descriptor of a view that knows how to show itself at three sizes —the board's glance, the PeekCard and the whole tab— and the tile that becomes the tab instead of opening it.",
+      "dependencies": [
+        "framer-motion"
+      ],
+      "registryDependencies": [
+        "utils",
+        "@wabi/tokens",
+        "@wabi/peek-card",
+        "@wabi/workspace-context",
+        "https://www.fluidfunctionalism.com/r/elevated.json",
+        "https://www.fluidfunctionalism.com/r/springs.json",
+        "https://www.fluidfunctionalism.com/r/shape-context.json",
+        "https://www.fluidfunctionalism.com/r/size-context.json",
+        "https://www.fluidfunctionalism.com/r/icon-context.json"
+      ],
+      "files": [
+        {
+          "path": "src/components/widget.tsx",
+          "type": "registry:component"
+        }
+      ],
+      "docs": "It hangs off a WorkspaceProvider — that's who opens the tab — so without one it throws. And a widget is drawn once per screen: the layoutId that makes the move comes from its id, and two tiles of the same widget mounted at once are the same object as far as Framer is concerned, so it crosses them. That's why the tile leaves a gap while its view is the active tab: it's what lets the board stay mounted off to the side. The tile carries a header with the name and, if you pass onClose, the button that takes it off the board; what opens the widget is a surface covering the card and not a button around everything, because a button can't contain another one."
+    },
+    {
+      "name": "widget-board",
+      "type": "registry:component",
+      "title": "WidgetBoard",
+      "description": "The grid of tiles: a size ladder from 1x1 to 2x2, layout driven by a container query, and the AnimatedEmpty when there are none.",
+      "dependencies": [
+        "framer-motion",
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "utils",
+        "@wabi/widget",
+        "@wabi/animated-empty"
+      ],
+      "files": [
+        {
+          "path": "src/components/widget-board.tsx",
+          "type": "registry:component"
+        }
+      ],
+      "docs": "Meant to live beside the panel as a region of the shell, not inside a tab. It measures its container and not the window: the layout comes from @container, so in a narrow rail it falls into one column and with width it shows the size ladder. It doesn't own the list: it reports through onWidgetClose and whoever uses it drops the widget from `widgets`. Without that callback the tiles show no close button. With onClose it draws a button reading «Close» at the top right, whether the board is full or empty: the board doesn't own its place and only reports."
+    },
+    {
+      "name": "widget-rail",
+      "type": "registry:component",
+      "title": "WidgetRail",
+      "description": "The widget rail beside the panel. It brings no handle of its own: it's resized from outside, with the handle it exposes through controlRef, and the panel never drops below 55% of the screen — before stopping, the drag folds the sidebar.",
+      "registryDependencies": [
+        "utils",
+        "@wabi/widget-board",
+        "https://www.fluidfunctionalism.com/r/base/sidebar.json"
+      ],
+      "files": [
+        {
+          "path": "src/components/widget-rail.tsx",
+          "type": "registry:component"
+        }
+      ],
+      "docs": "It hangs off a SidebarProvider — it needs to be able to fold it when the drag hits the limit — and it stands to the right of the panel: it measures its previous sibling in the DOM to know how much the two are splitting, so it goes after it. It isn't grabbed by the edge: through controlRef it exposes a handle with beginResize(event), nudge(delta) and step, and whoever resizes is the control that uses it — in this app, a button in the panel's bar. Through the `preview` prop it shows something else instead of the board — a LateralPreview, usually — and the board comes back when you remove it; while it lasts the rail widens by 140px, the preview rests against its borders, and if there's no room for that the sidebar folds. It reports through onResizingChange while the drag lasts. If the ceiling falls below a widget's width, the rail hides instead of showing a strip. onBoardClose is passed straight through to the board: the rail is the place and doesn't decide what's shown in it."
+    },
+    {
+      "name": "lateral-preview",
+      "type": "registry:component",
+      "title": "LateralPreview",
+      "description": "The glance at a single thing in the side rail —a conversation, a profile, a board of numbers—, with its fixed header, its scrolling body and its footer for opening the whole thing.",
+      "registryDependencies": [
+        "utils",
+        "@wabi/tokens",
+        "https://www.fluidfunctionalism.com/r/elevated.json",
+        "https://www.fluidfunctionalism.com/r/shape-context.json",
+        "https://www.fluidfunctionalism.com/r/size-context.json",
+        "https://www.fluidfunctionalism.com/r/icon-context.json"
+      ],
+      "files": [
+        {
+          "path": "src/components/lateral-preview.tsx",
+          "type": "registry:component"
+        }
+      ],
+      "docs": "It's the WidgetBoard's counterpart and takes its same place: the board says how everything is going, the preview says what this is. It doesn't know what it's showing — there's one frame and whoever uses it supplies the body, with PreviewGroup, PreviewRow, PreviewStat and PreviewMessage or with anything else. It fills its container's height: in the rail that's the whole column."
+    },
+    {
+      "name": "preview-context",
+      "type": "registry:component",
+      "title": "PreviewProvider",
+      "description": "The provider that gives the rail what it has to preview from anywhere in the app: usePreview().show() wherever it's needed.",
+      "registryDependencies": [
+        "@wabi/lateral-preview"
+      ],
+      "files": [
+        {
+          "path": "src/components/preview-context.tsx",
+          "type": "registry:component"
+        }
+      ],
+      "docs": "Same problem and same solution as workspace-context: the rail is drawn on one side of the shell and whatever asks for a preview lives anywhere else. LateralPreview knows nothing about it — it takes its content through props and works just as well on its own, with no provider."
+    },
+    {
+      "name": "filter-menu",
+      "type": "registry:component",
+      "title": "FilterMenu",
+      "description": "The two-level filter menu: a view's attributes and, inside each one, its values, with no side submenu.",
+      "dependencies": [
+        "framer-motion",
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "utils",
+        "@wabi/tokens",
+        "https://www.fluidfunctionalism.com/r/base/button.json",
+        "https://www.fluidfunctionalism.com/r/base/scroll-area.json",
+        "https://www.fluidfunctionalism.com/r/elevated.json",
+        "https://www.fluidfunctionalism.com/r/springs.json",
+        "https://www.fluidfunctionalism.com/r/shape-context.json",
+        "https://www.fluidfunctionalism.com/r/size-context.json",
+        "https://www.fluidfunctionalism.com/r/icon-context.json",
+        "https://www.fluidfunctionalism.com/r/use-proximity-hover.json"
+      ],
+      "files": [
+        {
+          "path": "src/components/filter-menu.tsx",
+          "type": "registry:component"
+        }
+      ]
+    },
+    {
+      "name": "workspace-panel",
+      "type": "registry:component",
+      "title": "WorkspacePanel",
+      "description": "The content frame with connected tabs that sits next to the sidebar, with the active tab's plane on a single sliding layer.",
+      "dependencies": [
+        "framer-motion",
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "utils",
+        "@wabi/tokens",
+        "https://www.fluidfunctionalism.com/r/base/sidebar.json",
+        "https://www.fluidfunctionalism.com/r/springs.json",
+        "https://www.fluidfunctionalism.com/r/size-context.json",
+        "https://www.fluidfunctionalism.com/r/icon-context.json",
+        "https://www.fluidfunctionalism.com/r/surface-context.json",
+        "https://www.fluidfunctionalism.com/r/surface-classes.json",
+        "https://www.fluidfunctionalism.com/r/use-proximity-hover.json"
+      ],
+      "files": [
+        {
+          "path": "src/components/workspace-panel.tsx",
+          "type": "registry:component"
+        }
+      ],
+      "docs": "It calls useSidebar(), so it has to hang off a SidebarProvider — without one it throws. It doesn't own its tabs: it takes `tabs` and reports through `onTabClose`. If you want to open them from anywhere in the app, add @wabi/workspace-context. The `controls` prop is the far right of the bar, outside the scrolling row: that's where the panel's controls go. The `lifted` prop raises its shadow two steps: it's there so an external handle —the widget rail's— can say the panel is about to be resized."
+    },
+    {
+      "name": "workspace-context",
+      "type": "registry:component",
+      "title": "WorkspaceProvider",
+      "description": "The provider that gives WorkspacePanel its tabs from anywhere in the app: WorkspaceOutlet where it's drawn and useWorkspace().openTab() wherever it's needed.",
+      "registryDependencies": [
+        "@wabi/workspace-panel"
+      ],
+      "files": [
+        {
+          "path": "src/components/workspace-context.tsx",
+          "type": "registry:component"
+        }
+      ]
+    },
+    {
+      "name": "window-controls",
+      "type": "registry:component",
+      "title": "WindowControls",
+      "description": "The bar that drives the window and the sidebar — full screen, floating window, side panel.",
+      "dependencies": [
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "utils",
+        "@wabi/travel-tooltip",
+        "https://www.fluidfunctionalism.com/r/base/button.json",
+        "https://www.fluidfunctionalism.com/r/base/dropdown.json",
+        "https://www.fluidfunctionalism.com/r/base/sidebar.json",
+        "https://www.fluidfunctionalism.com/r/size-context.json"
+      ],
+      "files": [
+        {
+          "path": "src/components/window-controls.tsx",
+          "type": "registry:component"
+        }
+      ],
+      "docs": "The sidebar button calls useSidebar(), so that part has to hang off a SidebarProvider. It takes children —your own TravelTooltipItems, inside the same travelling tooltip— and `more={false}` to leave the browser menu out when the bar is made only of the app's controls."
+    },
+    {
+      "name": "login-block",
+      "type": "registry:block",
+      "title": "LoginBlock",
+      "description": "The complete sign-in screen: the brand plane on the left, the form and the providers on the right. The layout comes from a container query, not from a viewport breakpoint.",
+      "dependencies": [
+        "framer-motion",
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "utils",
+        "@wabi/tokens",
+        "https://www.fluidfunctionalism.com/r/base/button.json",
+        "https://www.fluidfunctionalism.com/r/springs.json",
+        "https://www.fluidfunctionalism.com/r/icon-context.json"
+      ],
+      "files": [
+        {
+          "path": "src/components/login-block.tsx",
+          "type": "registry:block"
+        }
+      ],
+      "docs": "It paints itself light or dark on its own by putting the class on its own root, without touching the <html>. For that to work, the theme's light values have to be declared in `:root, .light` and not only in `:root`. Inside the block you can't use a single `dark:` utility: the variant is defined as `&:is(.dark *)` and would match anyway."
+    }
+  ]
+}

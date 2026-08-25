@@ -1,14 +1,18 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   Boxes,
+  ChevronsLeftRight,
+  PackageOpen,
   Layers,
   MessageSquare,
   Moon,
   Bell,
+  LayoutGrid,
   LayoutPanelTop,
   ListFilter,
   LogIn,
   MousePointer2,
+  PanelRight,
   PanelTop,
   IdCard,
   Smartphone,
@@ -18,9 +22,14 @@ import {
   TextCursorInput,
 } from "lucide-react";
 
+import { AnimatePresence } from "framer-motion";
 import { Toaster } from "sileo";
 
 import { Button } from "@/components/ui/button";
+
+import { TravelTooltipItem } from "@/components/travel-tooltip";
+import { WindowControls } from "@/components/window-controls";
+
 import {
   Sidebar,
   SidebarContent,
@@ -28,20 +37,25 @@ import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarHeader,
-  SidebarInset,
   SidebarMenu,
   SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
-  SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { Tooltip } from "@/components/ui/tooltip";
+import {
+  WorkspaceOutlet,
+  WorkspaceProvider,
+  useWorkspace,
+} from "@/components/workspace-context";
+import type { WorkspaceTab } from "@/components/workspace-panel";
 import { AgentSection } from "@/sections/AgentSection";
+import { AnimatedEmptySection } from "@/sections/AnimatedEmptySection";
 import { ControlsSection } from "@/sections/ControlsSection";
 import { FilterMenuSection } from "@/sections/FilterMenuSection";
 import { InputsSection } from "@/sections/InputsSection";
 import { InsetDialogSection } from "@/sections/InsetDialogSection";
+import { LateralPreviewSection } from "@/sections/LateralPreviewSection";
 import { LoginBlockSection } from "@/sections/LoginBlockSection";
 import { MobileActionConfirmationSection } from "@/sections/MobileActionConfirmationSection";
 import { PeekCardSection } from "@/sections/PeekCardSection";
@@ -49,8 +63,47 @@ import { SurfacesSection } from "@/sections/SurfacesSection";
 import { SystemSection } from "@/sections/SystemSection";
 import { TravelTooltipSection } from "@/sections/TravelTooltipSection";
 import { SileoSection } from "@/sections/SileoSection";
+import { PreviewProvider, usePreview } from "@/components/preview-context";
+import { WidgetRail, type WidgetRailControl } from "@/components/widget-rail";
+import { cn } from "@/lib/utils";
+import { WIDGETS } from "@/widgets";
+import { WidgetBoardSection } from "@/sections/WidgetBoardSection";
 import { WindowControlsSection } from "@/sections/WindowControlsSection";
 import { WorkspacePanelSection } from "@/sections/WorkspacePanelSection";
+
+/**
+ * Los controles de la barra del panel.
+ *
+ * Son `Button` en su escalón compacto —`icon-compact`, los 28px de la escalera
+ * de tamaños— sin achicarlos a mano: la barra tiene su propia escalera y un
+ * tamaño inventado al lado de ella se nota. Lo que cambia son dos cosas:
+ *
+ *   ícono en gris   `text-muted-foreground`, que se enciende al pasar. Un
+ *                   control del marco no tiene por qué pesar lo mismo que un
+ *                   botón del contenido.
+ *   fondo blanco    el escalón más alto de la escalera de superficies, que en
+ *                   claro es `#FFFFFF` y en oscuro es el gris que le
+ *                   corresponde — «blanco» acá quiere decir «el tope de la
+ *                   escalera», que es lo que se lee como una pieza levantada.
+ *
+ * El blanco contra el `#FAFAFA` de la barra es apenas un 2%: lo que separa de
+ * verdad es la sombra, y por eso `shadow-surface-3` no es decoración sino la
+ * mitad del efecto. Es el mismo recurso con el que el plano del panel se separa
+ * de la barra, donde la escalera también está aplanada en blanco.
+ *
+ * Se pisa `--btn-bg`, que es la variable con la que la variante `secondary`
+ * pinta el relleno **y** su anillo, así los dos se mueven juntos y el hover de
+ * la variante sigue resuelto. Va sobre la capa del botón y no sobre su raíz: la
+ * variante declara esa variable en la capa, y una declaración de arriba nunca
+ * la alcanza — las variables se heredan, pero la que el elemento define para sí
+ * mismo gana.
+ */
+const CONTROL = [
+  "rounded-full",
+  "text-muted-foreground hover:text-foreground",
+  "shadow-surface-3",
+  "[&>span:first-child]:[--btn-bg:var(--surface-3)]",
+].join(" ");
 
 /* El sidebar separa lo que viene del registry de lo que escribimos nosotros.
    Es la misma división que en el disco: components/ui/ es espejo del registry
@@ -59,22 +112,25 @@ const GROUPS = [
   {
     label: "Showcase",
     pages: [
-      { id: "controls", label: "Controles", icon: Sliders, count: 11, render: () => <ControlsSection /> },
-      { id: "inputs", label: "Entradas", icon: TextCursorInput, count: 5, render: () => <InputsSection /> },
-      { id: "surfaces", label: "Superficies", icon: Layers, count: 5, render: () => <SurfacesSection /> },
-      { id: "agent", label: "Agente", icon: MessageSquare, count: 4, render: () => <AgentSection /> },
-      { id: "system", label: "Sistema", icon: Boxes, count: 4, render: () => <SystemSection /> },
+      { id: "controls", label: "Controls", icon: Sliders, count: 11, render: () => <ControlsSection /> },
+      { id: "inputs", label: "Inputs", icon: TextCursorInput, count: 5, render: () => <InputsSection /> },
+      { id: "surfaces", label: "Surfaces", icon: Layers, count: 5, render: () => <SurfacesSection /> },
+      { id: "agent", label: "Agent", icon: MessageSquare, count: 4, render: () => <AgentSection /> },
+      { id: "system", label: "System", icon: Boxes, count: 4, render: () => <SystemSection /> },
       { id: "sileo", label: "Sileo", icon: Bell, count: 1, render: () => <SileoSection /> },
     ],
   },
   {
-    label: "Componentes propios",
+    label: "Our components",
     pages: [
+      { id: "animated-empty", label: "AnimatedEmpty", icon: PackageOpen, count: 5, render: () => <AnimatedEmptySection /> },
       { id: "filter-menu", label: "FilterMenu", icon: ListFilter, count: 4, render: () => <FilterMenuSection /> },
       { id: "inset-dialog", label: "InsetDialog", icon: PanelTop, count: 2, render: () => <InsetDialogSection /> },
+      { id: "lateral-preview", label: "LateralPreview", icon: PanelRight, count: 3, render: () => <LateralPreviewSection /> },
       { id: "mobile-action-confirmation", label: "MobileActionConfirmation", icon: Smartphone, count: 3, render: () => <MobileActionConfirmationSection /> },
       { id: "peek-card", label: "PeekCard", icon: IdCard, count: 4, render: () => <PeekCardSection /> },
       { id: "travel-tooltip", label: "TravelTooltip", icon: MousePointer2, count: 1, render: () => <TravelTooltipSection /> },
+      { id: "widget-board", label: "WidgetBoard", icon: LayoutGrid, count: 3, render: () => <WidgetBoardSection /> },
       { id: "window-controls", label: "WindowControls", icon: PanelsTopLeft, count: 1, render: () => <WindowControlsSection /> },
       { id: "workspace-panel", label: "WorkspacePanel", icon: LayoutPanelTop, count: 1, render: () => <WorkspacePanelSection /> },
     ],
@@ -83,7 +139,7 @@ const GROUPS = [
      entera, armada con las piezas de los dos grupos de arriba. Por eso va en
      su propio grupo y no al final de "Componentes propios". */
   {
-    label: "Blocks Propios",
+    label: "Our blocks",
     pages: [
       { id: "login-block", label: "LoginBlock", icon: LogIn, count: 1, render: () => <LoginBlockSection /> },
     ],
@@ -94,11 +150,66 @@ const GROUPS = [
 // que no tipa bien contra su firma.
 const PAGES = GROUPS.flatMap((g) => [...g.pages]);
 
-export default function App() {
-  const [page, setPage] = useState<(typeof PAGES)[number]["id"]>("controls");
-  const [dark, setDark] = useState(false);
+type Page = (typeof PAGES)[number];
 
-  const active = PAGES.find((p) => p.id === page)!;
+/* Una página del sidebar abierta como pestaña del panel. El contenido se arma
+   acá y no en el panel porque `content` es un ReactNode que viaja en el estado
+   del provider: la columna de lectura entra con la pestaña, no con el marco. */
+const toTab = (p: Page): WorkspaceTab => ({
+  id: p.id,
+  label: p.label,
+  icon: p.icon,
+  content: <div className="mx-auto max-w-3xl px-6 py-10">{p.render()}</div>,
+});
+
+/* El provider va afuera del sidebar, no al lado del panel: los botones que
+   abren pestañas son los del sidebar, así que el estado tiene que estar por
+   encima de los dos. Por eso App no es el showcase — lo envuelve. */
+export default function App() {
+  return (
+    <WorkspaceProvider defaultTabs={[toTab(PAGES[0])]}>
+      {/* El preview del riel vive al lado de las pestañas y por el mismo
+          motivo: lo que lo pide está en cualquier parte de la app y el riel se
+          dibuja en una sola. */}
+      <PreviewProvider>
+        <Showcase />
+      </PreviewProvider>
+    </WorkspaceProvider>
+  );
+}
+
+function Showcase() {
+  const { openTab, activeId } = useWorkspace();
+  const { preview } = usePreview();
+  const [dark, setDark] = useState(false);
+  /* El tirador del riel vive en un componente y el panel en otro, así que el
+     estado «esto está por redimensionarse» sube hasta acá, que es donde los dos
+     se encuentran. El riel avisa, el panel lo dice con su elevación. */
+  /* El panel se marca —sombra y canto oscuro— cuando el botón que lo
+     redimensiona está por usarse o se está usando. Las dos mitades se juntan
+     acá: el hover del botón lo sabe App, que lo renderiza, y el tirón lo avisa
+     el riel, que es quien lo hace. */
+  const [apuntado, setApuntado] = useState(false);
+  const [redimensionando, setRedimensionando] = useState(false);
+  const armado = apuntado || redimensionando;
+  /* La manija del riel. El botón de redimensionar vive en la barra del panel y
+     el tirón lo sabe hacer el riel, así que el botón le pasa su evento de
+     puntero y el riel hace el resto — mismo límite, mismo plegado del sidebar,
+     misma captura. La única diferencia con agarrar el canto es dónde empezó la
+     mano, y el tirón es relativo justamente para que eso no importe. */
+  const riel = useRef<WidgetRailControl | null>(null);
+  /* La lista del board vive acá: ni el riel ni el board son dueños de ella —
+     sólo avisan cuando se cierra uno—, y vaciarla es lo que deja ver el estado
+     vacío que el board ya sabe dibujar. */
+  const [widgets, setWidgets] = useState(WIDGETS);
+  /* El board se puede cerrar y el riel se va con él — salvo que haya un preview
+     que mostrar, que es la otra cosa que vive ahí. Volver a abrirlo es el
+     control de la barra: la × del board lo saca, el control lo trae, igual que
+     el sidebar con su riel y su botón. */
+  const [board, setBoard] = useState(true);
+  /* El riel se dibuja si hay algo que poner en él: el board abierto, o un
+     preview — que puede pedirse con el board cerrado. */
+  const rielVisible = board || preview !== null;
 
   const toggleTheme = () =>
     setDark((d) => {
@@ -127,8 +238,8 @@ export default function App() {
                   <SidebarMenuItem key={p.id}>
                     <SidebarMenuButton
                       icon={p.icon}
-                      isActive={p.id === page}
-                      onClick={() => setPage(p.id)}
+                      isActive={p.id === activeId}
+                      onClick={() => openTab(toTab(p))}
                     >
                       {p.label}
                     </SidebarMenuButton>
@@ -140,30 +251,158 @@ export default function App() {
           ))}
         </SidebarContent>
 
+        {/* El toggle de tema estuvo acá abajo mientras no hubo dónde: ahora la
+            barra del panel tiene sus controles y ese es su lugar. Dos botones
+            para lo mismo en la misma pantalla no son una comodidad, son una
+            duda sobre cuál es el que manda. */}
         <SidebarFooter>
-          <p className="px-2 py-1 text-[12px] text-muted-foreground">
-            24 del registry + 7 propios + 1 block + Sileo
-          </p>
+          <div className="flex items-center gap-2 px-2 py-1">
+            <p className="min-w-0 text-[12px] text-muted-foreground">
+              24 from the registry + 10 in-house + 1 block + Sileo
+            </p>
+          </div>
         </SidebarFooter>
       </Sidebar>
 
-      <SidebarInset>
-        <header className="flex items-center gap-3 border-b border-border px-6 py-4">
-          <SidebarTrigger />
-          <h1 className="text-[15px] font-medium tracking-tight">{active.label}</h1>
-          <div className="ml-auto">
-            <Tooltip content={dark ? "Modo claro" : "Modo oscuro"}>
-              <Button variant="tertiary" size="icon" onClick={toggleTheme} aria-label="Cambiar tema">
+      {/* El panel no vive adentro del contenido: es el contenido. Reemplaza al
+          SidebarInset —que aportaba una tarjeta más, con su fondo, su sombra y
+          su padding alrededor de otra tarjeta— y se lleva su papel: el `<main>`
+          del documento y los márgenes atados al estado del sidebar, que salen
+          del mismo `peer` que usaba el inset.
+
+          Al perder ese marco el panel se apoya derecho sobre el sustrato de la
+          página (escalón 1) y no sobre el 2 que pintaba el inset: la barra baja
+          un escalón y el plano queda en 3. Es el mismo salto de dos, medido
+          desde donde el panel está parado ahora. */}
+      <WorkspaceOutlet
+        as="main"
+        lifted={armado}
+        controls={
+          /* `sidebar={false}` y `more={false}`: el botón del sidebar ya está en
+             el otro extremo de esta misma barra, y el menú del navegador
+             —pantalla completa, ventana flotante— no tiene por qué acompañar a
+             tres controles de la app. Queda la barra con lo propio, adentro de
+             un solo TravelTooltip que viaja de un botón al otro. */
+          /* El `gap-1` que trae el riel del TravelTooltip es el de una fila de
+             botones pegados; acá son tres controles sueltos y necesitan
+             respirar un poco más. Se llega por el hijo directo porque el hueco
+             lo pone el contenedor del tooltip, no el de `WindowControls`. */
+          <WindowControls
+            sidebar={false}
+            more={false}
+            size="compact"
+            className="[&>div]:gap-1.5"
+          >
+            <TravelTooltipItem label={dark ? "Light mode" : "Dark mode"}>
+              <Button
+                variant="secondary"
+                size="icon-compact"
+                className={CONTROL}
+                aria-label="Toggle theme"
+                onClick={toggleTheme}
+              >
                 {dark ? <Sun /> : <Moon />}
               </Button>
-            </Tooltip>
-          </div>
-        </header>
+            </TravelTooltipItem>
 
-        <div className="min-h-0 flex-1 overflow-y-auto">
-          <div className="mx-auto max-w-3xl px-6 py-10">{active.render()}</div>
-        </div>
-      </SidebarInset>
+            <TravelTooltipItem label="Notifications">
+              <Button
+                variant="secondary"
+                size="icon-compact"
+                className={CONTROL}
+                aria-label="Notifications"
+              >
+                <Bell />
+              </Button>
+            </TravelTooltipItem>
+
+            {/* El tirador sólo existe si hay riel que tirar. Un botón que no
+                hace nada es peor que uno que no está. */}
+            {rielVisible && (
+            /* Se redimensiona manteniéndolo apretado, no clickeándolo: por eso
+               va por `onPointerDown` y no por `onClick`, y no lleva estado
+               propio — el riel es el dueño del tirón y de su límite. */
+            <TravelTooltipItem label="Hold to resize">
+              <Button
+                variant="secondary"
+                size="icon-compact"
+                className={cn(CONTROL, "cursor-col-resize")}
+                aria-label="Resize the panel"
+                onPointerDown={(e) => riel.current?.beginResize(e)}
+                onPointerEnter={() => setApuntado(true)}
+                onPointerLeave={() => setApuntado(false)}
+                onFocus={() => setApuntado(true)}
+                onBlur={() => setApuntado(false)}
+                /* Las flechas hacen lo mismo en pasos. Sin esto, redimensionar
+                   queda sólo para quien puede arrastrar. */
+                onKeyDown={(e) => {
+                  const manija = riel.current;
+                  if (!manija) return;
+                  const paso =
+                    e.key === "ArrowRight"
+                      ? -manija.step
+                      : e.key === "ArrowLeft"
+                        ? manija.step
+                        : 0;
+                  if (!paso) return;
+                  e.preventDefault();
+                  manija.nudge(paso);
+                }}
+              >
+                <ChevronsLeftRight />
+              </Button>
+            </TravelTooltipItem>
+            )}
+
+            {/* El board se abre y se cierra desde el extremo de la barra, del
+                lado donde el board aparece. Va siempre último, incluso cuando
+                el tirador del riel se suma: es el control que gobierna a los
+                demás y no debería cambiar de lugar según qué haya abierto. */}
+            <TravelTooltipItem label={board ? "Hide the board" : "Show the board"}>
+              <Button
+                variant="secondary"
+                size="icon-compact"
+                className={CONTROL}
+                aria-label={board ? "Hide the board" : "Show the board"}
+                aria-pressed={board}
+                onClick={() => setBoard((v) => !v)}
+              >
+                <LayoutGrid />
+              </Button>
+            </TravelTooltipItem>
+          </WindowControls>
+        }
+        className="m-2 ml-0 min-h-0 w-full min-w-0 flex-1 transition-[margin] duration-80 peer-data-[state=collapsed]:ml-2"
+      />
+
+      {/* El riel de widgets: el board no es contenido de ninguna pestaña sino
+          una región del shell, del mismo rango que el sidebar del otro costado.
+          Por eso está siempre montado, y por eso el mosaico que abrió su vista
+          deja un hueco en vez de quedarse: si se quedara, su plano y el de la
+          pestaña serían el mismo `layoutId` en dos sitios a la vez.
+
+          Va después del `WorkspaceOutlet` y no antes: el riel mide a su hermano
+          anterior para saber cuánto se están repartiendo, que es de dónde sale
+          el tope del tirón. */}
+      {/* `AnimatePresence` para que el riel alcance a irse: sin esto se
+          desmonta en el mismo cuadro en que se cierra el board y la animación
+          de salida no llega a correr. `initial={false}` para que no haga una
+          entrada en cada carga de la página — la entrada es para cuando alguien
+          lo abre, no para cuando llega. */}
+      <AnimatePresence initial={false}>
+        {rielVisible && (
+      <WidgetRail
+        widgets={widgets}
+        preview={preview}
+        onBoardClose={() => setBoard(false)}
+        onWidgetClose={(id) =>
+          setWidgets((lista) => lista.filter((w) => w.id !== id))
+        }
+        controlRef={riel}
+        onResizingChange={setRedimensionando}
+      />
+        )}
+      </AnimatePresence>
 
       {/* theme explícito y no "system": la app alterna el tema con la clase
           .dark en <html>, mientras que "system" seguiría al sistema operativo
