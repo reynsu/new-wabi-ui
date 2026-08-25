@@ -24,55 +24,55 @@ const TOUR: ConfirmationStep[] = [
   {
     id: "library",
     icon: Grid3x3,
-    title: "Biblioteca de shaders",
+    title: "Shader library",
     description:
-      "Recorré y cambiá entre todos los shaders que tenés guardados, sin salir del editor.",
+      "Browse and switch between every shader you've saved, without leaving the editor.",
   },
   {
     id: "palette",
     icon: Palette,
-    title: "Paleta compartida",
+    title: "Shared palette",
     description:
-      "Los colores de un shader viajan a los demás: cambiás la paleta una vez y se actualiza todo el set.",
+      "One shader's colours travel to the rest: change the palette once and the whole set updates.",
   },
   {
     id: "presets",
     icon: Wand2,
-    title: "Presets del equipo",
-    description: "Guardá una combinación y compartila con el resto del equipo.",
+    title: "Team presets",
+    description: "Save a combination and share it with the rest of the team.",
   },
   {
     id: "notifications",
     icon: Bell,
-    title: "Avisos de render",
+    title: "Render notifications",
     description:
-      "Te avisamos cuando termina un render largo, aunque tengas la aplicación cerrada.",
+      "We let you know when a long render finishes, even with the app closed.",
   },
   {
     id: "share",
     icon: Share2,
-    title: "Enlaces públicos",
-    description: "Publicá un shader con un enlace que se abre sin cuenta.",
+    title: "Public links",
+    description: "Publish a shader with a link that opens without an account.",
   },
   {
     id: "sync",
     icon: Sparkles,
-    title: "Sincronización",
+    title: "Sync",
     description:
-      "Todo lo que guardás en el teléfono aparece en el escritorio al abrirlo.",
+      "Everything you save on the phone shows up on the desktop when you open it.",
   },
   {
     id: "beta",
     icon: Sparkles,
-    title: "Funciones en prueba",
+    title: "Features in testing",
     description:
-      "Activá lo que todavía estamos escribiendo y contanos qué se rompe.",
+      "Turn on what we're still writing and tell us what breaks.",
   },
   {
     id: "ready",
     icon: Sparkles,
-    title: "Listo",
-    description: "Eso es todo. Podés volver a ver esta guía desde Ajustes.",
+    title: "All set",
+    description: "That's everything. You can see this guide again from Settings.",
   },
 ];
 
@@ -80,9 +80,9 @@ const DELETE_STEP: ConfirmationStep[] = [
   {
     id: "delete",
     icon: Trash2,
-    title: "Borrar el shader",
+    title: "Delete the shader",
     description:
-      "Se borra de la biblioteca y de los proyectos donde lo estés usando. No se puede deshacer.",
+      "It's deleted from the library and from any projects using it. This can't be undone.",
   },
 ];
 
@@ -137,7 +137,7 @@ export function MobileActionConfirmationSection() {
     <div className="flex flex-col gap-14">
       <Section
         title="MobileActionConfirmation"
-        hint="La hoja que confirma una acción en pantalla de teléfono: qué acción es, qué implica y las dos salidas, ancladas al piso donde llega el pulgar. Con varios pasos la misma hoja lleva el contador y el riel, y «Continuar» avanza en vez de confirmar."
+        hint="The sheet that confirms an action on a phone screen: which action it is, what it involves and the two ways out, anchored to the floor where the thumb reaches. With several steps the same sheet carries the counter and the rail, and “Continue” advances instead of confirming."
       >
         <div className="flex flex-wrap items-start gap-6">
           <Phone frame={setTourFrame}>
@@ -148,16 +148,16 @@ export function MobileActionConfirmationSection() {
               container={tourFrame}
               onSkip={() => setTourOpen(false)}
               onConfirm={() => setTourOpen(false)}
-              finalConfirmLabel="Empezar"
+              finalConfirmLabel="Get started"
               tileClassName="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
             />
           </Phone>
 
           <div className="flex min-w-[220px] flex-1 flex-col gap-3">
             <p className="text-[13px] text-muted-foreground">
-              Ocho pasos, que es justo pasado el tope del riel: los puntos se
-              retiran y queda el contador. Sacá dos pasos del arreglo y el riel
-              vuelve.
+              Eight steps, which is just past the rail's cap: the dots withdraw
+              and the counter is left. Drop two steps from the array and the rail
+              comes back.
             </p>
             <div className="flex flex-wrap gap-3">
               <Button
@@ -166,7 +166,7 @@ export function MobileActionConfirmationSection() {
                 onClick={() => setTourOpen(true)}
                 disabled={tourOpen}
               >
-                Abrir la guía
+                Open the guide
               </Button>
               <Button
                 variant="ghost"
@@ -174,21 +174,21 @@ export function MobileActionConfirmationSection() {
                 onClick={() => setTourOpen(false)}
                 disabled={!tourOpen}
               >
-                Cerrar
+                Close
               </Button>
             </div>
             <p className="text-[13px] text-muted-foreground">
-              El velo y la hoja se portalean adentro del marco, no sobre la
-              ventana: es la prop <code className="text-foreground">container</code>,
-              la misma escotilla que tiene el diálogo del registry.
+              The veil and the sheet are portalled inside the frame, not over
+              the window: that's the <code className="text-foreground">container</code>
+              prop, the same escape hatch the registry's dialog has.
             </p>
           </div>
         </div>
       </Section>
 
       <Section
-        title="Una sola acción"
-        hint="El caso común: un paso, sin contador ni riel, y la salida de arriba no se dibuja porque no hay nada que saltear. El tile toma el tono destructivo y el confirmar queda cargando mientras la acción viaja."
+        title="A single action"
+        hint="The common case: one step, with no counter and no rail, and the top exit isn't drawn because there's nothing to skip. The tile takes the destructive tone and the confirm goes into loading while the action is in flight."
       >
         <div className="flex flex-wrap items-start gap-6">
           <Phone frame={setDeleteFrame}>
@@ -199,16 +199,16 @@ export function MobileActionConfirmationSection() {
               container={deleteFrame}
               tone="destructive"
               pending={pending}
-              confirmLabel="Borrar"
+              confirmLabel="Delete"
               onConfirm={confirmDelete}
             />
           </Phone>
 
           <div className="flex min-w-[220px] flex-1 flex-col gap-3">
             <p className="text-[13px] text-muted-foreground">
-              El clic afuera no cierra — es un <code className="text-foreground">alertdialog</code>,
-              hay que elegir una de las dos salidas. Escape sí, que es la
-              cancelación de siempre.
+              Clicking outside doesn't close — it's an <code className="text-foreground">alertdialog</code>,
+              one of the two exits has to be chosen. Escape does, which is the
+              usual cancellation.
             </p>
             <Button
               variant="tertiary"
@@ -216,15 +216,15 @@ export function MobileActionConfirmationSection() {
               onClick={() => setDeleteOpen(true)}
               disabled={deleteOpen}
             >
-              Volver a abrir
+              Open it again
             </Button>
           </div>
         </div>
       </Section>
 
       <Section
-        title="Densidad compacta"
-        hint="En un teléfono de verdad esto no hay que pedirlo: la hoja ve el puntero grueso y se pone compacta sola. Acá, con mouse, se fuerza con un SizeProvider para ver el escalón. Los textos y el glifo bajan uno y la hoja se cierra, pero la fila de acciones queda en 44px: el salto al pulgar es el mismo en los dos escalones, así que lo que se achica es el aire y nunca el objetivo táctil."
+        title="Compact density"
+        hint="On a real phone you don't have to ask for this: the sheet sees the coarse pointer and goes compact on its own. Here, with a mouse, it's forced with a SizeProvider so the step can be seen. The text and the glyph drop one and the sheet tightens, but the row of actions stays at 44px: the jump to the thumb is the same at both steps, so what shrinks is the air and never the touch target."
       >
         <div className="flex flex-wrap items-start gap-6">
           <SizeProvider size="compact">
@@ -237,17 +237,17 @@ export function MobileActionConfirmationSection() {
                 placement="center"
                 onSkip={() => setCompactOpen(false)}
                 onConfirm={() => setCompactOpen(false)}
-                finalConfirmLabel="Empezar"
+                finalConfirmLabel="Get started"
               />
             </Phone>
           </SizeProvider>
 
           <div className="flex min-w-[220px] flex-1 flex-col gap-3">
             <p className="text-[13px] text-muted-foreground">
-              Tres pasos: acá el riel sí se dibuja, y el punto activo viaja en
-              vez de prenderse y apagarse. Va con{" "}
-              <code className="text-foreground">placement="center"</code>, que es
-              para cuando el piso del marco no es el piso de la pantalla.
+              Three steps: here the rail is drawn, and the active dot travels
+              instead of switching on and off. It goes with{" "}
+              <code className="text-foreground">placement="center"</code>, which
+              is for when the frame's floor isn't the screen's floor.
             </p>
             <Button
               variant="tertiary"
@@ -255,7 +255,7 @@ export function MobileActionConfirmationSection() {
               onClick={() => setCompactOpen(true)}
               disabled={compactOpen}
             >
-              Volver a abrir
+              Open it again
             </Button>
           </div>
         </div>

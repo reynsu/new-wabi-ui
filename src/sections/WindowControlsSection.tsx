@@ -14,12 +14,12 @@ function FloatingPanel() {
       <div className="flex flex-col gap-1">
         <p className="text-[13px] font-medium">Fluid Functionalism</p>
         <p className="text-[12px] text-muted-foreground">
-          Esto vive en otra ventana del sistema operativo, pero sigue siendo el
-          mismo árbol de React.
+          This lives in another window of the operating system, but it's still
+          the same React tree.
         </p>
       </div>
       <p className="text-[11px] text-muted-foreground">
-        Cerrala desde su cruz o desde el botón de la barra.
+        Close it from its own × or from the button in the bar.
       </p>
     </div>
   );
@@ -35,14 +35,14 @@ function SidebarState() {
         {state}
       </Badge>
       <Badge color="blue" size="compact">
-        lado: {side}
+        side: {side}
       </Badge>
       <Badge color="violet" size="compact">
-        {isMobile ? "móvil" : "escritorio"}
+        {isMobile ? "mobile" : "desktop"}
       </Badge>
       {shortcut && (
         <span className="text-[12px] text-muted-foreground">
-          atajo: <kbd className="font-mono">{shortcut}</kbd>
+          shortcut: <kbd className="font-mono">{shortcut}</kbd>
         </span>
       )}
     </div>
@@ -57,23 +57,23 @@ export function WindowControlsSection() {
   return (
     <div className="flex flex-col gap-14">
       <Section
-        title="La barra"
-        hint="Cuatro controles con un único TravelTooltip, que siempre abre hacia abajo. Nueva nota, ventana flotante por Document Picture-in-Picture, un menú «Más…» y el panel lateral por useSidebar()."
+        title="The bar"
+        hint="Four controls with a single TravelTooltip, which always opens downwards. New note, a floating window through Document Picture-in-Picture, a “More…” menu and the side panel through useSidebar()."
       >
         <div className="pb-20">
           <WindowControls
             floatingContent={<FloatingPanel />}
-            onCompose={() => setNotas((n) => [...n, `Nota ${n.length + 1}`])}
+            onCompose={() => setNotas((n) => [...n, `Note ${n.length + 1}`])}
             moreItems={(i) => (
               <>
                 <MenuItem
                   index={i}
-                  label="Restablecer ancho del panel"
+                  label="Reset the panel width"
                   onSelect={() => setWidth("16rem")}
                 />
                 <MenuItem
                   index={i + 1}
-                  label="Vaciar notas"
+                  label="Clear the notes"
                   disabled={notas.length === 0}
                   onSelect={() => setNotas([])}
                 />
@@ -96,46 +96,46 @@ export function WindowControlsSection() {
       </Section>
 
       <Section
-        title="El menú «Más…»"
-        hint="Pantalla completa y ventana flotante viven acá dentro; los items extra los pone quien usa el componente con moreItems, que recibe el índice desde el que seguir."
+        title="The “More…” menu"
+        hint="Full screen and the floating window live in here; the extra items are supplied by whoever uses the component through moreItems, which takes the index to carry on from."
       >
         <p className="text-[13px] text-muted-foreground">
-          Mientras el menú está abierto ese item se silencia
-          (<code>suppressed</code>): el popup se despliega justo donde iría la
-          píldora, y como aparece bajo el cursor nunca llegaría un mouseleave
-          que la cerrara sola.
+          While the menu is open that item is silenced
+          (<code>suppressed</code>): the popup unfolds exactly where the pill
+          would go, and since it appears under the cursor no mouseleave would
+          ever arrive to close it on its own.
         </p>
       </Section>
 
       <Section
-        title="La etiqueta sigue al estado"
-        hint="Cada etiqueta refleja el estado actual: «Usar» ⇄ «Cerrar», «Ocultar» ⇄ «Mostrar». Al cambiar el texto la píldora se remide y anima su ancho, el mismo mecanismo del traslado pero disparado por estado en vez de por el puntero."
+        title="The label follows the state"
+        hint="Every label reflects the current state: “Use” ⇄ “Close”, “Hide” ⇄ “Show”. When the text changes the pill remeasures and animates its width, the same mechanism as the travel but fired by state instead of by the pointer."
       >
         <p className="text-[13px] text-muted-foreground">
-          Es lo que obligó a mover los labels de un ref a estado en
-          TravelTooltip: en un ref, cambiar el texto de un item no
-          re-renderizaba al padre y la píldora se quedaba con el anterior.
+          It's what forced the labels to move from a ref into state in
+          TravelTooltip: in a ref, changing an item's text didn't re-render the
+          parent and the pill kept the previous one.
         </p>
         <p className="text-[13px] text-muted-foreground">
-          Si el tooltip sigue abierto tras pulsar depende del botón, no del
-          componente: el de la ventana flotante no mueve nada y la píldora se
-          reajusta en el sitio, mientras que el del panel lateral reacomoda la
-          página y el botón se va de debajo del cursor, así que el tooltip se
-          cierra — como debe.
+          Whether the tooltip stays open after a press depends on the button and
+          not on the component: the floating-window one moves nothing and the
+          pill readjusts in place, while the side-panel one rearranges the page
+          and the button slips out from under the cursor, so the tooltip closes —
+          as it should.
         </p>
       </Section>
 
       <Section
-        title="Pantalla completa acotada"
-        hint="fullscreenTarget apunta a un elemento concreto en vez del documento entero: sólo esta tarjeta pasa a pantalla completa. Está en el menú «Más…»."
+        title="Bounded full screen"
+        hint="fullscreenTarget points at a specific element instead of the whole document: only this card goes full screen. It's in the “More…” menu."
       >
         <div
           ref={panelRef}
           className="flex flex-col gap-4 rounded-2xl bg-surface-2 p-6 shadow-surface-2"
         >
           <p className="text-[13px] text-muted-foreground">
-            Esta tarjeta es el objetivo. En pantalla completa ocupa todo, con el
-            resto de la página fuera.
+            This card is the target. Full screen it takes everything, with the
+            rest of the page left out.
           </p>
           <div className="pb-20">
             <WindowControls
@@ -147,8 +147,8 @@ export function WindowControlsSection() {
       </Section>
 
       <Section
-        title="Sin sidebar"
-        hint="sidebar={false} omite ese botón y, con él, la llamada a useSidebar() — que lanza fuera de un SidebarProvider. Por eso ese botón vive en un subcomponente propio."
+        title="Without the sidebar"
+        hint="sidebar={false} leaves that button out and, with it, the call to useSidebar() — which throws outside a SidebarProvider. That's why that button lives in a subcomponent of its own."
       >
         <div className="pb-20">
           <WindowControls sidebar={false} size="compact" />

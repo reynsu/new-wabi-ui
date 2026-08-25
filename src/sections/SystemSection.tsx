@@ -11,11 +11,11 @@ import { SizeProvider, typeScale, sizeMap, type SizeVariant } from "@/lib/size-c
 import { spring } from "@/lib/springs";
 import { Row, Section } from "./Shared";
 
-const RELEASES = Array.from({ length: 24 }, (_, i) => `v1.${23 - i}.0 — release de mantenimiento`);
+const RELEASES = Array.from({ length: 24 }, (_, i) => `v1.${23 - i}.0 — maintenance release`);
 
 const MONTHS = [
-  "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-  "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
 ];
 
 function SpringTrack({ tier, label }: { tier: keyof typeof spring; label: string }) {
@@ -26,14 +26,14 @@ function SpringTrack({ tier, label }: { tier: keyof typeof spring; label: string
       <div className="flex items-baseline gap-2">
         <span className="text-[13px] font-medium">{label}</span>
         <span className="text-[12px] text-muted-foreground">
-          {t.duration}s · bounce {t.bounce} · salida {t.exit.duration}s
+          {t.duration}s · bounce {t.bounce} · exit {t.exit.duration}s
         </span>
       </div>
       <button
         type="button"
         onClick={() => setAt((v) => (v === 0 ? 1 : 0))}
         className="relative h-9 w-full max-w-md rounded-full bg-surface-2 shadow-surface-1"
-        aria-label={`Disparar el spring ${label}`}
+        aria-label={`Fire the ${label} spring`}
       >
         <motion.span
           className="absolute top-1/2 left-1 h-7 w-7 -translate-y-1/2 rounded-full bg-foreground"
@@ -54,13 +54,13 @@ function SizeSample({ size }: { size: SizeVariant }) {
           <span className="text-[12px] text-muted-foreground">{sizeMap[size].controlHeight}px</span>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Button leadingIcon={Calendar}>Nuevo</Button>
-          <Button variant="tertiary" trailingIcon={Search}>Buscar</Button>
+          <Button leadingIcon={Calendar}>New</Button>
+          <Button variant="tertiary" trailingIcon={Search}>Search</Button>
           <Select defaultValue="a">
-            <SelectTrigger className="w-40" placeholder="Filtrar" />
+            <SelectTrigger className="w-40" placeholder="Filter" />
             <SelectContent>
-              <SelectItem index={0} value="a">Última actualización</SelectItem>
-              <SelectItem index={1} value="b">Creación</SelectItem>
+              <SelectItem index={0} value="a">Last updated</SelectItem>
+              <SelectItem index={1} value="b">Created</SelectItem>
             </SelectContent>
           </Select>
           <Badge color="violet">badge</Badge>
@@ -73,19 +73,19 @@ function SizeSample({ size }: { size: SizeVariant }) {
 export function SystemSection() {
   return (
     <div className="flex flex-col gap-14">
-      <Section title="Motion" hint="Tres velocidades para todo. Hover y toggles usan fast; dropdowns y tabs, moderate; diálogos y drawers, slow. La salida siempre es un escalón más rápida. Click en una pista para dispararla.">
+      <Section title="Motion" hint="Three speeds for everything. Hover and toggles use fast; dropdowns and tabs, moderate; dialogs and drawers, slow. The exit is always one step faster. Click a track to fire it.">
         <div className="flex flex-col gap-6">
           <SpringTrack tier="fast" label="fast" />
           <SpringTrack tier="moderate" label="moderate" />
           <SpringTrack tier="slow" label="slow" />
         </div>
         <p className="text-[12px] text-muted-foreground">
-          El árbol está envuelto en <code>&lt;MotionConfig reducedMotion="user"&gt;</code>, así que con
-          reduced-motion activo desaparecen los cambios de posición y sólo quedan los fades.
+          The tree is wrapped in <code>&lt;MotionConfig reducedMotion="user"&gt;</code>, so with
+          reduced-motion on the changes of position disappear and only the fades are left.
         </p>
       </Section>
 
-      <Section title="Sizes" hint="Dos escalones: 36px por defecto y 28px compacto. La densidad es una decisión de región — envolvés el bloque en un SizeProvider y todo lo de adentro lo sigue, menús incluidos.">
+      <Section title="Sizes" hint="Two steps: 36px by default and 28px compact. Density is a decision of the region — you wrap the block in a SizeProvider and everything inside follows it, menus included.">
         <div className="grid gap-4 md:grid-cols-2">
           <SizeSample size="default" />
           <SizeSample size="compact" />
@@ -95,7 +95,7 @@ export function SystemSection() {
           <Table size="compact">
             <TableHeader>
               <TableRow>
-                <TableHead>Rol</TableHead>
+                <TableHead>Role</TableHead>
                 <TableHead>Default</TableHead>
                 <TableHead>Compact</TableHead>
               </TableRow>
@@ -113,7 +113,7 @@ export function SystemSection() {
         </div>
       </Section>
 
-      <Section title="Scrollbars" hint="El thumb descansa angosto y de bajo contraste, y se ensancha al acercarte. Encima va scroll-fade: una máscara que disuelve el contenido hacia el borde que todavía tiene más para scrollear.">
+      <Section title="Scrollbars" hint="The thumb rests narrow and low-contrast, and widens as you get closer. On top of that goes scroll-fade: a mask that dissolves the content towards whichever edge still has more to scroll.">
         <div className="flex flex-wrap gap-6">
           <div className="w-72 rounded-xl bg-surface-2 p-1 shadow-surface-1">
             <ScrollArea className="h-56" viewportClassName="scroll-fade px-3 py-2">
@@ -138,18 +138,18 @@ export function SystemSection() {
           </div>
         </div>
         <p className="text-[12px] text-muted-foreground">
-          En dispositivos táctiles el componente se aparta y deja el scroll nativo: la física de la
-          plataforma le gana a cualquier barra custom.
+          On touch devices the component steps aside and leaves the native scroll: the platform's
+          physics beats any custom bar.
         </p>
       </Section>
 
-      <Section title="Table" hint="Filas con resalte por proximidad; el borde se retira junto a la fila activa.">
+      <Section title="Table" hint="Rows with proximity highlighting; the border withdraws next to the active row.">
         <div className="max-w-2xl overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Componente</TableHead>
-                <TableHead>Primitiva</TableHead>
+                <TableHead>Component</TableHead>
+                <TableHead>Primitive</TableHead>
                 <TableHead>Spring</TableHead>
               </TableRow>
             </TableHeader>
@@ -171,11 +171,11 @@ export function SystemSection() {
         </div>
       </Section>
 
-      <Section title="Row de referencia">
+      <Section title="Reference row">
         <Row>
-          <Badge color="teal">30 componentes</Badge>
+          <Badge color="teal">30 components</Badge>
           <Badge color="indigo">Base UI</Badge>
-          <Badge color="amber">4 capas de sistema</Badge>
+          <Badge color="amber">4 system layers</Badge>
         </Row>
       </Section>
     </div>

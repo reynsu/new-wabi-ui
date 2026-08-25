@@ -1,16 +1,16 @@
 "use client";
 
 /**
- * TravelTooltip — un solo tooltip compartido por un grupo de triggers.
+ * TravelTooltip — a single tooltip shared by a group of triggers.
  *
- * La diferencia con un tooltip normal: cuando el puntero pasa de un trigger al
- * vecino, la píldora no se desmonta y vuelve a aparecer. Se traslada, ajusta su
- * ancho al texto nuevo y hace crossfade del label. El caret llega antes que el
- * cuerpo, que es lo que hace que el movimiento se lea como una sola pieza
- * siguiendo al cursor y no como dos tooltips distintos.
+ * The difference from a regular tooltip: when the pointer moves from one
+ * trigger to its neighbour, the pill doesn't unmount and reappear. It travels,
+ * fits its width to the new text and crossfades the label. The caret arrives
+ * ahead of the body, and that difference is what makes the movement read as a
+ * single piece chasing the cursor and not as two separate tooltips.
  *
- * Autónomo: no envuelve al Tooltip del registry, así que `shadcn add` no lo
- * toca. Un grupo de un solo item se comporta como un tooltip común.
+ * Standalone: it doesn't wrap the registry's Tooltip, so `shadcn add` never
+ * touches it. A group with a single item behaves like a plain tooltip.
  */
 
 import {
@@ -42,9 +42,9 @@ import { useTouchPrimary } from "@/hooks/use-touch-primary";
 
 type Side = "top" | "bottom";
 
-/** Aire mínimo entre la píldora y el borde del viewport, en px. */
+/** Minimum air between the pill and the viewport's edge, in px. */
 const VIEWPORT_MARGIN = 8;
-/** Media base del caret triangular, en px. */
+/** Half the base of the triangular caret, in px. */
 const CARET = 4;
 
 interface Registered {
@@ -53,12 +53,12 @@ interface Registered {
 }
 
 interface Geometry {
-  /** Coordenadas de viewport: la píldora vive en un portal con position fixed. */
+  /** Viewport coordinates: the pill lives in a portal with position fixed. */
   left: number;
   top: number;
   width: number;
-  /** Centro del trigger. Independiente del cuerpo: cuando el viewport recorta
-   *  la píldora, el caret se queda apuntando al botón real. */
+  /** The trigger's centre. Independent of the body: when the viewport trims
+   *  the pill, the caret keeps pointing at the real button. */
   caretX: number;
 }
 
@@ -79,7 +79,7 @@ const TravelTooltipContext = createContext<TravelTooltipContextValue | null>(
 function useTravelTooltip() {
   const ctx = useContext(TravelTooltipContext);
   if (!ctx) {
-    throw new Error("TravelTooltipItem debe usarse dentro de un TravelTooltip");
+    throw new Error("TravelTooltipItem must be used inside a TravelTooltip");
   }
   return ctx;
 }
@@ -88,20 +88,21 @@ function useTravelTooltip() {
 
 interface TravelTooltipProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;
-  /** De qué lado del trigger se abre. @default "bottom" */
+  /** Which side of the trigger it opens on. @default "bottom" */
   side?: Side;
-  /** Distancia en px entre el trigger y la píldora. @default 8 */
+  /** Distance in px between the trigger and the pill. @default 8 */
   sideOffset?: number;
-  /** Espera antes de la primera apertura, en ms. Moverse a un trigger vecino
-   *  con el tooltip ya abierto no espera nada — ahí está el efecto. @default 200 */
+  /** Wait before the first opening, in ms. Moving to a neighbouring trigger
+   *  with the tooltip already open waits for nothing — that's the whole effect.
+   *  @default 200 */
   delayDuration?: number;
-  /** Gracia al salir del grupo, en ms. Evita el parpadeo al cruzar el hueco
-   *  de 1-2px entre dos botones pegados. @default 90 */
+  /** Grace period on leaving the group, in ms. It avoids the flicker when
+   *  crossing the 1-2px gap between two adjacent buttons. @default 90 */
   closeDelay?: number;
-  /** Fija el grupo a un escalón de la escalera de tamaños. Omitido, sigue al
-   *  SizeProvider de alrededor. */
+  /** Pins the group to a step of the size ladder. Omitted, it follows the
+   *  surrounding SizeProvider. */
   size?: SizeVariant;
-  /** Clases para la píldora. */
+  /** Classes for the pill. */
   tooltipClassName?: string;
 }
 
@@ -122,12 +123,12 @@ const TravelTooltip = forwardRef<HTMLDivElement, TravelTooltipProps>(
   ) => {
     const containerRef = useRef<HTMLDivElement | null>(null);
     const measurerRef = useRef<HTMLSpanElement | null>(null);
-    // Los nodos van en un ref: no participan del render, y guardarlos en
-    // estado provocaría un render por cada montaje.
+    // The nodes go in a ref: they take no part in the render, and keeping them
+    // in state would cause a render per mount.
     const nodes = useRef(new Map<number, HTMLElement | null>());
-    // Los labels sí van en estado: se pintan. En un ref, cambiar el label de un
-    // item no re-renderizaba al padre y la píldora se quedaba con el texto
-    // anterior hasta el próximo render por otro motivo.
+    // The labels do go in state: they get painted. In a ref, changing an item's
+    // label didn't re-render the parent and the pill kept the previous text
+    // until the next render for some other reason.
     const [labels, setLabels] = useState<Record<number, string>>({});
 
     const [activeIndex, setActiveIndex] = useState<number | null>(null);
@@ -144,8 +145,8 @@ const TravelTooltip = forwardRef<HTMLDivElement, TravelTooltipProps>(
     const compact = sizeClasses.variant === "compact";
     const isTouch = useTouchPrimary();
     const reduceMotion = useReducedMotion() ?? false;
-    // En táctil no hay hover: el tooltip nunca se abre y el grupo queda como un
-    // contenedor común. La plataforma ya resuelve eso con long-press.
+    // On touch there's no hover: the tooltip never opens and the group is left
+    // as a plain container. The platform already solves that with long-press.
     const enabled = !isTouch;
 
     const pillHeight = compact ? 20 : 24;
@@ -177,7 +178,8 @@ const TravelTooltip = forwardRef<HTMLDivElement, TravelTooltipProps>(
       }
     }, []);
 
-    // Espejo del índice activo, para leerlo dentro de un timer sin recrearlo.
+    // A mirror of the active index, to read it inside a timer without
+    // recreating it.
     const activeIndexRef = useRef<number | null>(null);
     useEffect(() => {
       activeIndexRef.current = activeIndex;
@@ -187,8 +189,8 @@ const TravelTooltip = forwardRef<HTMLDivElement, TravelTooltipProps>(
       (index: number, immediate: boolean) => {
         if (!enabled) return;
         clearTimers();
-        // Ya abierto: el salto al vecino es inmediato, sin re-esperar el delay.
-        // Es la razón de ser del componente.
+        // Already open: the jump to the neighbour is immediate, without waiting
+        // out the delay again. It's the component's whole reason for being.
         if (open || immediate || delayDuration <= 0) {
           setActiveIndex(index);
           setOpen(true);
@@ -209,7 +211,7 @@ const TravelTooltip = forwardRef<HTMLDivElement, TravelTooltipProps>(
           openTimer.current = null;
         }
         closeTimer.current = setTimeout(() => {
-          // Sólo cierra si nadie tomó el relevo mientras corría la gracia.
+          // It only closes if nobody took over while the grace period ran.
           if (activeIndexRef.current !== index) return;
           setActiveIndex(null);
           setOpen(false);
@@ -230,10 +232,10 @@ const TravelTooltip = forwardRef<HTMLDivElement, TravelTooltipProps>(
       const width = measurer.offsetWidth;
       const caretX = triggerBox.left + triggerBox.width / 2;
 
-      // Centrada en el trigger, recortada contra el viewport. El recorte va
-      // contra el viewport y no contra el grupo: una etiqueta larga en una
-      // barra de cuatro iconos es más ancha que el grupo entero, y clampear
-      // ahí la empujaría fuera de su propio trigger.
+      // Centred on the trigger, trimmed against the viewport. The trim is
+      // against the viewport and not the group: a long label in a bar of four
+      // icons is wider than the whole group, and clamping there would push it
+      // off its own trigger.
       const maxLeft = Math.max(
         VIEWPORT_MARGIN,
         window.innerWidth - width - VIEWPORT_MARGIN
@@ -251,12 +253,12 @@ const TravelTooltip = forwardRef<HTMLDivElement, TravelTooltipProps>(
       setGeometry({ left, top, width, caretX });
     }, [activeIndex, side, sideOffset, pillHeight]);
 
-    // Se mide en layout, antes de pintar, para que la píldora no aparezca un
-    // frame en la posición anterior.
+    // It's measured in layout, before paint, so the pill doesn't show up for a
+    // frame at the previous position.
     useLayoutEffect(measure, [measure, activeLabel, compact]);
 
-    // Con position:fixed la píldora no sigue al trigger sola: hay que
-    // recolocarla si algo scrollea o el viewport cambia de tamaño.
+    // With position:fixed the pill doesn't follow the trigger on its own: it
+    // has to be repositioned if anything scrolls or the viewport resizes.
     useEffect(() => {
       if (!open) return;
       const onChange = () => measure();
@@ -269,8 +271,8 @@ const TravelTooltip = forwardRef<HTMLDivElement, TravelTooltipProps>(
     }, [open, measure]);
 
     const travel = reduceMotion ? { duration: 0 } : spring.moderate;
-    // El caret usa un tier más rápido que el cuerpo: llega antes, y esa
-    // diferencia es lo que hace que el conjunto se lea persiguiendo al cursor.
+    // The caret uses a faster tier than the body: it arrives first, and that
+    // difference is what makes the whole thing read as chasing the cursor.
     const caretTravel = reduceMotion ? { duration: 0 } : spring.fast;
     const fade = reduceMotion ? { duration: 0 } : spring.fast;
 
@@ -287,13 +289,13 @@ const TravelTooltip = forwardRef<HTMLDivElement, TravelTooltipProps>(
       [register, activate, deactivate, activeIndex, open, tooltipId, enabled]
     );
 
-    // Contador propio en vez del índice que da Children.map: un hijo
-    // condicional que resuelve a null dejaría un hueco en la numeración, y los
-    // labels y la geometría se indexan por estos números.
+    // Our own counter instead of the index Children.map hands out: a
+    // conditional child that resolves to null would leave a hole in the
+    // numbering, and the labels and the geometry are indexed by these numbers.
     let slot = 0;
     const indexedChildren = Children.map(children, (child) =>
-      // Igual que TabsList: inyectar _index en un <div> dispara el warning de
-      // prop desconocida de React, así que sólo se toca a los componentes.
+      // Same as TabsList: injecting _index into a <div> triggers React's
+      // unknown-prop warning, so only components get touched.
       isValidElement(child) && typeof child.type !== "string"
         ? cloneElement(child, { _index: slot++ } as Record<string, unknown>)
         : child
@@ -302,10 +304,10 @@ const TravelTooltip = forwardRef<HTMLDivElement, TravelTooltipProps>(
     const overlay = (
       <AnimatePresence>
         {enabled && open && activeIndex !== null && (
-          // Capa fija de tamaño cero en el origen del viewport: los hijos se
-          // colocan con transform desde ahí. Va en un portal porque cualquier
-          // ancestro con overflow recortaría la píldora — que es justo lo que
-          // pasaba cuando esto vivía dentro del grupo.
+          // A fixed, zero-sized layer at the viewport's origin: the children
+          // are placed with transform from there. It goes in a portal because
+          // any ancestor with overflow would clip the pill — which is exactly
+          // what happened when this lived inside the group.
           <motion.div
             className="pointer-events-none fixed left-0 top-0 z-50 h-0 w-0"
             initial={{ opacity: 0 }}
@@ -356,9 +358,9 @@ const TravelTooltip = forwardRef<HTMLDivElement, TravelTooltipProps>(
               exit={{ scale: 0.96 }}
               transition={{ ...travel, scale: fade }}
             >
-              {/* El label viejo y el nuevo se superponen durante el cambio:
-                  el saliente pasa a absolute, así el ancho lo manda la píldora
-                  y no el más largo de los dos. */}
+              {/* The old label and the new one overlap during the change: the
+                  outgoing one goes absolute, so the width is set by the pill and
+                  not by the longer of the two. */}
               <AnimatePresence initial={false} mode="popLayout">
                 <motion.span
                   key={activeIndex}
@@ -392,9 +394,9 @@ const TravelTooltip = forwardRef<HTMLDivElement, TravelTooltipProps>(
         >
           {indexedChildren}
 
-          {/* Medidor: fuera de pantalla, da el ancho de destino antes de animar.
-              Animar a "auto" no sirve — framer lo resuelve midiendo el tamaño
-              visual, que bajo un ancestro escalado sobrepasa. */}
+          {/* Measurer: off screen, it gives the target width before animating.
+              Animating to "auto" doesn't work — framer resolves it by measuring
+              the visual size, which overshoots under a scaled ancestor. */}
           <span
             ref={measurerRef}
             aria-hidden
@@ -407,8 +409,8 @@ const TravelTooltip = forwardRef<HTMLDivElement, TravelTooltipProps>(
           </span>
         </div>
 
-        {/* Vite no hace SSR: document existe ya en el primer render, así que
-            el portal no necesita el clásico guard de montaje. */}
+        {/* Vite doesn't do SSR: document exists on the very first render, so
+            the portal doesn't need the classic mount guard. */}
         {typeof document !== "undefined"
           ? createPortal(overlay, document.body)
           : null}
@@ -422,15 +424,16 @@ TravelTooltip.displayName = "TravelTooltip";
 /* ─────────────────────────── Item ─────────────────────────── */
 
 interface TravelTooltipItemProps {
-  /** Texto de la píldora. */
+  /** The pill's text. */
   label: string;
-  /** El trigger. Un único elemento — recibe los handlers y aria-describedby. */
+  /** The trigger. A single element — it takes the handlers and
+   *  aria-describedby. */
   children: ReactElement;
-  /** Silencia este item: no abre con hover ni con foco, y cierra si estaba
-   *  abierto. Para triggers que despliegan algo debajo —un menú— donde la
-   *  píldora se superpondría al popup. */
+  /** Silences this item: it doesn't open on hover or on focus, and closes if it
+   *  was open. For triggers that unfold something below them —a menu— where the
+   *  pill would overlap the popup. */
   suppressed?: boolean;
-  /** @internal Lo asigna TravelTooltip. */
+  /** @internal Assigned by TravelTooltip. */
   _index?: number;
 }
 
@@ -449,8 +452,8 @@ function TravelTooltipItem({
     return () => register(_index, null);
   }, [register, _index, label]);
 
-  // Al silenciarse hay que cerrar lo que ya estaba abierto: el menú se
-  // despliega bajo el cursor, así que no va a llegar ningún mouseleave.
+  // On being silenced, whatever was already open has to close: the menu
+  // unfolds under the cursor, so no mouseleave is ever going to arrive.
   useEffect(() => {
     if (suppressed) deactivate(_index);
   }, [suppressed, deactivate, _index]);
@@ -459,28 +462,28 @@ function TravelTooltipItem({
 
   const child = children as ReactElement<Record<string, unknown>>;
   const childProps = child.props;
-  // En React 19 `ref` es un prop más. Leerlo de `child.ref` está deprecado y
-  // avisa por consola, así que se toma de props.
+  // In React 19 `ref` is just another prop. Reading it from `child.ref` is
+  // deprecated and warns in the console, so it's taken from props.
   const childRef = childProps.ref as React.Ref<HTMLElement> | undefined;
 
-  // El linter ve un ref manipulado en render; es la composición de refs de
-  // siempre, que sólo corre cuando React monta el nodo.
+  // The linter sees a ref being handled during render; it's the usual ref
+  // composition, which only runs when React mounts the node.
   // oxlint-disable-next-line react/refs
   return cloneElement(child, {
-    // Se compone con el ref que el consumidor ya hubiera puesto en su trigger,
-    // en vez de pisarlo.
+    // It composes with whatever ref the consumer had already put on their
+    // trigger, instead of overwriting it.
     ref: (node: HTMLElement | null) => {
       nodeRef.current = node;
       if (typeof childRef === "function") childRef(node);
       else if (childRef && typeof childRef === "object") {
-        // Escribir el `.current` del ref ajeno es justamente reenviarlo, no
-        // mutar un prop.
+        // Writing the other ref's `.current` is precisely forwarding it, not
+        // mutating a prop.
         // oxlint-disable-next-line react/immutability
         (childRef as { current: HTMLElement | null }).current = node;
       }
     },
-    // Los handlers se componen, no se reemplazan: un onMouseEnter del consumidor
-    // tiene que seguir corriendo.
+    // The handlers compose, they don't replace: a consumer's onMouseEnter has
+    // to keep running.
     onMouseEnter: (e: React.MouseEvent) => {
       if (!suppressed) activate(_index, false);
       (childProps.onMouseEnter as ((e: React.MouseEvent) => void) | undefined)?.(e);
@@ -489,7 +492,8 @@ function TravelTooltipItem({
       deactivate(_index);
       (childProps.onMouseLeave as ((e: React.MouseEvent) => void) | undefined)?.(e);
     },
-    // El foco abre sin esperar: quien navega con teclado ya declaró su intención.
+    // Focus opens without waiting: someone navigating by keyboard has already
+    // declared their intent.
     onFocus: (e: React.FocusEvent) => {
       if (!suppressed) activate(_index, true);
       (childProps.onFocus as ((e: React.FocusEvent) => void) | undefined)?.(e);

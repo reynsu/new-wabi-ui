@@ -1,15 +1,15 @@
 "use client";
 
 /**
- * WorkspacePanel — el marco de contenido que va al lado del sidebar.
+ * WorkspacePanel — the content frame that sits next to the sidebar.
  *
- * Una barra de pestañas donde la activa no es una píldora suelta sino que se
- * funde con el área de contenido: comparten fondo y las une un par de esquinas
- * cóncavas, como las pestañas de un navegador. Eso es lo que comunica que lo
- * de abajo es el contenido *de esa* pestaña y no un panel aparte.
+ * A bar of tabs where the active one isn't a loose pill but merges into the
+ * content area: they share a background and a pair of concave corners joins
+ * them, like a browser's tabs. That's what says the thing below is the content
+ * *of that* tab and not a separate panel.
  *
- * A la izquierda de la primera pestaña va el botón que muestra y oculta el
- * sidebar, así que el componente tiene que vivir dentro de un SidebarProvider.
+ * To the left of the first tab sits the button that shows and hides the
+ * sidebar, so the component has to live inside a SidebarProvider.
  */
 
 import {
@@ -37,58 +37,57 @@ import { SURFACE_BG, surfaceClasses } from "@/lib/surface-classes";
 import type { IconComponent } from "@/lib/icon-context";
 import { useProximityHover } from "@/hooks/use-proximity-hover";
 
-/** Radio de la pestaña y de las esquinas cóncavas que la unen al contenido.
- *  Un solo número: si difieren, la curva se nota partida en la unión. */
+/** Radius of the tab and of the concave corners that join it to the content.
+ *  A single number: if they differ, the curve reads as broken at the joint. */
 const TAB_RADIUS = 12;
 
-/** Escalones que sube el plano (pestaña activa + contenido) sobre la barra.
- *  Dos, como cualquier capa que se apoya en su sustrato. */
+/** Steps the plane (active tab + content) climbs over the bar. Two, like any
+ *  layer resting on its substrate. */
 const PLANE_OFFSET = 2;
 
 /**
- * Peso fijo de la sombra del plano.
+ * The plane's shadow weight, fixed.
  *
- * El fondo del plano sigue al sustrato, pero su sombra no: de ella sólo se ve
- * el anillo de 1px del borde superior — el resto lo recorta el `overflow-hidden`
- * del panel — y ese anillo es la línea que separa la barra del contenido. Fijo
- * para que sea siempre un pelo, aunque el panel viva dentro de un diálogo.
- * Mismo recurso que el indicador de `tabs` con su `shadowLevel`.
+ * The plane's background follows the substrate, but its shadow doesn't: all you
+ * see of it is the 1px ring along the top edge — the rest is clipped by the
+ * panel's `overflow-hidden` — and that ring is the line separating the bar from
+ * the content. Fixed so it's always a hairline, even if the panel lives inside
+ * a dialog. Same device as the `tabs` indicator with its `shadowLevel`.
  */
 const PLANE_SHADOW = 3;
 
-/** Lo que la pestaña activa monta sobre el plano para tapar el anillo de su
- *  sombra justo donde las dos se funden. */
+/** How far the active tab rides onto the plane to cover its shadow's ring
+ *  exactly where the two merge. */
 const TAB_OVERLAP = 1;
 
 /**
- * El aire de la barra: entre pestañas y también entre la fila y el contenido.
+ * The bar's air: between tabs and also between the row and the content.
  *
- * Un solo número para los dos, porque son el mismo aire — al pasar el cursor,
- * el relleno de una pestaña tiene que quedar igual de despegado de su vecina
- * que del contenido de abajo.
+ * A single number for both, because it's the same air — on hover, a tab's fill
+ * has to sit as far off its neighbour as it does off the content below.
  *
- * No lo subas a 24 (`TAB_RADIUS * 2`) para "arreglar" el solape de las
- * esquinas cóncavas de dos pestañas vecinas: ese solape es a propósito.
+ * Don't raise it to 24 (`TAB_RADIUS * 2`) to "fix" the overlap of two
+ * neighbouring tabs' concave corners: that overlap is on purpose.
  */
 const BAR_GAP = 4;
 
 /**
- * Color del canto de la silueta.
+ * The outline's edge colour.
  *
- * Es el mismo con el que la escalera dibuja todos sus anillos en claro
- * (`--shadow-color`), así que el canto de la pestaña y la línea que corre por
- * la barra son literalmente la misma línea. En oscuro la escalera separa por
- * color y este canto queda en un susurro, que es lo que corresponde.
+ * It's the same one the ladder draws all its rings with in light
+ * (`--shadow-color`), so the tab's edge and the line running along the bar are
+ * literally the same line. In dark the ladder separates by colour and this edge
+ * drops to a whisper, which is exactly right.
  */
 const EDGE = "var(--shadow-color)";
 
 /**
- * Hasta dónde bajan los costados del canto, medido desde el pie de la pestaña.
+ * How far down the edge's sides run, measured from the tab's foot.
  *
- * No es un número suelto: es exactamente donde arranca el arco de la esquina
- * cóncava, que empieza `TAB_RADIUS` por encima de la línea del plano y la
- * pestaña termina `BAR_GAP` por encima de ella. Ahí el canto tiene que cortar
- * — ni un pixel antes, que abre un hueco, ni uno después, que lo pisa.
+ * It isn't a loose number: it's exactly where the concave corner's arc starts,
+ * which begins `TAB_RADIUS` above the plane's line while the tab ends
+ * `BAR_GAP` above it. That's where the edge has to stop — not a pixel earlier,
+ * which opens a gap, and not one later, which treads on it.
  */
 const EDGE_STOP = TAB_RADIUS - BAR_GAP;
 
@@ -101,32 +100,61 @@ interface WorkspaceTab {
 
 interface WorkspacePanelProps {
   tabs: WorkspaceTab[];
-  /** Pestaña activa (controlado). */
+  /** Active tab (controlled). */
   value?: string;
-  /** Pestaña activa inicial (no controlado). Por defecto, la primera. */
+  /** Initial active tab (uncontrolled). The first one by default. */
   defaultValue?: string;
   onValueChange?: (id: string) => void;
-  /** Cierra una pestaña. El componente no es dueño del array, así que sólo
-   *  avisa: quien lo usa la saca de `tabs`. Sin este callback no hay botón de
-   *  cerrar — no tendría nada que hacer. */
+  /** Closes a tab. The component doesn't own the array, so it only reports:
+   *  whoever uses it drops the tab from `tabs`. Without this callback there's no
+   *  close button — it would have nothing to do. */
   onTabClose?: (id: string) => void;
-  /** Fija el panel a un escalón de la escalera de tamaños. */
+  /** Marks the panel while something is holding it from outside — the handle
+   *  that resizes it, today the widget rail's.
+   *
+   *  It does two things, both in the vocabulary the system already has:
+   *
+   *  - **raises the shadow two steps**, which is how you say "elevation" here;
+   *  - **darkens the edge**, the same device the sidebar's rail uses to mark its
+   *    border when it can be grabbed. The ladder's ring is 6% black —enough to
+   *    separate two resting surfaces, not to say "this object is being held"—,
+   *    so for as long as it lasts it's swapped for 25% of the text colour.
+   *
+   *  What **isn't** touched is the fill or the level the panel publishes
+   *  inwards: that way everything mounted on top —the tabs, the popups— doesn't
+   *  get recomputed every time the pointer brushes the edge. */
+  lifted?: boolean;
+  /** What goes at the far right of the bar, after the tabs: the panel's
+   *  controls — theme, notifications, whatever the app has to offer about the
+   *  window and not about the content.
+   *
+   *  It sits outside the scrolling row, for the same reason as the sidebar
+   *  button at the other end: they belong to the panel and not to the tabs, and
+   *  with many tabs open they'd scroll out of sight exactly when they're needed
+   *  most. */
+  controls?: ReactNode;
+  /** Pins the panel to a step of the size ladder. */
   size?: SizeVariant;
+  /** The root element. A panel that takes the place of the app's content is its
+   *  `<main>`, and it's worth it actually being one and not a div with the air
+   *  of one. The default is `div` because a single page can show several panels
+   *  —the showcase's shows three— and a document has only one main. */
+  as?: "div" | "main";
   className?: string;
 }
 
-/* ────────────────── Esquinas cóncavas de la pestaña activa ────────────────── */
+/* ────────────────── The active tab's concave corners ────────────────── */
 
 /**
- * Cada esquina es un cuadrado al que se le muerde un cuarto de círculo
- * apoyado en su esquina exterior de arriba. Puesta al lado de la pestaña, esa
- * mordida es la curva que baja hacia la barra.
+ * Each corner is a square with a quarter circle bitten out of it, centred on its
+ * outer top corner. Placed beside the tab, that bite is the curve that drops
+ * towards the bar.
  *
- * Va en SVG y no como máscara sobre un fondo porque la curva no sólo se
- * rellena: también se traza. El arco es el tramo de la silueta que une el
- * canto del costado de la pestaña con la línea que corre por la barra, y con
- * el centro del círculo en la esquina exterior entra tangente a las dos — sin
- * codos en ninguna de las dos uniones.
+ * It's SVG and not a mask over a background because the curve isn't only
+ * filled: it's also stroked. The arc is the stretch of outline that joins the
+ * tab's side edge with the line running along the bar, and with the circle's
+ * centre at the outer corner it meets both tangentially — no kinks at either
+ * joint.
  */
 function ConcaveCorner({
   side,
@@ -141,14 +169,14 @@ function ConcaveCorner({
     side === "left"
       ? `M0,${R} A${outline} ${R},0`
       : `M0,0 A${outline} ${R},${R}`;
-  // Cerrar contra la esquina interior de abajo deja el relleno del lado del
-  // contenido, que es de quien la esquina es parte.
+  // Closing against the inner bottom corner leaves the fill on the content's
+  // side, which is what the corner is part of.
   const fill = side === "left" ? `${borde} L${R},${R} Z` : `${borde} L0,${R} Z`;
 
-  // El trazo no va sobre el borde del relleno sino medio pixel adentro del
-  // círculo, que en una mordida es el lado de la barra. Con un trazo de 1px
-  // eso lo deja pisando la misma banda que el canto de la pestaña arriba y la
-  // línea del plano abajo: las tres líneas se continúan sin pisarse.
+  // The stroke doesn't run along the fill's border but half a pixel inside the
+  // circle, which in a bite is the bar's side. With a 1px stroke that leaves it
+  // on the same band as the tab's edge above and the plane's line below: the
+  // three lines continue into each other without overlapping.
   const r = R - 0.5;
   const arco =
     side === "left"
@@ -163,13 +191,13 @@ function ConcaveCorner({
       viewBox={`0 0 ${R} ${R}`}
       className="pointer-events-none absolute"
       style={{
-        // Alineada con el plano y no con la pestaña: la pestaña baja un pixel
-        // de más para tapar el anillo, y ese pixel lo rellena el contenido,
-        // que es del mismo color.
+        // Aligned with the plane and not with the tab: the tab drops one extra
+        // pixel to cover the ring, and that pixel is filled by the content,
+        // which is the same colour.
         bottom: TAB_OVERLAP,
         [side === "left" ? "left" : "right"]: -R,
-        // El trazo se sale medio pixel del cuadrado en las dos puntas; ahí es
-        // justo donde tiene que encontrarse con sus vecinos.
+        // The stroke runs half a pixel out of the square at both ends; that's
+        // exactly where it has to meet its neighbours.
         overflow: "visible",
       }}
     >
@@ -179,18 +207,18 @@ function ConcaveCorner({
   );
 }
 
-/* ─────────────────────── Canto de la pestaña activa ─────────────────────── */
+/* ─────────────────────── The active tab's edge ─────────────────────── */
 
 /**
- * Techo y costados de la pestaña, en una capa aparte.
+ * The tab's top and sides, on a layer of their own.
  *
- * Es un anillo entero —así las dos esquinas de arriba salen redondas de una,
- * sin empalmar tres líneas— al que una máscara le come la mitad de abajo. Ahí
- * se van juntos el canto del piso, que no existe porque la pestaña sigue en el
- * contenido, y la mitad inferior de los costados.
+ * It's a full ring —that way both top corners come out round in one go, with no
+ * splicing of three lines— with a mask eating its bottom half. That takes away,
+ * together, the floor edge, which doesn't exist because the tab carries on into
+ * the content, and the lower half of the sides.
  *
- * Capa aparte y no una sombra en la propia pestaña porque la máscara recorta
- * todo lo que el elemento pinta, y la pestaña además pinta su fondo.
+ * A separate layer and not a shadow on the tab itself because the mask clips
+ * everything the element paints, and the tab also paints its background.
  */
 function TabEdge({ skirt }: { skirt: number }) {
   const mask = `linear-gradient(to bottom, #000 calc(100% - ${EDGE_STOP}px), transparent calc(100% - ${EDGE_STOP}px))`;
@@ -200,18 +228,18 @@ function TabEdge({ skirt }: { skirt: number }) {
       aria-hidden
       className="pointer-events-none absolute"
       style={{
-        // La capa se pasa 1px para afuera en los tres lados y el anillo va
-        // inset, así que el canto termina ocupando esa banda de afuera. Es
-        // donde tiene que estar: el anillo del plano también corre por encima
-        // del contenido y no por dentro, y las dos líneas tienen que caer del
-        // mismo lado del relleno o no empalman.
+        // The layer runs 1px outwards on all three sides and the ring is inset,
+        // so the edge ends up occupying that outer band. That's where it has to
+        // be: the plane's ring also runs over the content and not inside it, and
+        // both lines have to fall on the same side of the fill or they don't
+        // meet.
         top: -1,
         left: -1,
         right: -1,
-        // Abajo, en cambio, se corta antes del faldón: el faldón ya es
-        // contenido y no lleva canto.
+        // At the bottom, on the other hand, it stops before the skirt: the
+        // skirt is already content and carries no edge.
         bottom: skirt,
-        // Uno más que el de la pestaña, para quedar concéntrico con ella.
+        // One more than the tab's, to stay concentric with it.
         borderTopLeftRadius: TAB_RADIUS + 1,
         borderTopRightRadius: TAB_RADIUS + 1,
         boxShadow: `inset 0 0 0 1px ${EDGE}`,
@@ -222,19 +250,19 @@ function TabEdge({ skirt }: { skirt: number }) {
   );
 }
 
-/* ──────────────────────────── El selector ──────────────────────────── */
+/* ──────────────────────────── The selector ──────────────────────────── */
 
 /**
- * Todo lo que distingue a la pestaña activa —el plano, las dos esquinas
- * cóncavas y el canto— vive acá, en una sola capa que se desplaza de una
- * pestaña a otra en vez de aparecer y desaparecer.
+ * Everything that sets the active tab apart —the plane, the two concave corners
+ * and the edge— lives here, on a single layer that slides from one tab to
+ * another instead of appearing and disappearing.
  *
- * Es lo que convierte el cambio de pestaña en un movimiento: la forma es
- * siempre la misma y sólo viaja, que es exactamente lo que hace el indicador
- * de `tabs` del registry. Se anima `left` y `width` y no un `transform`
- * porque una escala deformaría el redondeo de las esquinas y los arcos.
+ * It's what turns a change of tab into a movement: the shape is always the same
+ * and only travels, which is exactly what the registry's `tabs` indicator does.
+ * `left` and `width` are animated and not a `transform` because a scale would
+ * distort the corners' radii and the arcs.
  *
- * Las pestañas de abajo quedan limpias: sólo ponen su etiqueta y su hover.
+ * The tabs underneath stay clean: they only supply their label and their hover.
  */
 function TabSelector({
   rect,
@@ -248,18 +276,18 @@ function TabSelector({
   return (
     <motion.div
       aria-hidden
-      // Nada de eventos: los arcos se meten por debajo de las vecinas y no
-      // tienen por qué robarles el click.
+      // No events: the arcs slip underneath the neighbouring tabs and have no
+      // business stealing their clicks.
       className={cn("pointer-events-none absolute z-10", SURFACE_BG[level])}
-      // Sin animación de entrada: la primera vez tiene que aparecer ya puesto
-      // sobre su pestaña, no viajando desde el borde.
+      // No entry animation: the first time it has to appear already sitting on
+      // its tab, not travelling in from the edge.
       initial={false}
       animate={{ left: rect.left, width: rect.width }}
       transition={spring.moderate}
       style={{
         top: rect.top,
-        // El faldón entra en la altura: el selector llega hasta el plano y le
-        // monta el pixel que tapa su anillo.
+        // The skirt is part of the height: the selector reaches the plane and
+        // rides the pixel that covers its ring.
         height: rect.height + skirt,
         borderTopLeftRadius: TAB_RADIUS,
         borderTopRightRadius: TAB_RADIUS,
@@ -272,7 +300,7 @@ function TabSelector({
   );
 }
 
-/* ───────────────────────── Botón del sidebar ───────────────────────── */
+/* ───────────────────────── The sidebar button ───────────────────────── */
 
 function SidebarToggle({
   compact,
@@ -296,7 +324,7 @@ function SidebarToggle({
   return (
     <button
       type="button"
-      aria-label={visible ? "Ocultar panel lateral" : "Mostrar panel lateral"}
+      aria-label={visible ? "Hide side panel" : "Show side panel"}
       aria-pressed={visible}
       onClick={toggleSidebar}
       style={{ borderRadius: TAB_RADIUS }}
@@ -305,23 +333,23 @@ function SidebarToggle({
         "cursor-pointer outline-none transition-colors duration-80",
         "text-muted-foreground hover:text-foreground",
         "focus-visible:ring-1 focus-visible:ring-[color:var(--focus-ring,#6B97FF)]",
-        // El relleno del hover es un rectángulo redondeado más ancho que el
-        // círculo de reposo — es lo que se ve en la referencia.
+        // The hover fill is a rounded rectangle wider than the resting circle —
+        // it's what the reference shows.
         "hover:bg-active",
         compact ? "h-7 w-9" : "h-8 w-11"
       )}
     >
       <span
-        // El chip se apoya en el mismo escalón que el plano, al 60% para que
-        // sobre la barra sea un apoyo y no un botón más. Inline porque la
-        // opacidad de un token dinámico no sale de las clases de Tailwind.
+        // The chip rests on the same step as the plane, at 60% so that over the
+        // bar it reads as a support and not as one more button. Inline because
+        // the opacity of a dynamic token can't come out of Tailwind's classes.
         style={{
           backgroundColor: `color-mix(in srgb, var(--surface-${level}) 60%, transparent)`,
         }}
         className={cn(
-          // Es una superficie, así que va con su sombra: en oscuro lo despega
-          // el color, pero en claro la escalera está aplanada en blanco y sin
-          // el anillo de --shadow-1 no se ve que hay un chip.
+          // It's a surface, so it comes with its shadow: in dark colour lifts
+          // it, but in light the ladder is flattened to white and without
+          // --shadow-1's ring you can't see there's a chip at all.
           "flex items-center justify-center rounded-full shadow-surface-1",
           "[&_svg]:stroke-[1.5] group-hover:[&_svg]:stroke-2 [&_svg]:transition-[stroke-width] [&_svg]:duration-80",
           compact ? "h-5 w-5 [&_svg]:h-3 [&_svg]:w-3" : "h-6 w-6 [&_svg]:h-3.5 [&_svg]:w-3.5"
@@ -341,27 +369,33 @@ function WorkspacePanel({
   defaultValue,
   onValueChange,
   onTabClose,
+  lifted = false,
+  controls,
   size,
+  as: Root = "div",
   className,
 }: WorkspacePanelProps) {
   const sizeClasses = useSize(size);
   const compact = sizeClasses.variant === "compact";
 
-  // El panel se apoya donde lo pongan: la barra es el sustrato y el plano —
-  // pestaña activa y contenido, que son la misma superficie — sube dos
-  // escalones sobre ella.
+  // The panel rests wherever it's put: the bar is the substrate and the plane —
+  // active tab and content, which are the same surface — climbs two steps over
+  // it.
   const substrate = useSurface();
   const barLevel = substrate;
   const planeLevel = Math.min(barLevel + PLANE_OFFSET, 8);
+  /** Two steps and not one: a single step, against a shadow that's already
+   *  there, is indistinguishable from a change of light. */
+  const lift = lifted ? 2 : 0;
 
-  // Lo que la activa baja de más que sus vecinas: cruza el aire de la barra y
-  // encima monta el pixel que tapa el anillo del plano.
+  // How much further down the active tab goes than its neighbours: it crosses
+  // the bar's air and on top of that rides the pixel covering the plane's ring.
   const skirt = BAR_GAP + TAB_OVERLAP;
 
-  // El selector necesita saber a dónde viajar, así que las pestañas se miden.
-  // Es el mismo hook con el que se mide el indicador de `tabs`: publica los
-  // rects en coordenadas de layout —`offsetLeft`, inmune a los transform— y
-  // los vuelve a tomar solo con que una pestaña cambie de tamaño.
+  // The selector needs to know where to travel to, so the tabs get measured.
+  // It's the same hook the `tabs` indicator is measured with: it publishes the
+  // rects in layout coordinates —`offsetLeft`, immune to transforms— and takes
+  // them again on its own as soon as a tab changes size.
   const listRef = useRef<HTMLDivElement>(null);
   const { itemRects, registerItem } = useProximityHover<HTMLDivElement>(
     listRef,
@@ -380,18 +414,18 @@ function WorkspacePanel({
     [value, onValueChange]
   );
 
-  // Resuelta y no el id crudo: al cerrar la pestaña activa, `active` queda
-  // apuntando a un id que ya no está en `tabs`. Comparando contra esto, el
-  // reemplazo queda marcado en vez de mostrarse el contenido de tabs[0] sin
-  // ninguna pestaña seleccionada.
+  // Resolved and not the raw id: on closing the active tab, `active` is left
+  // pointing at an id that's no longer in `tabs`. Compared against this, the
+  // replacement ends up marked instead of showing tabs[0]'s content with no tab
+  // selected at all.
   const activeTab = tabs.find((t) => t.id === active) ?? tabs[0];
 
-  // Registrar acá y no en el `ref` de cada pestaña: un ref en línea se
-  // vuelve a atar en cada render y haría remedir de más. Así el registro
-  // ocurre sólo cuando cambia el array.
+  // Registering here and not in each tab's `ref`: an inline ref is re-attached
+  // on every render and would cause needless remeasuring. This way registration
+  // only happens when the array changes.
   useLayoutEffect(() => {
     tabs.forEach((_, i) => registerItem(i, itemsRef.current[i] ?? null));
-    // Al cerrar una pestaña sobran índices registrados de la vuelta anterior.
+    // On closing a tab there are leftover indices registered from last time.
     for (let i = tabs.length; i < itemsRef.current.length; i++) {
       registerItem(i, null);
     }
@@ -401,15 +435,44 @@ function WorkspacePanel({
   const activeIndex = tabs.findIndex((t) => t.id === activeTab?.id);
   const activeRect = activeIndex >= 0 ? itemRects[activeIndex] : undefined;
 
-  // Cerrar sólo tiene sentido si queda algo detrás.
+  // With the bar scrolled, the active tab can end up out of view — above all
+  // when it isn't the bar that picks it but something outside, an `openTab` from
+  // the sidebar. It's brought back the bare minimum: it only moves if it doesn't
+  // fit, and with the concave corner's arc included in the margin, because
+  // otherwise the tab ends up flush and its curve cut off.
+  //
+  // By assigning `scrollLeft` and not with `scrollTo({ behavior: "smooth" })`:
+  // changing tab remounts the plane's content, and that smooth scroll cancels
+  // itself halfway more often than it arrives. A jump is also what editors do
+  // when revealing a tab, and here what has to read as movement is the selector,
+  // which already travels on its own.
+  //
+  // By hand and not with `scrollIntoView`: that one also corrects the ancestors,
+  // and here the ancestor is the whole page.
+  useLayoutEffect(() => {
+    const list = listRef.current;
+    const item = itemsRef.current[activeIndex];
+    if (!list || !item) return;
+
+    const inicio = item.offsetLeft - TAB_RADIUS;
+    const fin = item.offsetLeft + item.offsetWidth + TAB_RADIUS;
+
+    if (inicio < list.scrollLeft) list.scrollLeft = inicio;
+    else if (fin > list.scrollLeft + list.clientWidth) {
+      list.scrollLeft = fin - list.clientWidth;
+    }
+  }, [activeIndex, tabs.length]);
+
+  // Closing only makes sense if there's something left behind.
   const closable = onTabClose != null && tabs.length > 1;
 
   const closeTab = useCallback(
     (id: string) => {
-      // Al cerrar la activa hay que pasarle el relevo a una vecina: la de la
-      // derecha, y si era la última la de la izquierda — la convención de
-      // navegadores y editores. Se elige antes de avisar al padre porque
-      // después la pestaña ya no está en `tabs` para saber quién la seguía.
+      // On closing the active tab the baton has to pass to a neighbour: the one
+      // on the right, and if it was the last one the one on the left — the
+      // convention in browsers and editors. It's chosen before telling the
+      // parent because afterwards the tab is no longer in `tabs` to tell who
+      // came after it.
       if (id === activeTab?.id) {
         const i = tabs.findIndex((t) => t.id === id);
         const vecina = tabs[i + 1] ?? tabs[i - 1];
@@ -421,128 +484,176 @@ function WorkspacePanel({
   );
 
   return (
-    <div
+    <Root
       className={cn(
         "flex min-h-0 flex-col overflow-hidden rounded-2xl",
-        // La tarjeta entera flota un escalón sobre su sustrato; el fondo que
-        // se ve acá es el de la barra, porque el contenido lo tapa.
-        surfaceClasses(barLevel, Math.min(barLevel + 1, 8)),
+        // The whole card floats one step over its substrate; the background you
+        // see here is the bar's, because the content covers it. With `lifted`
+        // the shadow climbs two more steps and the background stays: see the
+        // prop.
+        "transition-[box-shadow] duration-80",
+        surfaceClasses(barLevel, Math.min(barLevel + 1 + lift, 8)),
+        // The ring goes as a `ring` and not by overriding `--shadow-color`: all
+        // four layers of the shadow read that variable, so darkening it there
+        // would turn the whole halo into a smudge. As a separate ring, what gets
+        // darkened is the edge and nothing else.
+        lifted &&
+          "ring-1 ring-[color-mix(in_oklab,var(--foreground)_25%,transparent)]",
         className
       )}
     >
-      {/* items-end alinea abajo toda la fila, y el aire de la barra la despega
-          del contenido tanto como se despegan las pestañas entre sí. La única
-          que cruza ese aire es la activa, con su faldón. */}
+      {/* items-end aligns the whole row to the bottom, and the bar's air lifts
+          it off the content as much as the tabs are lifted off each other. The
+          only one that crosses that air is the active tab, with its skirt.
+
+          The sidebar button stays outside the scrolling row: it belongs to the
+          panel and not to the tabs, and with many tabs open it would scroll out
+          of sight exactly when it's needed most. */}
       <div
-        role="tablist"
-        ref={listRef}
         className={cn(
-          "relative flex shrink-0 items-end px-2",
+          "flex shrink-0 items-end pl-2",
           compact ? "pt-1.5" : "pt-2"
         )}
-        style={{ gap: BAR_GAP, paddingBottom: BAR_GAP }}
+        style={{ paddingBottom: BAR_GAP }}
       >
-        {activeRect && (
-          <TabSelector rect={activeRect} skirt={skirt} level={planeLevel} />
-        )}
-
         <SidebarToggle compact={compact} level={planeLevel} />
 
-        {tabs.map((tab, i) => {
-          const isActive = tab.id === activeTab?.id;
-          const Icon = tab.icon;
-          return (
-            // Contenedor y no <button>: el botón de cerrar es otro botón, y
-            // anidarlos es HTML inválido. Como hermanos, cada uno conserva su
-            // semántica nativa y el wrapper aporta el hover.
-            <div
-              key={tab.id}
-              ref={(el) => {
-                itemsRef.current[i] = el;
-              }}
-              className={cn(
-                "group relative inline-flex shrink-0 items-center",
-                "transition-colors duration-80",
-                compact ? "h-7 text-[12px]" : "h-8 text-[13px]",
-                isActive
-                  ? // Ni fondo ni forma: eso lo pone el selector, que viaja
-                    // por debajo. Acá sólo queda la etiqueta, y va por encima
-                    // de él.
-                    "z-20 text-foreground font-medium"
-                  : // --active (10% blanco) y no --hover (6%): sobre la barra,
-                    // el 6% cae en #232323, a dos puntos del #252525 del tab
-                    // activo, y el relleno no se despega del fondo.
-                    "text-muted-foreground hover:bg-active hover:text-foreground"
-              )}
-              // Mismo radio que el selector: dos redondeos distintos en la
-              // misma fila se notan.
-              style={{ borderRadius: TAB_RADIUS }}
-            >
-              <button
-                type="button"
-                role="tab"
-                aria-selected={isActive}
-                onClick={() => select(tab.id)}
+        {/* With many tabs the row runs past the end: it scrolls instead of
+            clipping them against the edge. With no visible bar —it's a 32px row
+            and a native scrollbar would eat a third of it— and no vertical
+            scroll, which has nowhere to go here. */}
+        <div
+          role="tablist"
+          ref={listRef}
+          className="relative flex min-w-0 flex-1 items-end overflow-x-auto overflow-y-hidden scrollbar-hide"
+          style={{
+            gap: BAR_GAP,
+            // The sides leave room for the concave corners' arcs, which run
+            // `TAB_RADIUS` out of the active tab. Without that air the scroll's
+            // clipping eats them at the ends — and on the left it's also what
+            // separates the first tab from the sidebar button.
+            paddingLeft: TAB_RADIUS,
+            paddingRight: TAB_RADIUS,
+            // The foot carries the extra skirt and gives it back to the layout
+            // with a negative margin. The active tab's skirt drops `skirt` below
+            // the tabs' foot to ride onto the plane, and the scrolling box clips
+            // whatever runs out: without this air the clipping eats exactly the
+            // pixel that covers the plane's ring and the seam reappears.
+            paddingBottom: skirt,
+            marginBottom: -skirt,
+          }}
+        >
+          {activeRect && (
+            <TabSelector rect={activeRect} skirt={skirt} level={planeLevel} />
+          )}
+
+          {tabs.map((tab, i) => {
+            const isActive = tab.id === activeTab?.id;
+            const Icon = tab.icon;
+            return (
+              // A container and not a <button>: the close button is another
+              // button, and nesting them is invalid HTML. As siblings, each
+              // keeps its native semantics and the wrapper supplies the hover.
+              <div
+                key={tab.id}
+                ref={(el) => {
+                  itemsRef.current[i] = el;
+                }}
                 className={cn(
-                  "relative inline-flex h-full items-center bg-transparent",
-                  "cursor-pointer outline-none",
-                  "focus-visible:ring-1 focus-visible:ring-[color:var(--focus-ring,#6B97FF)]",
-                  compact ? "gap-1.5 pl-2.5" : "gap-2 pl-3",
-                  // Sin botón de cerrar, el padding derecho lo pone la propia
-                  // pestaña.
-                  closable ? "pr-1" : compact ? "pr-2.5" : "pr-3"
+                  "group relative inline-flex shrink-0 items-center",
+                  "transition-colors duration-80",
+                  compact ? "h-7 text-[12px]" : "h-8 text-[13px]",
+                  isActive
+                    ? // Neither background nor shape: the selector supplies
+                      // those, travelling underneath. All that's left here is
+                      // the label, and it goes above it.
+                      "z-20 text-foreground font-medium"
+                    : // --active (10% white) and not --hover (6%): over the
+                      // bar, the 6% lands on #232323, two points off the active
+                      // tab's #252525, and the fill doesn't lift off the
+                      // background.
+                      "text-muted-foreground hover:bg-active hover:text-foreground"
                 )}
+                // Same radius as the selector: two different roundings in the
+                // same row show.
                 style={{ borderRadius: TAB_RADIUS }}
               >
-                {Icon && (
-                  <span
-                    className={cn(
-                      "relative flex items-center justify-center",
-                      "[&_svg]:stroke-[1.5] group-hover:[&_svg]:stroke-2 [&_svg]:transition-[stroke-width] [&_svg]:duration-80",
-                      compact ? "[&_svg]:h-3.5 [&_svg]:w-3.5" : "[&_svg]:h-4 [&_svg]:w-4"
-                    )}
-                  >
-                    <Icon />
-                  </span>
-                )}
-                <span className="relative whitespace-nowrap">{tab.label}</span>
-              </button>
-
-              {closable && (
-                // Siempre en el layout, invisible hasta el hover: si apareciera
-                // recién entonces, la pestaña cambiaría de ancho y la fila
-                // entera saltaría bajo el cursor.
                 <button
                   type="button"
-                  aria-label={`Cerrar ${tab.label}`}
-                  onClick={() => closeTab(tab.id)}
+                  role="tab"
+                  aria-selected={isActive}
+                  onClick={() => select(tab.id)}
                   className={cn(
-                    "relative mr-1 inline-flex items-center justify-center",
-                    "cursor-pointer rounded-md outline-none",
-                    "opacity-0 transition-opacity duration-80 pointer-events-none",
-                    // El foco también lo revela: si no, con teclado se llega a
-                    // un botón que no se ve.
-                    "group-hover:pointer-events-auto group-hover:opacity-100",
-                    "focus-visible:pointer-events-auto focus-visible:opacity-100",
+                    "relative inline-flex h-full items-center bg-transparent",
+                    "cursor-pointer outline-none",
                     "focus-visible:ring-1 focus-visible:ring-[color:var(--focus-ring,#6B97FF)]",
-                    "text-muted-foreground hover:bg-active hover:text-foreground",
-                    compact
-                      ? "h-4 w-4 [&_svg]:h-2.5 [&_svg]:w-2.5"
-                      : "h-5 w-5 [&_svg]:h-3 [&_svg]:w-3"
+                    compact ? "gap-1.5 pl-2.5" : "gap-2 pl-3",
+                    // With no close button, the right padding is supplied by the
+                    // tab itself.
+                    closable ? "pr-1" : compact ? "pr-2.5" : "pr-3"
                   )}
+                  style={{ borderRadius: TAB_RADIUS }}
                 >
-                  <X />
+                  {Icon && (
+                    <span
+                      className={cn(
+                        "relative flex items-center justify-center",
+                        "[&_svg]:stroke-[1.5] group-hover:[&_svg]:stroke-2 [&_svg]:transition-[stroke-width] [&_svg]:duration-80",
+                        compact ? "[&_svg]:h-3.5 [&_svg]:w-3.5" : "[&_svg]:h-4 [&_svg]:w-4"
+                      )}
+                    >
+                      <Icon />
+                    </span>
+                  )}
+                  <span className="relative whitespace-nowrap">{tab.label}</span>
                 </button>
-              )}
-            </div>
-          );
-        })}
+
+                {closable && (
+                  // Always in the layout, invisible until hover: if it only
+                  // appeared then, the tab would change width and the whole row
+                  // would jump under the cursor.
+                  <button
+                    type="button"
+                    aria-label={`Close ${tab.label}`}
+                    onClick={() => closeTab(tab.id)}
+                    className={cn(
+                      "relative mr-1 inline-flex items-center justify-center",
+                      "cursor-pointer rounded-md outline-none",
+                      "opacity-0 transition-opacity duration-80 pointer-events-none",
+                      // Focus reveals it too: otherwise the keyboard reaches a
+                      // button you can't see.
+                      "group-hover:pointer-events-auto group-hover:opacity-100",
+                      "focus-visible:pointer-events-auto focus-visible:opacity-100",
+                      "focus-visible:ring-1 focus-visible:ring-[color:var(--focus-ring,#6B97FF)]",
+                      "text-muted-foreground hover:bg-active hover:text-foreground",
+                      compact
+                        ? "h-4 w-4 [&_svg]:h-2.5 [&_svg]:w-2.5"
+                        : "h-5 w-5 [&_svg]:h-3 [&_svg]:w-3"
+                    )}
+                  >
+                    <X />
+                  </button>
+                )}
+              </div>
+              );
+          })}
+        </div>
+
+        {/* The controls close the bar at the other end. `items-center` and not
+            the row's `items-end`: the tabs rest on the bottom edge because
+            that's where their skirt comes from, and the controls have no skirt —
+            flush with the bottom they'd sit lower than the tabs' text. */}
+        {controls && (
+          <div className="flex shrink-0 items-center self-stretch pr-2 pl-1">
+            {controls}
+          </div>
+        )}
       </div>
 
-      {/* El plano lleva fondo *y* sombra. En oscuro lo despega el color, pero
-          en claro la escalera de superficies está aplanada en blanco desde el
-          escalón 3, así que la separación con la barra la da entera el anillo
-          de la sombra. Sin él, #FAFAFA contra #FFFFFF no se distingue. */}
+      {/* The plane carries background *and* shadow. In dark colour lifts it,
+          but in light the surface ladder is flattened to white from step 3 up,
+          so the separation from the bar is given entirely by the shadow's ring.
+          Without it, #FAFAFA against #FFFFFF is indistinguishable. */}
       <div
         role="tabpanel"
         className={cn(
@@ -550,11 +661,11 @@ function WorkspacePanel({
           surfaceClasses(planeLevel, PLANE_SHADOW)
         )}
       >
-        {/* Lo que se monte adentro arranca desde el nivel del plano, no desde
-            el sustrato del panel: un popover en una pestaña sigue subiendo. */}
+        {/* Whatever is mounted inside starts from the plane's level and not
+            from the panel's substrate: a popover in a tab keeps rising. */}
         <SurfaceProvider value={planeLevel}>{activeTab?.content}</SurfaceProvider>
       </div>
-    </div>
+    </Root>
   );
 }
 

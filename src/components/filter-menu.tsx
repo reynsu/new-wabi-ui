@@ -1,36 +1,37 @@
 "use client";
 
 /**
- * FilterMenu — el menú de filtros de una vista de datos.
+ * FilterMenu — the filter menu of a data view.
  *
- * Un botón abre la lista de atributos por los que se puede filtrar; al elegir
- * uno, el mismo panel se corre a los valores de ese atributo. Dos niveles
- * adentro de un panel y no un submenú lateral: el submenú obliga a cruzarlo en
- * diagonal sin salirse, y con ocho atributos ya no entra al lado del primero.
- * Acá el panel se queda quieto en su ancla y lo que viaja es el contenido.
+ * A button opens the list of attributes you can filter by; picking one slides
+ * the same panel across to that attribute's values. Two levels inside one panel
+ * and not a side submenu: a submenu forces you to cross it diagonally without
+ * slipping off, and with eight attributes it no longer fits beside the first
+ * one. Here the panel stays put on its anchor and what travels is the content.
  *
- * Cuatro decisiones que conviene no deshacer sin mirar el resto:
+ * Four decisions worth not undoing without looking at the rest:
  *
- * 1. **El buscador no se desmonta al cambiar de nivel.** Es el mismo `<input>`
- *    en los dos: cambian el placeholder y el texto, pero el nodo es el mismo,
- *    así que el foco no se pierde ni al entrar ni al volver. Se puede filtrar,
- *    entrar y seguir tecleando sin tocar el mouse ni volver a hacer foco.
+ * 1. **The search box doesn't unmount when the level changes.** It's the same
+ *    `<input>` in both: the placeholder and the text change, but the node is
+ *    the same, so focus isn't lost going in or coming back. You can filter,
+ *    step in and keep typing without touching the mouse or refocusing.
  *
- * 2. **El foco se queda en el buscador; lo que se mueve es un resaltado.** Las
- *    filas no son focusables: el campo es un `combobox` y señala la fila activa
- *    con `aria-activedescendant`. Si el foco viajara fila por fila, cada flecha
- *    lo sacaría del campo donde se está escribiendo.
+ * 2. **Focus stays in the search box; what moves is a highlight.** The rows
+ *    aren't focusable: the field is a `combobox` and points at the active row
+ *    with `aria-activedescendant`. If focus travelled row by row, every arrow
+ *    would pull it out of the field being typed into.
  *
- * 3. **Elegir un valor no cierra el panel.** Un filtro casi nunca es uno solo:
- *    se marcan dos estados y tres empresas de una sentada. El panel se cierra
- *    con Escape, con un clic afuera o con la X. La excepción es un atributo
- *    `single`, donde después de elegir no queda nada más que hacer ahí y por
- *    eso vuelve solo al primer nivel.
+ * 3. **Picking a value doesn't close the panel.** A filter is almost never a
+ *    single one: you tick two statuses and three companies in one sitting. The
+ *    panel closes with Escape, with a click outside or with the ×. The
+ *    exception is a `single` attribute, where after picking there's nothing
+ *    left to do in there, which is why it returns to the first level on its
+ *    own.
  *
- * 4. **La columna de la derecha dice qué pasa si activás la fila.** En el
- *    primer nivel un chevron, que promete otro nivel; en el segundo un tilde,
- *    que promete un valor puesto. Es la misma columna en los dos, así que la
- *    promesa se lee sin cambiar de renglón.
+ * 4. **The right-hand column says what happens if you activate the row.** On
+ *    the first level a chevron, which promises another level; on the second a
+ *    tick, which promises a value set. It's the same column in both, so the
+ *    promise is read without changing line.
  */
 
 import {
@@ -73,16 +74,17 @@ import { exitFallbackMs, spring } from "@/lib/springs";
 import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
-// Tipos públicos
+// Public types
 // ---------------------------------------------------------------------------
 
 interface FilterOption {
   value: string;
   label: string;
-  /** Ícono del valor. Los estados y las etiquetas suelen tener uno propio. */
+  /** The value's icon. Statuses and labels usually have one of their own. */
   icon?: IconComponent;
-  /** Texto secundario a la derecha del nombre: cuántos registros tiene ese
-   *  valor, de dónde sale, lo que ayude a elegir sin salir del panel. */
+  /** Secondary text to the right of the name: how many records that value has,
+   *  where it comes from, whatever helps you choose without leaving the
+   *  panel. */
   hint?: string;
 }
 
@@ -91,19 +93,19 @@ interface FilterAttribute {
   label: string;
   icon: IconComponent;
   /**
-   * Cómo se elige el valor.
-   *   "select" — de una lista cerrada de `options` (default)
-   *   "text"   — texto libre: lo que se escriba en el buscador se agrega como
-   *              término con Enter. Nombres y descripciones no tienen lista.
+   * How the value is picked.
+   *   "select" — from a closed list of `options` (default)
+   *   "text"   — free text: whatever is typed into the search box is added as a
+   *              term with Enter. Names and descriptions have no list.
    */
   type?: "select" | "text";
-  /** Los valores del atributo, para `type: "select"`. */
+  /** The attribute's values, for `type: "select"`. */
   options?: FilterOption[];
-  /** Un solo valor a la vez. Elegir uno reemplaza al anterior y vuelve al
-   *  primer nivel. */
+  /** One value at a time. Picking one replaces the previous and returns to the
+   *  first level. */
   single?: boolean;
-  /** Placeholder del buscador dentro de este atributo. Sin esto se arma uno
-   *  con la etiqueta. */
+  /** Placeholder for the search box inside this attribute. Without it one is
+   *  built from the label. */
   searchPlaceholder?: string;
 }
 
@@ -113,18 +115,18 @@ interface FilterGroup {
 }
 
 /**
- * Lo que está filtrado: id del atributo → valores elegidos.
+ * What's filtered: attribute id → chosen values.
  *
- * Un atributo sin valores **no está en el mapa**, nunca como arreglo vacío.
- * Así `Object.keys(selection).length` es la cantidad de atributos filtrados y
- * nadie tiene que acordarse de descartar los vacíos al contar o al pintar los
- * chips de afuera.
+ * An attribute with no values **isn't in the map**, never as an empty array.
+ * That way `Object.keys(selection).length` is the number of filtered attributes
+ * and nobody has to remember to drop the empties when counting or when painting
+ * the chips outside.
  */
 type FilterSelection = Record<string, string[]>;
 
 interface FilterMenuProps {
   groups: FilterGroup[];
-  /** Etiqueta del botón y nombre accesible del panel. */
+  /** The button's label and the panel's accessible name. */
   label?: string;
   value?: FilterSelection;
   defaultValue?: FilterSelection;
@@ -132,54 +134,56 @@ interface FilterMenuProps {
   open?: boolean;
   defaultOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
-  /** Fija el panel y el botón a un escalón de la escala de tamaños. Sin esto
-   *  siguen al SizeProvider de alrededor. */
+  /** Pins the panel and the button to a step of the size ladder. Without this
+   *  they follow the surrounding SizeProvider. */
   size?: SizeVariant;
-  /** De qué lado del botón se alinea el panel. */
+  /** Which side of the button the panel aligns to. */
   align?: "start" | "end";
-  /** Va al botón, que es lo único que este componente deja en el layout. */
+  /** Goes on the button, which is the only thing this component leaves in the
+   *  layout. */
   className?: string;
 }
 
 // ---------------------------------------------------------------------------
-// Forma y medidas
+// Shape and measurements
 // ---------------------------------------------------------------------------
 
-/* Como el `dropdown` del registry, el panel se baja del sistema de formas y
-   se queda siempre en los radios `rounded`. A esta escala el burbujeo de la
-   forma píldora deforma el padding que se percibe y desbalancea la sombra de
-   las esquinas; un popover se lee mejor con el radio chico aunque el resto de
-   la app esté redondeada. */
+/* Like the registry's `dropdown`, the panel steps off the shape system and
+   stays on the `rounded` radii for good. At this scale the pill shape's
+   bulging distorts the padding you perceive and unbalances the corners'
+   shadow; a popover reads better with the small radius even if the rest of the
+   app is rounded. */
 const shape = shapeMap.rounded;
 
-/** Ancho del panel. Fijo y no atado al botón ni a la densidad: el botón dice
- *  una palabra y la lista tiene que dar lugar a etiquetas como "Direcciones de
- *  correo". */
+/** The panel's width. Fixed and tied neither to the button nor to the density:
+ *  the button says one word and the list has to make room for labels like
+ *  "Email addresses". */
 const PANEL_WIDTH = 288;
 
-/** El aire del panel: entre el canto y el buscador, las filas y el pie. */
+/** The panel's air: between the edge and the search box, the rows and the
+ *  footer. */
 const PANEL_PAD = 6;
 
-/** Cuántas filas se ven antes de que la lista scrollee. El alto sale de
- *  multiplicar por el escalón de la escalera, así en compacto se ven las
- *  mismas siete filas y no siete y media. */
+/** How many rows are visible before the list scrolls. The height comes from
+ *  multiplying by the ladder's step, so in compact you see the same seven rows
+ *  and not seven and a half. */
 const VISIBLE_ROWS = 7;
 
-/** Cuánto se corre una vista al entrar y al salir. Corto a propósito: es un
- *  cambio de nivel adentro del mismo panel, no un cambio de pantalla. */
+/** How far a view shifts on the way in and on the way out. Short on purpose:
+ *  it's a change of level inside the same panel, not a change of screen. */
 const VIEW_TRAVEL = 18;
 
 const viewVariants = {
   enter: (direction: number) => ({ x: direction * VIEW_TRAVEL, opacity: 0 }),
   center: { x: 0, opacity: 1 },
-  // La vista que se va sale del flujo apenas empieza a irse, así el alto del
-  // marco pasa a ser el de la que entra y las dos quedan una encima de la otra
-  // en vez de apiladas.
+  // The outgoing view leaves the flow as soon as it starts to go, so the
+  // frame's height becomes the incoming one's and the two sit on top of each
+  // other instead of stacked.
   //
-  // Y se va con la salida del escalón rápido, no con la del moderado: mientras
-  // dura el cruce hay dos copias del nombre del atributo —la de la fila que se
-  // va y la que viaja a la cabecera— una encima de la otra. Cuanto antes se
-  // apague la de abajo, más limpio se lee el viaje.
+  // And it leaves with the fast step's exit, not the moderate one's: while the
+  // crossover lasts there are two copies of the attribute's name —the one on
+  // the row that's leaving and the one travelling to the header— on top of each
+  // other. The sooner the bottom one goes out, the cleaner the trip reads.
   exit: (direction: number) => ({
     x: direction * -VIEW_TRAVEL,
     opacity: 0,
@@ -192,30 +196,30 @@ const viewVariants = {
 } satisfies Variants;
 
 /**
- * El nombre del atributo no aparece en la cabecera: llega volando desde su
- * fila.
+ * The attribute's name doesn't appear in the header: it flies in from its row.
  *
- * La fila y la cabecera comparten un `layoutId` por pieza —el glifo y la
- * etiqueta—, así que cuando la lista se va y la cabecera se arma, framer
- * reconoce que son la misma cosa en dos lugares y la lleva de una posición a
- * la otra en vez de apagarla acá y prenderla allá. Es lo que ata el nivel
- * nuevo a la fila que lo abrió: se ve *de dónde* salió.
+ * The row and the header share a `layoutId` per piece —the glyph and the
+ * label—, so when the list leaves and the header assembles itself, framer
+ * recognizes they're the same thing in two places and carries it from one
+ * position to the other instead of switching it off here and on over there.
+ * That's what ties the new level to the row that opened it: you see *where* it
+ * came from.
  *
- * Va con `layout="position"`: la caja de la etiqueta cambia de ancho entre los
- * dos lugares, y una animación de layout completa corrige ese cambio
- * escalando, que en un texto se ve como una goma. Animando sólo la posición,
- * el texto viaja sin deformarse.
+ * It goes with `layout="position"`: the label's box changes width between the
+ * two places, and a full layout animation corrects that change by scaling,
+ * which on text looks like rubber. Animating only the position, the text
+ * travels without distorting.
  *
- * **Sólo de ida.** Al volver, lo que se recupera es la lista entera y no una
- * fila: un nombre bajando solo hacia su renglón, distinto de la lista a la que
- * pertenece, se lee como un salto y no como un vínculo. Además la lista
- * scrollea y recorta, así que la mitad de ese viaje pasaría abajo del
- * buscador, invisible. Por eso el id lleva el número de viaje, que sube en
- * cada vuelta: las filas que vuelven ya no comparten id con la cabecera que se
- * está yendo y framer no las empareja.
+ * **One way only.** On the way back, what's recovered is the whole list and not
+ * one row: a name dropping on its own towards its line, separate from the list
+ * it belongs to, reads as a jump and not as a link. On top of that the list
+ * scrolls and clips, so half of that trip would happen under the search box,
+ * invisible. That's why the id carries the trip number, which goes up on every
+ * return: the rows coming back no longer share an id with the header that's
+ * leaving and framer doesn't pair them.
  *
- * El `scope` es el `useId` del menú: dos FilterMenu en la misma página no
- * pueden compartir ids o el nombre de uno saldría volando hacia el otro.
+ * The `scope` is the menu's `useId`: two FilterMenus on the same page can't
+ * share ids or one's name would fly off towards the other.
  */
 const travelId = (
   scope: string,
@@ -224,10 +228,10 @@ const travelId = (
   attributeId: string,
 ) => `${scope}-${trip}-${part}-${attributeId}`;
 
-/** El título de la cabecera sólo se cruza en opacidad. El que se va sale del
- *  flujo —`inset` y no `top`, para que siga centrado mientras se apaga— y se
- *  apaga rápido, por lo mismo que la lista: abajo suyo hay una copia del
- *  nombre viajando. */
+/** The header's title only crosses over in opacity. The outgoing one leaves the
+ *  flow —`inset` and not `top`, so it stays centred while it fades— and fades
+ *  fast, for the same reason as the list: underneath it there's a copy of the
+ *  name travelling. */
 const titleVariants = {
   enter: { opacity: 0 },
   center: { opacity: 1 },
@@ -243,11 +247,11 @@ const titleVariants = {
 } satisfies Variants;
 
 // ---------------------------------------------------------------------------
-// Búsqueda
+// Search
 // ---------------------------------------------------------------------------
 
-/** Sin mayúsculas y sin tildes: "descripcion" tiene que encontrar
- *  "Descripción". Quien filtra escribe rápido y no acentúa. */
+/** No capitals and no accents: "descripcion" has to find "Descripción".
+ *  Whoever is filtering types fast and doesn't accent. */
 const normalize = (text: string) =>
   text.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
 
@@ -255,13 +259,13 @@ const matches = (text: string, query: string) =>
   normalize(text).includes(normalize(query.trim()));
 
 // ---------------------------------------------------------------------------
-// Selección
+// Selection
 // ---------------------------------------------------------------------------
 
 const valuesOf = (selection: FilterSelection, id: string) => selection[id] ?? [];
 
-/** Prende o apaga un valor y deja el mapa sin arreglos vacíos (ver
- *  `FilterSelection`). Un atributo `single` reemplaza en vez de sumar. */
+/** Switches a value on or off and leaves the map free of empty arrays (see
+ *  `FilterSelection`). A `single` attribute replaces instead of adding. */
 function toggleValue(
   selection: FilterSelection,
   attribute: FilterAttribute,
@@ -289,28 +293,29 @@ function clearAttribute(
   return result;
 }
 
-/** Cuántos valores hay puestos en total — es lo que cuenta el botón y el pie
- *  del panel, porque "3 filtros" son tres valores y no tres atributos. */
+/** How many values are set in total — it's what the button and the panel's
+ *  footer count, because "3 filters" is three values and not three
+ *  attributes. */
 const totalValues = (selection: FilterSelection) =>
   Object.values(selection).reduce((sum, values) => sum + values.length, 0);
 
 // ---------------------------------------------------------------------------
-// Filas
+// Rows
 // ---------------------------------------------------------------------------
 
-/** El contador de una fila y del botón.
+/** The counter on a row and on the button.
  *
- *  Va con `bg-active`, un escalón más fuerte que el `bg-hover` con el que se
- *  prende la fila: si usara el mismo, el número se disolvería justo cuando el
- *  cursor está encima, que es cuando se lo mira.
+ *  It goes with `bg-active`, one step stronger than the `bg-hover` the row
+ *  lights up with: with the same one, the number would dissolve exactly when
+ *  the cursor is on it, which is when it gets looked at.
  *
- *  `inline-flex` y no `flex`: adentro del botón este contador viaja como hijo,
- *  y el Button mete a sus hijos en el span de la etiqueta. Ahí una caja de
- *  bloque se va sola al renglón de abajo y parte el botón en dos líneas. */
+ *  `inline-flex` and not `flex`: inside the button this counter travels as a
+ *  child, and the Button puts its children into the label's span. In there a
+ *  block box drops to the next line on its own and splits the button in two. */
 function Count({ children }: { children: ReactNode }) {
-  // Se mide contra el glifo de la escalera y no contra un alto propio: el
-  // contador es un hermano del ícono de la fila, y cuando la región baja a
-  // compacto tiene que bajar con él.
+  // It's measured against the ladder's glyph and not against a height of its
+  // own: the counter is a sibling of the row's icon, and when the region drops
+  // to compact it has to drop with it.
   const { icon } = useSize();
   const scale = useTypeScale();
   const box = icon + 4;
@@ -331,25 +336,26 @@ function Count({ children }: { children: ReactNode }) {
 interface PanelRowProps {
   id: string;
   active: boolean;
-  /** La fila se anota en el medidor del resaltado, que necesita su caja para
-   *  saber hasta dónde viajar. Se pasan el índice y la función —y no un ref ya
-   *  armado— porque un callback nuevo en cada render haría que React desmonte
-   *  y vuelva a montar el ref, y cada vuelta invalida la medición: el
-   *  resaltado quedaría parpadeando a razón de un cuadro. Es como se anotan
-   *  los items del `dropdown` del registry. */
+  /** The row signs up with the highlight's measurer, which needs its box to
+   *  know how far to travel. The index and the function are passed —and not a
+   *  ready-made ref— because a new callback on every render would make React
+   *  unmount and remount the ref, and each round trip invalidates the
+   *  measurement: the highlight would end up flickering a frame at a time. It's
+   *  how the registry's `dropdown` items sign up. */
   index: number;
   registerItem: (index: number, element: HTMLElement | null) => void;
   icon?: IconComponent;
   label: string;
-  /** Ids del elemento compartido con la cabecera (ver `travelId`). Sólo los
-   *  llevan las filas del primer nivel: son las únicas que abren un nivel al
-   *  que viajar. */
+  /** Ids of the element shared with the header (see `travelId`). Only the first
+   *  level's rows carry them: they're the only ones that open a level to travel
+   *  to. */
   travelIconId?: string;
   travelLabelId?: string;
   hint?: string;
   trailing?: ReactNode;
-  /** Sólo para las filas que son un valor: si está puesto o no. Las del primer
-   *  nivel no seleccionan nada, navegan, y por eso lo dejan en `undefined`. */
+  /** Only for rows that are a value: whether it's set or not. The first level's
+   *  don't select anything, they navigate, which is why they leave it
+   *  `undefined`. */
   selected?: boolean;
   onActivate: () => void;
 }
@@ -368,10 +374,10 @@ function PanelRow({
   selected,
   onActivate,
 }: PanelRowProps) {
-  // La fila resuelve su propia densidad desde el contexto en vez de recibirla
-  // por props: el `SizeProvider` que arma el menú cruza el portal, así que la
-  // fila lee lo mismo que el botón que la abrió — que es exactamente por qué
-  // `control` es un solo token para controles y filas de menú.
+  // The row resolves its own density from context instead of taking it through
+  // props: the `SizeProvider` the menu sets up crosses the portal, so the row
+  // reads the same thing as the button that opened it — which is exactly why
+  // `control` is a single token for controls and menu rows.
   const classes = useSize();
   const scale = useTypeScale();
   const rowRef = useRef<HTMLDivElement>(null);
@@ -388,13 +394,14 @@ function PanelRow({
       role="option"
       aria-selected={selected}
       data-active={active || undefined}
-      // El clic no tiene que sacar el foco del buscador, que es donde vive
-      // toda la navegación por teclado.
+      // The click mustn't take focus out of the search box, which is where all
+      // the keyboard navigation lives.
       onMouseDown={(e) => e.preventDefault()}
       onClick={onActivate}
-      // `relative`: el resaltado es una capa absoluta que va antes en el DOM,
-      // y sin posicionar la fila el fondo le pasaría por encima al texto.
-      // La fila no pinta ese fondo — lo pinta la capa que viaja.
+      // `relative`: the highlight is an absolute layer that comes earlier in
+      // the DOM, and without positioning the row the background would run over
+      // the text. The row doesn't paint that background — the travelling layer
+      // does.
       className={cn(
         "relative flex cursor-default select-none items-center",
         shape.item,
@@ -435,12 +442,11 @@ function PanelRow({
 }
 
 // ---------------------------------------------------------------------------
-// Vistas
+// Views
 //
-// Las filas de los dos niveles se arman en una sola pasada y salen numeradas
-// de corrido: el resaltado del teclado es un índice sobre ese arreglo plano, y
-// los títulos de grupo quedan afuera de la numeración porque no se pueden
-// activar.
+// Both levels' rows are built in a single pass and come out numbered
+// consecutively: the keyboard's highlight is an index into that flat array, and
+// the group titles stay out of the numbering because they can't be activated.
 // ---------------------------------------------------------------------------
 
 type Row =
@@ -490,14 +496,14 @@ function buildSections(
     const term = query.trim();
     const terms = valuesOf(selection, attribute.id);
     const rows: Row[] = [];
-    // Sólo si no está ya puesto: repetir un término no agrega nada y la fila
-    // ofrecería algo que no cambia nada.
+    // Only if it isn't set already: repeating a term adds nothing and the row
+    // would offer something that changes nothing.
     if (term && !terms.includes(term)) {
       rows.push({ kind: "add", key: `add:${term}`, index: cursor++, attribute, term });
     }
-    // Los términos ya puestos no se filtran por lo que se esté escribiendo:
-    // mientras se tipea uno nuevo, esconder los viejos haría parecer que se
-    // borraron.
+    // Terms already set aren't filtered by whatever is being typed: while a new
+    // one is typed, hiding the old ones would make it look like they'd been
+    // deleted.
     for (const t of terms) {
       rows.push({ kind: "term", key: `term:${t}`, index: cursor++, attribute, term: t });
     }
@@ -521,17 +527,18 @@ function buildSections(
 // ---------------------------------------------------------------------------
 // PanelList
 //
-// La lista de un nivel: el marco que scrollea, las filas y el resaltado que
-// viaja entre ellas.
+// One level's list: the scrolling frame, the rows and the highlight that
+// travels between them.
 //
-// Es un componente aparte y no un pedazo del panel por una razón que se paga
-// caro si se deshace: **cada nivel necesita su propio medidor**. Las filas se
-// anotan en `useProximityHover` por índice, y durante el cruce las dos vistas
-// están montadas a la vez; con un medidor compartido los índices de las dos se
-// pisan, y al desmontarse la que se va su limpieza borra las filas de la que
-// acaba de entrar — el resaltado desaparece y no vuelve más. Un medidor por
-// vista no puede colisionar, y de paso el resaltado del nivel nuevo aparece
-// con su propia opacidad en vez de venir viajando desde el nivel anterior.
+// It's a separate component and not a chunk of the panel for a reason that
+// costs dearly if undone: **each level needs its own measurer**. The rows sign
+// up with `useProximityHover` by index, and during the crossover both views are
+// mounted at once; with a shared measurer the two sets of indices tread on each
+// other, and when the outgoing one unmounts its cleanup wipes the rows of the
+// one that just came in — the highlight disappears and never comes back. One
+// measurer per view can't collide, and as a bonus the new level's highlight
+// appears with an opacity of its own instead of travelling in from the previous
+// level.
 // ---------------------------------------------------------------------------
 
 interface PanelListProps {
@@ -544,9 +551,9 @@ interface PanelListProps {
   isEmpty: boolean;
   emptyMessage: string;
   selection: FilterSelection;
-  /** La fila marcada, en índices de esta lista. Vive arriba porque el buscador
-   *  —que está afuera— la anuncia por `aria-activedescendant` y Enter la
-   *  activa. */
+  /** The marked row, in this list's indices. It lives above because the search
+   *  box —which is outside— announces it through `aria-activedescendant` and
+   *  Enter activates it. */
   highlighted: number;
   onHighlight: (index: number) => void;
   onActivate: (row: Row) => void;
@@ -571,18 +578,18 @@ function PanelList({
   const containerRef = useRef<HTMLDivElement>(null);
 
   /**
-   * El resaltado, con el mismo mecanismo que el sidebar y el dropdown del
-   * registry: el hook mide las filas y elige la *más cercana* al puntero, no la
-   * que está literalmente abajo. Eso es lo que hace que no se apague al pasar
-   * por el aire que queda entre dos filas.
+   * The highlight, with the same mechanism as the registry's sidebar and
+   * dropdown: the hook measures the rows and picks the one *closest* to the
+   * pointer, not the one literally underneath it. That's what keeps it from
+   * going out when passing over the air left between two rows.
    */
   const { activeIndex, itemRects, isMeasured, handlers, registerItem } =
     useProximityHover(containerRef);
 
-  // El cable hacia arriba: el hook elige la fila acá adentro y el índice tiene
-  // que salir de esta lista para que el buscador lo anuncie y Enter lo use. No
-  // hay forma de derivarlo en el render — la elección la hace el hook en su
-  // propio estado, un cuadro después del movimiento del mouse.
+  // The wire upwards: the hook picks the row in here and the index has to get
+  // out of this list so the search box can announce it and Enter can use it.
+  // There's no way to derive it during render — the choice is made by the hook
+  // in its own state, a frame after the mouse moves.
   // oxlint-disable-next-line react/set-state-in-effect
   useEffect(() => {
     if (activeIndex !== null) onHighlight(activeIndex);
@@ -609,27 +616,28 @@ function PanelList({
         aria-multiselectable={multiselectable}
         onMouseEnter={handlers.onMouseEnter}
         onMouseMove={handlers.onMouseMove}
-        // Sin `onMouseLeave`: al salir el puntero, el resaltado se queda donde
-        // estaba. Acá no es una marca de hover sino el cursor del teclado —es
-        // la fila que Enter va a activar— y apagarlo lo dejaría sin destino.
+        // No `onMouseLeave`: when the pointer leaves, the highlight stays where
+        // it was. Here it isn't a hover mark but the keyboard's cursor —it's the
+        // row Enter is going to activate— and switching it off would leave it
+        // with no destination.
         //
-        // El aire va acá adentro y no en el viewport que scrollea, así el
-        // contenedor que mide la proximidad también cubre los bordes: el
-        // resaltado no se apaga al pasar por el borde de la lista.
+        // The air goes in here and not on the scrolling viewport, so the
+        // container that measures proximity also covers the edges: the highlight
+        // doesn't go out when passing over the list's border.
         className="relative p-1.5"
       >
-        {/* Una sola capa que viaja de fila en fila, en vez de un fondo por fila
-            que prende y apaga. Viaja con el escalón rápido, que es el del
-            hover, y aparece con una opacidad de 80ms para no verse venir desde
-            otra fila la primera vez.
+        {/* A single layer travelling from row to row, instead of one background
+            per row switching on and off. It travels with the fast step, which is
+            hover's, and appears with an 80ms opacity so it isn't seen arriving
+            from another row the first time.
 
-            Va antes que las filas en el DOM: las dos capas están posicionadas,
-            así que manda el orden del documento, y así el texto queda arriba.
+            It comes before the rows in the DOM: both layers are positioned, so
+            document order rules, and that keeps the text on top.
 
-            `isMeasured` es la condición y no un detalle: mientras las medidas
-            no describan lo que hay en pantalla, una capa montada contra ellas
-            se corregiría después de aparecer, y esa corrección se ve como un
-            deslizamiento desde otra fila. */}
+            `isMeasured` is the condition and not a detail: while the
+            measurements don't describe what's on screen, a layer mounted against
+            them would correct itself after appearing, and that correction looks
+            like a slide in from another row. */}
         {isMeasured && highlightRect && (
           <motion.div
             aria-hidden="true"
@@ -740,7 +748,7 @@ function PanelList({
                     key={row.key}
                     {...shared}
                     icon={Plus}
-                    label={`Agregar «${row.term}»`}
+                    label={`Add "${row.term}"`}
                   />
                 );
               }
@@ -787,7 +795,7 @@ function PanelList({
 
 function FilterMenu({
   groups,
-  label = "Filtros",
+  label = "Filters",
   value,
   defaultValue,
   onValueChange,
@@ -809,14 +817,14 @@ function FilterMenu({
   );
   const selection = value ?? internalValue;
 
-  /** La fila marcada. La mueven el teclado desde acá y el puntero desde la
-   *  lista, que avisa por `onHighlight`: un solo resaltado y no dos que se
-   *  pisan. */
+  /** The marked row. It's moved by the keyboard from here and by the pointer
+   *  from the list, which reports through `onHighlight`: one highlight and not
+   *  two treading on each other. */
   const [activeIndex, setActiveIndex] = useState(0);
 
   const [path, setPath] = useState<string | null>(null);
   const [direction, setDirection] = useState(1);
-  /** Sube en cada vuelta al primer nivel — ver `travelId`. */
+  /** Goes up on every return to the first level — see `travelId`. */
   const [trip, setTrip] = useState(0);
   const [query, setQuery] = useState("");
 
@@ -824,9 +832,9 @@ function FilterMenu({
   const listId = useId();
   const rowId = (index: number) => `${listId}-row-${index}`;
 
-  // El override va directo y no por contexto: estos hooks corren afuera del
-  // `SizeProvider` que este mismo componente monta. Lo portaleado sí lo lee
-  // del provider — el contexto de React cruza el portal.
+  // The override goes in directly and not through context: these hooks run
+  // outside the `SizeProvider` this very component mounts. What's portalled does
+  // read it from the provider — React context crosses the portal.
   const classes = useSize(size);
   const scale = useTypeScale(size);
 
@@ -853,11 +861,11 @@ function FilterMenu({
   );
   const rows = useMemo(() => sections.flatMap((s) => s.rows), [sections]);
 
-  // El resaltado se recorta en el render y no se corrige con un efecto: si la
-  // lista se acortó por debajo de donde estaba parado — al destildar el último
-  // término de un atributo de texto, por ejemplo — el índice bueno se calcula
-  // acá mismo. Un efecto que lo arreglara después pintaría un cuadro con la
-  // marca en una fila que ya no existe.
+  // The highlight is clamped during render and not corrected in an effect: if
+  // the list got shorter than where it was standing — on unticking the last term
+  // of a text attribute, say — the good index is computed right here. An effect
+  // fixing it afterwards would paint one frame with the mark on a row that no
+  // longer exists.
   const highlighted = rows.length ? Math.min(activeIndex, rows.length - 1) : -1;
 
   const handleOpenChange = useCallback(
@@ -869,10 +877,10 @@ function FilterMenu({
   );
 
   /**
-   * Base UI difiere el desmontaje mientras haya `actionsRef`, así que el panel
-   * se libera recién cuando terminó la animación de salida. El estado de
-   * navegación se reinicia en el mismo lugar y no al cerrar: si se limpiara
-   * antes, el panel se vería volver al primer nivel mientras se desvanece.
+   * Base UI defers the unmount while there's an `actionsRef`, so the panel is
+   * released only once the exit animation has finished. The navigation state is
+   * reset in the same place and not on close: cleared any earlier, the panel
+   * would be seen going back to the first level while it fades out.
    */
   useEffect(() => {
     if (open) return;
@@ -887,10 +895,10 @@ function FilterMenu({
     return () => window.clearTimeout(id);
   }, [open, setActiveIndex]);
 
-  /** Cambiar lo que se busca devuelve el resaltado a la primera fila: quedarse
-   *  en el índice 5 después de escribir tres letras deja la marca en una fila
-   *  que no tiene nada que ver con lo que se buscó. Por acá pasan las cuatro
-   *  formas de cambiarlo — tipear, entrar, volver y agregar un término. */
+  /** Changing what's being searched sends the highlight back to the first row:
+   *  staying at index 5 after typing three letters leaves the mark on a row that
+   *  has nothing to do with what was searched for. All four ways of changing it
+   *  go through here — typing, stepping in, coming back and adding a term. */
   const search = useCallback(
     (next: string) => {
       setQuery(next);
@@ -925,8 +933,8 @@ function FilterMenu({
           break;
         case "option":
           commit(toggleValue(selection, row.attribute, row.option.value));
-          // Con un solo valor posible, quedarse adentro del atributo es
-          // quedarse mirando una lista donde ya no hay nada que hacer.
+          // With only one value possible, staying inside the attribute means
+          // staring at a list where there's nothing left to do.
           if (row.attribute.single) back();
           break;
         case "add":
@@ -951,12 +959,12 @@ function FilterMenu({
         if (!rows.length) return;
         event.preventDefault();
         const step = event.key === "ArrowDown" ? 1 : -1;
-        // Da la vuelta: en una lista corta, bajar desde la última a la primera
-        // es más rápido que subir siete veces.
+        // It wraps around: in a short list, going down from the last to the
+        // first is faster than going up seven times.
         const next = (highlighted + step + rows.length) % rows.length;
         setActiveIndex(next);
-        // Y la trae a la vista. Hay que pedirlo a mano: las filas no reciben
-        // el foco, que es lo que normalmente arrastra el scroll de una lista.
+        // And brings it into view. It has to be asked for by hand: the rows
+        // don't take focus, which is what normally drags a list's scroll.
         document
           .getElementById(rowId(next))
           ?.scrollIntoView({ block: "nearest" });
@@ -969,8 +977,8 @@ function FilterMenu({
         }
         break;
       case "ArrowRight":
-        // Sólo con el cursor al final del texto: si está en el medio de lo que
-        // se escribió, la flecha es del campo y no del panel.
+        // Only with the caret at the end of the text: in the middle of what was
+        // typed, the arrow belongs to the field and not to the panel.
         if (
           row?.kind === "attribute" &&
           input.selectionStart === input.value.length
@@ -987,11 +995,11 @@ function FilterMenu({
         }
         break;
       case "Escape":
-        // Escape deshace de a un paso: primero la búsqueda, después el nivel, y
-        // recién con las dos cosas limpias cierra el panel. Lo último lo hace
-        // Base UI, que escucha la tecla en el contenedor del portal; para
-        // frenarlo hay que cortar la propagación del evento nativo, porque el
-        // handler de React corre antes pero sobre el mismo evento.
+        // Escape undoes one step at a time: first the search, then the level,
+        // and only with both cleared does it close the panel. That last part is
+        // Base UI's doing, which listens for the key on the portal's container;
+        // to stop it you have to cut the native event's propagation, because
+        // React's handler runs first but on the same event.
         if (query) {
           event.preventDefault();
           event.nativeEvent.stopPropagation();
@@ -1005,17 +1013,17 @@ function FilterMenu({
     }
   };
 
-  // El marco de la lista anima su alto contra el de la vista que está en
-  // pantalla. Se mide con un ResizeObserver sobre el nodo de la vista actual y
-  // no con `layout` de framer, que para animar el alto escala el marco y le
-  // deforma el texto a las filas.
+  // The list's frame animates its height against the one of the view on screen.
+  // It's measured with a ResizeObserver on the current view's node and not with
+  // framer's `layout`, which animates height by scaling the frame and distorts
+  // the rows' text.
   const [viewNode, setViewNode] = useState<HTMLDivElement | null>(null);
   const [viewHeight, setViewHeight] = useState<number | null>(null);
 
-  // La función de limpieza es la que evita que la vista que se está yendo se
-  // lleve puesta la medición de la que entra: React 19 no llama al ref con
-  // `null` cuando hay cleanup, así que cada nodo limpia el suyo y el tardío
-  // sólo borra si todavía era el nodo actual.
+  // The cleanup function is what keeps the outgoing view from taking the
+  // incoming one's measurement with it: React 19 doesn't call the ref with
+  // `null` when there's a cleanup, so each node clears its own and the late one
+  // only wipes if it was still the current node.
   const attachView = useCallback((node: HTMLDivElement) => {
     setViewNode(node);
     return () => setViewNode((current) => (current === node ? null : current));
@@ -1037,25 +1045,25 @@ function FilterMenu({
 
   const AttributeIcon = attribute?.icon;
 
-  /** Los botones cuadrados de la cabecera bajan con la región: la escalera
-   *  tiene un escalón propio para el botón de sólo ícono en cada paso. */
+  /** The header's square buttons drop with the region: the ladder has a step of
+   *  its own for the icon-only button at each rung. */
   const iconButtonSize = classes.variant === "compact" ? "icon-compact" : "icon";
 
   const placeholder = attribute
     ? (attribute.searchPlaceholder ??
       (attribute.type === "text"
-        ? `${attribute.label} contiene…`
-        : `Buscar en ${attribute.label.toLowerCase()}…`))
-    : "Buscar atributos…";
+        ? `${attribute.label} contains…`
+        : `Search in ${attribute.label.toLowerCase()}…`))
+    : "Search attributes…";
 
   const panel = (
     <Popover.Root
       open={open}
       onOpenChange={(next, details) => {
-        // Escape con búsqueda escrita o adentro de un atributo no cierra: eso
-        // lo resuelve `onKeyDown`. Pero la tecla también llega por acá cuando
-        // el foco está en la X o en el botón de limpiar, donde el handler del
-        // campo no corre — de ahí el mismo corte del lado de Base UI.
+        // Escape with a search typed or inside an attribute doesn't close:
+        // `onKeyDown` handles that. But the key also arrives here when focus is
+        // on the × or on the clear button, where the field's handler doesn't run
+        // — hence the same cut on Base UI's side.
         if (!next && details.reason === "escape-key" && (query || attribute)) {
           details.cancel();
           if (query) search("");
@@ -1066,14 +1074,14 @@ function FilterMenu({
         handleOpenChange(next);
       }}
       actionsRef={actionsRef}
-      // Sin modal: la página sigue scrolleando y el positioner sigue al botón,
-      // así el panel viaja con su ancla en vez de despegarse.
+      // Not modal: the page keeps scrolling and the positioner follows the
+      // button, so the panel travels with its anchor instead of coming loose.
       modal={false}
     >
-      {/* El botón va adentro de un contenedor inline y no suelto: `Popover.Root`
-          no dibuja nada, así que sin esto el botón queda como hijo directo de
-          lo que haya alrededor y una columna flex se lo estira de punta a
-          punta. Es el mismo envoltorio que usa `ColorPickerPopover`. */}
+      {/* The button goes inside an inline container and not loose:
+          `Popover.Root` draws nothing, so without this the button ends up a
+          direct child of whatever is around it and a flex column stretches it
+          end to end. It's the same wrapper `ColorPickerPopover` uses. */}
       <div className="inline-flex">
         <Popover.Trigger
           render={
@@ -1086,12 +1094,12 @@ function FilterMenu({
             />
           }
         >
-          {/* Etiqueta y contador van en una misma caja inline con el aire de la
-              escalera. No alcanza con ponerlos como dos hijos sueltos: el
-              Button mete a todos sus hijos en el span de la etiqueta, y ahí
-              adentro su `gap` no llega — el número terminaría pegado a la
-              palabra. La caja es `inline-flex` por lo mismo que el contador:
-              una de bloque se iría al renglón de abajo. */}
+          {/* Label and counter go in a single inline box with the ladder's air.
+              Putting them as two loose children isn't enough: the Button puts
+              all its children into the label's span, and in there its `gap`
+              doesn't reach — the number would end up stuck to the word. The box
+              is `inline-flex` for the same reason as the counter: a block one
+              would drop to the next line. */}
           {triggerCount > 0 ? (
             <span className={cn("inline-flex items-center", classes.gap)}>
               {label}
@@ -1125,15 +1133,15 @@ function FilterMenu({
               }}
             >
               <Popover.Popup
-                // El plano sale de `Elevated`: dos escalones sobre el sustrato
-                // —lo que sube cualquier popover— y sombra fija en 3, así el
-                // panel pesa lo mismo abierto sobre la página que adentro de un
-                // diálogo, aunque su fondo siga al sustrato. Elevated además
-                // vuelve a publicar el nivel, y por eso las filas y el pie de
-                // acá adentro no necesitan saber sobre qué se abrió.
+                // The plane comes from `Elevated`: two steps over the substrate
+                // —what any popover climbs— and a shadow fixed at 3, so the
+                // panel weighs the same open over the page as inside a dialog,
+                // even though its background follows the substrate. Elevated
+                // also republishes the level, which is why the rows and the
+                // footer in here don't need to know what it opened over.
                 render={<Elevated offset={2} shadowLevel={3} />}
-                // El foco entra al buscador y no al panel: es el único lugar
-                // desde donde se maneja todo lo demás.
+                // Focus lands on the search box and not on the panel: it's the
+                // only place everything else is driven from.
                 initialFocus={inputRef}
                 aria-label={label}
                 className={cn(
@@ -1142,21 +1150,22 @@ function FilterMenu({
                 )}
                 style={{ width: PANEL_WIDTH }}
               >
-                {/* Cabecera: título, vuelta y cierre. La vuelta y la X no
-                    viajan con el contenido — son del panel, no del nivel.
-                    El alto es una fila de la escalera más el aire del panel,
-                    así la X cae en la misma grilla que las filas de abajo. */}
-                {/* `z-10`: el nombre que viaja desde la fila se dibuja en el
-                    DOM de la cabecera, y sin esto la lista —que va después—
-                    le pasaría por encima durante el vuelo. */}
+                {/* Header: title, back and close. The back and the × don't
+                    travel with the content — they belong to the panel, not to
+                    the level. The height is one of the ladder's rows plus the
+                    panel's air, so the × falls on the same grid as the rows
+                    below. */}
+                {/* `z-10`: the name travelling from the row is drawn in the
+                    header's DOM, and without this the list —which comes after—
+                    would run over it mid-flight. */}
                 <div
                   className="relative z-10 flex shrink-0 items-center gap-1 px-1.5"
                   style={{ height: classes.controlHeight + PANEL_PAD * 2 }}
                 >
-                  {/* La vuelta aparece con su ancho ya puesto y sólo se
-                      revela: si el ancho creciera, el lugar de la cabecera al
-                      que apunta el nombre se estaría moviendo mientras el
-                      nombre viaja hacia él, y aterrizaría corrido. */}
+                  {/* The back button appears with its width already set and
+                      only reveals itself: if the width grew, the spot in the
+                      header the name is aiming at would be moving while the name
+                      travels towards it, and it would land off-mark. */}
                   {attribute && (
                     <motion.div
                       key="back"
@@ -1167,7 +1176,7 @@ function FilterMenu({
                       <Button
                         variant="ghost"
                         size={iconButtonSize}
-                        aria-label="Volver a los atributos"
+                        aria-label="Back to attributes"
                         onClick={back}
                       >
                         <ChevronLeft />
@@ -1175,11 +1184,10 @@ function FilterMenu({
                     </motion.div>
                   )}
 
-                  {/* El título no se corre: en el nivel de un atributo lo que
-                      llega es el nombre volando desde su fila, y un
-                      desplazamiento propio pelearía con ese viaje. Lo único
-                      que hace acá el título de la raíz es cruzarse en opacidad
-                      con el que llega. */}
+                  {/* The title doesn't shift: at an attribute's level what
+                      arrives is the name flying in from its row, and a shift of
+                      its own would fight that trip. All the root title does here
+                      is cross over in opacity with the one arriving. */}
                   <div className="relative flex min-w-0 flex-1 items-center">
                     <AnimatePresence initial={false}>
                       <motion.div
@@ -1244,7 +1252,7 @@ function FilterMenu({
                       <Button
                         variant="ghost"
                         size={iconButtonSize}
-                        aria-label="Cerrar filtros"
+                        aria-label="Close filters"
                       />
                     }
                   >
@@ -1254,15 +1262,16 @@ function FilterMenu({
 
                 <span className="h-px shrink-0 bg-border" />
 
-                {/* Buscador. Se pinta con `bg-hover` — una capa translúcida— y
-                    no con un escalón fijo de la escalera: el panel se abre
-                    sobre cualquier sustrato, y un `bg-surface-2` quedaría más
-                    oscuro o más claro que su propio panel según dónde caiga.
+                {/* Search box. It's painted with `bg-hover` —a translucent
+                    layer— and not with a fixed step of the ladder: the panel
+                    opens over any substrate, and a `bg-surface-2` would end up
+                    darker or lighter than its own panel depending on where it
+                    lands.
 
-                    No dibuja anillo de foco. Mientras el panel está abierto el
-                    foco vive acá, así que un anillo permanente no informaría
-                    nada; quien dice dónde estás parado es el resaltado de la
-                    fila, que es lo que se mueve. */}
+                    It draws no focus ring. While the panel is open focus lives
+                    here, so a permanent ring would report nothing; what says
+                    where you're standing is the row's highlight, which is what
+                    moves. */}
                 <div
                   className="relative shrink-0"
                   style={{ margin: PANEL_PAD, marginBottom: 0 }}
@@ -1283,8 +1292,8 @@ function FilterMenu({
                     aria-label={placeholder}
                     autoComplete="off"
                     spellCheck={false}
-                    // El padding de la derecha deja lugar a la lupa: el glifo
-                    // de la escalera más el aire del campo de los dos lados.
+                    // The right padding makes room for the magnifier: the
+                    // ladder's glyph plus the field's air on both sides.
                     style={{ paddingRight: classes.icon + PANEL_PAD * 2 }}
                     className={cn(
                       "w-full bg-hover text-foreground outline-none",
@@ -1305,10 +1314,11 @@ function FilterMenu({
                 </div>
 
                 <motion.div
-                  // `initial={false}`: en el primer render todavía no hay
-                  // medida y el alto es `auto`; sin esto el panel se abriría
-                  // animando de 0 a su alto por dentro, además de la entrada
-                  // que ya hace por fuera.
+                  // `initial={false}`: on the first render there's no
+                  // measurement yet and the height is `auto`; without this the
+                  // panel would open animating from 0 to its height on the
+                  // inside, on top of the entry it already does on the
+                  // outside.
                   initial={false}
                   animate={{ height: viewHeight ?? "auto" }}
                   transition={spring.moderate}
@@ -1325,17 +1335,17 @@ function FilterMenu({
                       exit="exit"
                       transition={spring.moderate}
                     >
-                      {/* El scroll va por `ScrollArea` con `scroll-fade` en el
-                          viewport y `scroll-divider` en el marco: el thumb del
-                          sistema, el contenido que se disuelve hacia el borde
-                          que todavía tiene más, y la línea que aparece cuando
-                          hay algo pasando por arriba o por abajo. La línea no
-                          puede ir en el mismo nodo que scrollea — la máscara
-                          del fade se la comería.
+                      {/* The scroll goes through `ScrollArea` with
+                          `scroll-fade` on the viewport and `scroll-divider` on
+                          the frame: the system's thumb, the content dissolving
+                          towards whichever edge still has more, and the line
+                          that appears when something is passing above or below.
+                          The line can't go on the same node that scrolls — the
+                          fade's mask would eat it.
 
-                          El tope de alto viaja como variable CSS porque sale
-                          de la escalera en tiempo de ejecución, y Tailwind sólo
-                          genera clases que puede leer en el código. */}
+                          The height cap travels as a CSS variable because it
+                          comes from the ladder at runtime, and Tailwind only
+                          generates classes it can read in the code. */}
                       <PanelList
                         listId={listId}
                         trip={trip}
@@ -1348,8 +1358,8 @@ function FilterMenu({
                         isEmpty={!rows.length}
                         emptyMessage={
                           attribute?.type === "text"
-                            ? "Escribí un texto y apretá Enter"
-                            : "No hay nada con ese nombre"
+                            ? "Type some text and press Enter"
+                            : "Nothing by that name"
                         }
                         selection={selection}
                         highlighted={highlighted}
@@ -1360,8 +1370,8 @@ function FilterMenu({
                   </AnimatePresence>
                 </motion.div>
 
-                {/* Pie: aparece sólo cuando hay algo puesto en el nivel donde
-                    estás, y limpia exactamente eso. */}
+                {/* Footer: it appears only when something is set at the level
+                    you're on, and clears exactly that. */}
                 <AnimatePresence initial={false}>
                   {scopeCount > 0 && (
                     <motion.div
@@ -1382,11 +1392,11 @@ function FilterMenu({
                           className="text-muted-foreground"
                         >
                           {scopeCount === 1
-                            ? "1 filtro puesto"
-                            : `${scopeCount} filtros puestos`}
+                            ? "1 filter set"
+                            : `${scopeCount} filters set`}
                         </span>
-                        {/* Sin `size`: el botón sigue al SizeProvider del panel
-                            como cualquier otro control de la región. */}
+                        {/* No `size`: the button follows the panel's
+                            SizeProvider like any other control in the region. */}
                         <Button
                           variant="ghost"
                           onClick={() => {
@@ -1398,7 +1408,7 @@ function FilterMenu({
                             inputRef.current?.focus();
                           }}
                         >
-                          Limpiar
+                          Clear
                         </Button>
                       </div>
                     </motion.div>

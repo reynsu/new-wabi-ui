@@ -56,7 +56,7 @@ function Stat({
 const MONTHS = [
   { label: "Feb", publico: 22, anonimo: 38 },
   { label: "Mar", publico: 34, anonimo: 62 },
-  { label: "Abr", publico: 48, anonimo: 74 },
+  { label: "Apr", publico: 48, anonimo: 74 },
   { label: "May", publico: 92, anonimo: 55 },
   { label: "Jun", publico: 70, anonimo: 34 },
   { label: "Jul", publico: 41, anonimo: 22 },
@@ -64,58 +64,58 @@ const MONTHS = [
 
 const TABS: PeekCardTab[] = [
   {
-    label: "Resumen",
+    label: "Summary",
     content: (
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between gap-3">
           <Stat
             icon={UserRound}
             tint="color-mix(in oklab, #f59e0b 22%, transparent)"
-            label="Público"
-            value="$38.000"
+            label="Public"
+            value="$38,000"
           />
           <Stat
             icon={VenetianMask}
             tint="color-mix(in oklab, #6b97ff 22%, transparent)"
-            label="Anónimo"
-            value="$45.000"
+            label="Anonymous"
+            value="$45,000"
           />
         </div>
         <p className="text-[13px] text-muted-foreground">
-          142 aportes en los últimos seis meses.
+          142 contributions over the last six months.
         </p>
       </div>
     ),
   },
   {
-    label: "Meta",
+    label: "Goal",
     content: (
       <div className="flex flex-col gap-2.5">
         <div className="flex items-baseline justify-between">
-          <span className="text-[13px] text-muted-foreground">Meta del año</span>
-          <span className="text-[13px] font-medium">$83.000 / $120.000</span>
+          <span className="text-[13px] text-muted-foreground">Goal for the year</span>
+          <span className="text-[13px] font-medium">$83,000 / $120,000</span>
         </div>
         <div className="h-2 overflow-hidden rounded-full bg-surface-2">
           <div className="h-full w-[69%] rounded-full bg-foreground" />
         </div>
         <p className="text-[13px] text-muted-foreground">
-          Faltan $37.000 y quedan cinco meses.
+          $37,000 to go, with five months left.
         </p>
       </div>
     ),
   },
   {
-    label: "Estadísticas",
+    label: "Statistics",
     content: (
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-4 text-[12px] text-muted-foreground">
           <span className="flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full bg-[#f59e0b]" />
-            Público
+            Public
           </span>
           <span className="flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full bg-[#6b97ff]" />
-            Anónimo
+            Anonymous
           </span>
         </div>
         <div className="flex h-24 items-end gap-2">
@@ -142,13 +142,13 @@ const TABS: PeekCardTab[] = [
 
 const ACTION = (
   <Button variant="tertiary" size="compact" leadingIcon={HeartPlus}>
-    Donar
+    Donate
   </Button>
 );
 
 const FOOTER = (
   <Button variant="tertiary" leadingIcon={History} className="w-full">
-    Ver el historial
+    See the history
   </Button>
 );
 
@@ -167,7 +167,7 @@ const Avatar = forwardRef<
   <button
     ref={ref}
     type="button"
-    aria-label={`Perfil de ${initials}`}
+    aria-label={`${initials}'s profile`}
     className={cn(
       "flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-surface-3 text-[12px] font-medium shadow-surface-2 outline-none transition-shadow duration-100 hover:shadow-surface-3 focus-visible:ring-1 focus-visible:ring-[color:var(--focus-ring)]",
       className
@@ -186,27 +186,27 @@ export function PeekCardSection() {
   return (
     <div className="flex flex-col gap-14">
       <Section
-        title="El gesto"
-        hint="Un botón abre el card pegado a él. Adentro está el reparto del InsetDialog: el título con su acción y el riel de Tabs en el marco, y el cuerpo de la pestaña embutido en su propia tarjeta. Cambiar de pestaña cruza lo de adentro y lleva el alto a la medida de la que entra, así el borde de abajo no salta contra el ancla."
+        title="The gesture"
+        hint="A button opens the card stuck to it. Inside goes a plain Card: the title with its action, the Tabs rail and the body of the chosen tab, all on the same plane and separated by air. Changing tab crosses the content over and takes the height to the incoming one's measure, so the bottom edge doesn't jump against the anchor."
       >
         <div className="flex">
           <PeekCard
-            title="Perfil de donación"
+            title="Donation profile"
             icon={HandHeart}
             action={ACTION}
             footer={FOOTER}
             tabs={TABS}
           >
             <Button variant="secondary" leadingIcon={Wallet}>
-              Ver el perfil
+              See the profile
             </Button>
           </PeekCard>
         </div>
       </Section>
 
       <Section
-        title="El otro gesto"
-        hint="El mismo card con openOn=&quot;hover&quot;: aparece al pasar por encima y espera 120ms al salir, que es lo que tarda el puntero en cruzar el hueco hasta el card. El foco no se mueve — sólo entra si lo abrió el teclado."
+        title="The other gesture"
+        hint="The same card with openOn=&quot;hover&quot;: it appears on pointer-over and waits 120ms on leave, which is how long the pointer takes to cross the gap to the card. Focus doesn't move — it only goes in if the keyboard opened it."
       >
         <div className="flex flex-col gap-5">
           <div className="flex items-center gap-3">
@@ -229,11 +229,11 @@ export function PeekCardSection() {
           </div>
 
           <p className="max-w-lg text-[13px] text-muted-foreground">
-            También sirve sobre texto corrido: la campaña la lleva{" "}
+            It works over running text too: the campaign has been run by{" "}
             <PeekCard
               openOn="hover"
               side="top"
-              title="Fondo Marmota"
+              title="Marmot Fund"
               icon={Target}
               footer={FOOTER}
               tabs={TABS}
@@ -242,21 +242,21 @@ export function PeekCardSection() {
                 type="button"
                 className="cursor-pointer text-foreground underline decoration-dotted underline-offset-4 outline-none focus-visible:ring-1 focus-visible:ring-[color:var(--focus-ring)]"
               >
-                Fondo Marmota
+                Marmot Fund
               </button>
             </PeekCard>{" "}
-            desde marzo, y ya pasó dos tercios de la meta del año.
+            since March, and it's already past two thirds of this year's goal.
           </p>
         </div>
       </Section>
 
       <Section
-        title="Contra el borde"
-        hint="Alineado al final del trigger y abriendo hacia arriba. Base UI da vuelta el lado solo cuando no entra, y el card sigue al ancla si la página scrollea: no es modal."
+        title="Against the edge"
+        hint="Aligned to the trigger's end and opening upwards. Base UI flips the side on its own when it doesn't fit, and the card follows the anchor if the page scrolls: it isn't modal."
       >
         <div className="flex justify-end">
           <PeekCard
-            title="Perfil de donación"
+            title="Donation profile"
             icon={HandHeart}
             action={ACTION}
             footer={FOOTER}
@@ -265,20 +265,20 @@ export function PeekCardSection() {
             align="end"
           >
             <Button variant="tertiary" leadingIcon={ChartLine}>
-              Ver los números
+              See the numbers
             </Button>
           </PeekCard>
         </div>
       </Section>
 
       <Section
-        title="Controlado y compacto"
-        hint="La pestaña se puede manejar desde afuera — los botones de acá abajo mueven la del card — y dentro de un SizeProvider compacto bajan el título, las pestañas, los botones y el aire del marco. El ancho también: 360 pasa a 320, un escalón más angosto."
+        title="Controlled and compact"
+        hint="The tab can be driven from outside — the buttons below move the card's — and inside a compact SizeProvider the title, the tabs, the buttons and the Card's padding all step down. So does the width: 360 becomes 320, one step narrower."
       >
         <SizeProvider size="compact">
           <div className="flex flex-wrap items-center gap-2">
             <PeekCard
-              title="Perfil de donación"
+              title="Donation profile"
               icon={HandHeart}
               action={ACTION}
               footer={FOOTER}
@@ -288,7 +288,7 @@ export function PeekCardSection() {
               defaultOpen
             >
               <Button variant="secondary" leadingIcon={Wallet}>
-                Ver el perfil
+                See the profile
               </Button>
             </PeekCard>
 

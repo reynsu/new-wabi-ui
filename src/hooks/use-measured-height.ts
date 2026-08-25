@@ -2,27 +2,29 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-/** Mide el alto del nodo montado. Devuelve un ref estable y el alto en px.
+/** Measures the mounted node's height. Returns a stable ref and the height in
+ *  px.
  *
- *  Para animar el alto de un contenedor cuyo contenido se reemplaza con un
- *  cruce: el que entra publica su medida antes de que el que sale termine de
- *  irse, así el contenedor viaja a la medida final y no en dos tirones.
+ *  For animating the height of a container whose content is replaced with a
+ *  crossover: the incoming one publishes its measurement before the outgoing
+ *  one has finished leaving, so the container travels to the final measure and
+ *  not in two tugs.
  *
- *  Dos detalles que parecen de más y no lo son:
+ *  Two details that look superfluous and aren't:
  *
- *  - **El ref es el mismo callback en todos los renders.** Uno nuevo por
- *    render hace que React lo desmonte y lo vuelva a montar, y cada vuelta
- *    invalida la medición.
+ *  - **The ref is the same callback on every render.** A new one per render
+ *    makes React unmount and remount it, and each round trip invalidates the
+ *    measurement.
  *
- *  - **No suelta el observer cuando lo llaman con `null`.** Durante el cruce
- *    los dos contenidos están montados, así que el nodo que se va llama al ref
- *    con `null` *después* de que el que entra ya se anotó: soltar ahí borraría
- *    la medición del que se está quedando.
+ *  - **It doesn't release the observer when called with `null`.** During the
+ *    crossover both contents are mounted, so the outgoing node calls the ref
+ *    with `null` *after* the incoming one has already signed up: releasing
+ *    there would wipe the measurement of the one that's staying.
  *
- *  `offsetHeight` y no `getBoundingClientRect`: bajo un ancestro escalado —un
- *  popup que entra con un spring de escala— el rect devuelve el alto visual y
- *  el contenedor animaría hacia un número que deja de ser cierto en cuanto la
- *  escala llega a 1. */
+ *  `offsetHeight` and not `getBoundingClientRect`: under a scaled ancestor —a
+ *  popup coming in with a scale spring— the rect returns the visual height and
+ *  the container would animate towards a number that stops being true the
+ *  moment the scale reaches 1. */
 export function useMeasuredHeight<T extends HTMLElement = HTMLDivElement>() {
   const [height, setHeight] = useState<number | null>(null);
   const observer = useRef<ResizeObserver | null>(null);

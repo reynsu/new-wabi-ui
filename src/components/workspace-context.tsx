@@ -1,17 +1,17 @@
 "use client";
 
 /**
- * WorkspaceProvider — las pestañas del WorkspacePanel, elevadas al nivel de la
- * app para que cualquier componente pueda abrir una sin tener que pasarse
- * callbacks por props hasta llegar al panel.
+ * WorkspaceProvider — the WorkspacePanel's tabs, raised to app level so any
+ * component can open one without threading callbacks through props all the way
+ * to the panel.
  *
- * Tres piezas:
- *   WorkspaceProvider  guarda las pestañas y cuál está activa
- *   useWorkspace()     lo que consume cualquier parte de la app para abrirlas
- *   WorkspaceOutlet    el sitio donde el panel se dibuja, normalmente uno solo
+ * Three pieces:
+ *   WorkspaceProvider  holds the tabs and which one is active
+ *   useWorkspace()     what any part of the app consumes to open them
+ *   WorkspaceOutlet    where the panel is drawn, usually in a single place
  *
- * WorkspacePanel no se entera de nada de esto: sigue recibiendo `tabs` por
- * props y sirve igual suelto, sin provider.
+ * WorkspacePanel knows none of this: it still takes `tabs` through props and
+ * works just as well on its own, with no provider.
  */
 
 import {
@@ -35,14 +35,15 @@ interface WorkspaceState {
 }
 
 interface WorkspaceContextValue extends WorkspaceState {
-  /** Abre una pestaña y la enfoca. Si ya hay una con ese id no la duplica:
-   *  sólo la enfoca, que es lo que se espera al volver a pedir algo abierto.
-   *  Con `focus: false` la deja abierta en segundo plano. */
+  /** Opens a tab and focuses it. If one with that id is already open it isn't
+   *  duplicated: it just gets focused, which is what you expect when you ask
+   *  again for something that's open. With `focus: false` it opens in the
+   *  background. */
   openTab: (tab: WorkspaceTab, options?: { focus?: boolean }) => void;
-  /** Cierra una pestaña. Si era la activa, el relevo pasa a su vecina — la de
-   *  la derecha, o la de la izquierda si era la última. */
+  /** Closes a tab. If it was the active one, its neighbour takes over — the one
+   *  to the right, or the one to the left if it was the last. */
   closeTab: (id: string) => void;
-  /** Enfoca una pestaña ya abierta. Ignora ids que no existan. */
+  /** Focuses an already-open tab. Ids that don't exist are ignored. */
   activateTab: (id: string) => void;
 }
 
@@ -51,16 +52,16 @@ const WorkspaceContext = createContext<WorkspaceContextValue | null>(null);
 function useWorkspace(): WorkspaceContextValue {
   const ctx = useContext(WorkspaceContext);
   if (!ctx) {
-    throw new Error("useWorkspace debe usarse dentro de un WorkspaceProvider");
+    throw new Error("useWorkspace must be used inside a WorkspaceProvider");
   }
   return ctx;
 }
 
 interface WorkspaceProviderProps {
   children: ReactNode;
-  /** Pestañas con las que arranca. */
+  /** Tabs it starts with. */
   defaultTabs?: WorkspaceTab[];
-  /** Cuál queda activa al montar. Por defecto, la primera. */
+  /** Which one is active on mount. The first one by default. */
   defaultActiveId?: string;
 }
 
@@ -69,11 +70,11 @@ function WorkspaceProvider({
   defaultTabs = [],
   defaultActiveId,
 }: WorkspaceProviderProps) {
-  // Un solo objeto de estado y no dos: cerrar la activa tiene que quitarla de
-  // la lista y mover la selección en el mismo paso, y para elegir la vecina
-  // hace falta la lista de ANTES de quitarla. Con dos estados separados eso
-  // obliga a leer uno desde el updater del otro, que en StrictMode se ejecuta
-  // dos veces.
+  // One state object and not two: closing the active tab has to drop it from
+  // the list and move the selection in the same step, and picking the
+  // neighbour needs the list from BEFORE it was dropped. With two separate
+  // states that means reading one from inside the other's updater, which
+  // StrictMode runs twice.
   const [state, setState] = useState<WorkspaceState>(() => ({
     tabs: defaultTabs,
     activeId: defaultActiveId ?? defaultTabs[0]?.id,
@@ -84,9 +85,9 @@ function WorkspaceProvider({
       setState((s) => {
         const abierta = s.tabs.some((t) => t.id === tab.id);
         return {
-          // Ya abierta: se respeta la que está. Reemplazarla por el descriptor
-          // nuevo remontaría su contenido y se perdería lo que tuviera dentro
-          // (scroll, un formulario a medias).
+          // Already open: the existing one wins. Replacing it with the new
+          // descriptor would remount its content and lose whatever was inside
+          // (scroll position, a half-filled form).
           tabs: abierta ? s.tabs : [...s.tabs, tab],
           activeId: focus ? tab.id : s.activeId ?? tab.id,
         };
@@ -127,7 +128,7 @@ function WorkspaceProvider({
   );
 }
 
-/** Donde el panel se dibuja. Normalmente uno solo, al lado del sidebar. */
+/** Where the panel is drawn. Usually one of these, next to the sidebar. */
 type WorkspaceOutletProps = Omit<
   WorkspacePanelProps,
   "tabs" | "value" | "defaultValue" | "onValueChange" | "onTabClose"
@@ -139,9 +140,9 @@ function WorkspaceOutlet(props: WorkspaceOutletProps) {
   return (
     <WorkspacePanel
       tabs={tabs}
-      // "" y no undefined: el panel trata `value === undefined` como "no
-      // controlado" y volvería a su estado interno cuando no hay ninguna
-      // activa. Un id vacío no coincide con nada y lo mantiene controlado.
+      // "" and not undefined: the panel reads `value === undefined` as
+      // "uncontrolled" and would fall back to its internal state when no tab is
+      // active. An empty id matches nothing and keeps it controlled.
       value={activeId ?? ""}
       onValueChange={activateTab}
       onTabClose={closeTab}
@@ -150,8 +151,8 @@ function WorkspaceOutlet(props: WorkspaceOutletProps) {
   );
 }
 
-// `useWorkspace` vive al lado de su provider a propósito: separarlo sólo para
-// contentar al fast refresh partiría el módulo en dos por nada.
+// `useWorkspace` lives next to its provider on purpose: splitting it out just
+// to please fast refresh would break the module in two for nothing.
 // oxlint-disable-next-line react/only-export-components
 export { WorkspaceProvider, WorkspaceOutlet, useWorkspace };
 export type { WorkspaceContextValue, WorkspaceProviderProps, WorkspaceOutletProps };

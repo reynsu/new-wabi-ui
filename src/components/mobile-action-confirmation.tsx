@@ -1,58 +1,61 @@
 "use client";
 
 /**
- * MobileActionConfirmation — la confirmación de una acción en pantalla de
- * teléfono.
+ * MobileActionConfirmation — confirming an action on a phone screen.
  *
- * Una hoja anclada al piso: qué acción es —glifo y nombre—, qué implica, y las
- * dos salidas. Cuando la acción no es una sino una secuencia —ocho permisos,
- * ocho pantallas de alta— la misma hoja lleva el contador arriba, el riel de
- * puntos abajo y "Continuar" avanza en vez de confirmar.
+ * A sheet anchored to the floor: which action this is —glyph and name—, what it
+ * involves, and the two ways out. When the action isn't one but a sequence
+ * —eight permissions, eight sign-up screens— the same sheet carries the counter
+ * at the top, the rail of dots at the bottom, and "Continue" advances instead
+ * of confirming.
  *
- * Es un `InsetDialog` con `placement="bottom"`: el paso —glifo, nombre y qué
- * implica— va en la tarjeta, y el contador, la salida de arriba, el riel y las
- * dos acciones quedan en la bandeja. Eso es lo que hace que al cambiar de paso
- * se mueva una sola cosa: el marco es todo lo que no cambia.
+ * It's an `InsetDialog` with `placement="bottom"`: the step —glyph, name and
+ * what it involves— goes in the card, and the counter, the top exit, the rail
+ * and the two actions stay in the tray. That's what makes a single thing move
+ * when the step changes: the frame is everything that doesn't change.
  *
- * Seis decisiones que conviene no deshacer sin mirar el resto:
+ * Six decisions worth not undoing without looking at the rest:
  *
- * 1. **Va al piso, no al centro.** En un teléfono el pulgar llega abajo y no
- *    arriba; una hoja centrada deja las dos acciones en la mitad de la
- *    pantalla, donde hay que reacomodar la mano para tocarlas. `placement`
- *    tiene `center` para cuando el componente se muestra en un marco chico
- *    —el showcase— y el piso del marco no es el piso de la pantalla.
+ * 1. **It goes to the floor, not the centre.** On a phone the thumb reaches the
+ *    bottom and not the top; a centred sheet leaves the two actions in the
+ *    middle of the screen, where the hand has to be rearranged to reach them.
+ *    `placement` has `center` for when the component is shown in a small frame
+ *    —the showcase— and the frame's floor isn't the screen's floor.
  *
- * 2. **La escalera sube al pulgar con un solo número.** 36px pasa el mouse
- *    pero no el dedo: las dos plataformas piden 44px de lado. En vez de
- *    escribir 44 y 52 a mano, todo sale de `TOUCH_BUMP` sumado a la escalera,
- *    así el escalón compacto y el default quedan los dos arriba del piso y la
- *    diferencia entre densidades se sigue leyendo. Y por eso mismo el escalón
- *    en un táctil es siempre el compacto: lo único que baja es el aire — la
- *    acción sigue midiendo 44px, que es el piso, no el techo.
+ * 2. **The ladder climbs to the thumb with a single number.** 36px passes for a
+ *    mouse but not for a finger: both platforms ask for 44px a side. Instead of
+ *    writing 44 and 52 by hand, everything comes from `TOUCH_BUMP` added to the
+ *    ladder, so the compact step and the default one both end up above the
+ *    floor and the difference between densities can still be read. And for that
+ *    same reason the step on a touch device is always the compact one: the only
+ *    thing that goes down is the air — the action still measures 44px, which is
+ *    the floor, not the ceiling.
  *
- * 3. **El alto se anima, el contenido se cruza.** Dos pasos con descripciones
- *    de distinto largo cambian el alto de la tarjeta; como la hoja está
- *    anclada al piso, ese cambio la haría saltar. El alto viaja con
- *    `spring.moderate` a la medida del paso que entra, y los dos pasos
- *    conviven durante el cruce —`popLayout` saca de flujo al que se va— así el
- *    que entra ya mide bien antes de que el otro termine de irse.
+ * 3. **The height animates, the content crosses over.** Two steps with
+ *    descriptions of different lengths change the card's height; since the
+ *    sheet is anchored to the floor, that change would make it jump. The height
+ *    travels with `spring.moderate` to the incoming step's measure, and the two
+ *    steps coexist during the crossover —`popLayout` takes the outgoing one out
+ *    of flow— so the incoming one already measures right before the other
+ *    finishes leaving.
  *
- * 4. **El punto activo viaja, no prende y apaga.** Es una sola capa que se
- *    desplaza por el riel, como el selector de `WorkspacePanel`. Acá sí puede
- *    ser un `transform`: el punto no cambia de tamaño entre posiciones, así
- *    que no hay redondeo que deformar. Y el riel se retira pasados los
- *    `DOT_CAP` puntos — veinte puntos no se cuentan de un vistazo, para eso
- *    está el contador.
+ * 4. **The active dot travels, it doesn't switch on and off.** It's a single
+ *    layer sliding along the rail, like `WorkspacePanel`'s selector. Here it
+ *    can be a `transform`: the dot doesn't change size between positions, so
+ *    there's no radius to distort. And the rail withdraws past `DOT_CAP` dots —
+ *    twenty dots aren't counted at a glance, that's what the counter is for.
  *
- * 5. **El título y la descripción se etiquetan a mano.** Durante el cruce hay
- *    dos pasos montados; con `Dialog.Title` los dos publicarían su id sobre el
- *    mismo popup y el `aria-labelledby` quedaría apuntando al que se está
- *    yendo. Cada paso lleva su id propio y el popup apunta al que entra.
+ * 5. **The title and the description are labelled by hand.** During the
+ *    crossover there are two steps mounted; with `Dialog.Title` both would
+ *    publish their id on the same popup and `aria-labelledby` would end up
+ *    pointing at the one that's leaving. Each step carries its own id and the
+ *    popup points at the one coming in.
  *
- * 6. **El clic afuera no cierra.** Una confirmación se contesta: el clic al
- *    costado no es ninguna de las dos respuestas. Es lo que separa un
- *    `alertdialog` de un diálogo común, y `InsetDialog` lo trae como perilla
- *    —`disablePointerDismissal`— junto con el `role`, que va en el content.
+ * 6. **Clicking outside doesn't close.** A confirmation gets answered: a click
+ *    off to the side is neither of the two answers. It's what separates an
+ *    `alertdialog` from a plain dialog, and `InsetDialog` brings it as a knob
+ *    —`disablePointerDismissal`— together with the `role`, which goes on the
+ *    content.
  */
 
 import {
@@ -89,115 +92,117 @@ import { exitFallbackMs, spring } from "@/lib/springs";
 import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
-// Medidas
+// Measurements
 // ---------------------------------------------------------------------------
 
-/** El salto de la escalera al pulgar. La fila de acciones sube dos veces este
- *  número sobre el alto de control y el tile del glifo uno, así el escalón
- *  compacto (28) da 44 y 36, y el default (36) da 52 y 44 — los dos arriba del
- *  piso táctil de 44px, sin repetir literales por el archivo. */
+/** The ladder's jump to the thumb. The row of actions climbs twice this number
+ *  above the control height and the glyph's tile climbs it once, so the compact
+ *  step (28) gives 44 and 36, and the default one (36) gives 52 and 44 — both
+ *  above the 44px touch floor, without repeating literals across the file. */
 const TOUCH_BUMP = 8;
 
-/** El punto del riel y el aire entre puntos. Iguales a propósito: el riel se
- *  lee como una secuencia y no como pares. */
+/** The rail's dot and the air between dots. Equal on purpose: the rail reads as
+ *  a sequence and not as pairs. */
 const DOT = 6;
 const DOT_GAP = 6;
 
-/** Pasados estos pasos el riel se retira y queda sólo el contador: veinte
- *  puntos no se cuentan de un vistazo. */
+/** Past this many steps the rail withdraws and only the counter is left: twenty
+ *  dots aren't counted at a glance. */
 const DOT_CAP = 7;
 
 // ---------------------------------------------------------------------------
-// Tipos públicos
+// Public types
 // ---------------------------------------------------------------------------
 
 interface ConfirmationStep {
-  /** Estable entre renders: es la clave del cruce y la raíz de los ids que
-   *  etiquetan el diálogo. */
+  /** Stable across renders: it's the crossover's key and the root of the ids
+   *  that label the dialog. */
   id: string;
   icon: IconComponent;
   title: string;
   description: ReactNode;
-  /** Etiqueta de la acción que sigue, sólo para este paso. Sin esto, la del
-   *  componente. */
+  /** Label for the next action, for this step only. Without it, the
+   *  component's. */
   confirmLabel?: string;
 }
 
 interface MobileActionConfirmationProps {
   open: boolean;
-  /** Cerrar. Llega también por Escape; el clic afuera no cierra —hay que
-   *  elegir una de las dos salidas. */
+  /** Close. It also arrives via Escape; clicking outside doesn't close —one of
+   *  the two exits has to be chosen. */
   onOpenChange: (open: boolean) => void;
-  /** Uno para una confirmación común, varios para una secuencia. */
+  /** One for a plain confirmation, several for a sequence. */
   steps: ConfirmationStep[];
-  /** Paso activo, para manejarlo desde afuera. Sin esto lo lleva el
-   *  componente y vuelve al primero cuando la hoja termina de salir. */
+  /** Active step, to drive it from outside. Without this the component keeps it
+   *  and rewinds to the first one once the sheet finishes leaving. */
   step?: number;
   onStepChange?: (step: number) => void;
-  /** Confirmar. En una secuencia, sólo en el último paso. */
+  /** Confirm. In a sequence, only on the last step. */
   onConfirm: () => void;
-  /** Volver atrás en el primer paso. Sin esto, cierra. */
+  /** Going back on the first step. Without this, it closes. */
   onCancel?: () => void;
-  /** La salida de arriba a la derecha. Sin esto no se dibuja: una secuencia de
-   *  la que no se puede salir no debería ofrecerlo. */
+  /** The exit at the top right. Without this it isn't drawn: a sequence you
+   *  can't leave shouldn't offer it. */
   onSkip?: () => void;
   confirmLabel?: string;
-  /** Etiqueta del confirmar en el último paso de una secuencia. Sin esto, la
-   *  misma que en los demás. */
+  /** Label for confirming on a sequence's last step. Without this, the same as
+   *  on the others. */
   finalConfirmLabel?: string;
-  /** La salida del primer paso — cerrar sin hacer nada. */
+  /** The first step's way out — closing without doing anything. */
   cancelLabel?: string;
-  /** La vuelta al paso anterior. Es otra etiqueta que `cancelLabel` porque es
-   *  otra cosa: una deshace un paso, la otra abandona. */
+  /** Going back to the previous step. It's a different label from
+   *  `cancelLabel` because it's a different thing: one undoes a step, the other
+   *  walks away. */
   backLabel?: string;
   skipLabel?: string;
-  /** El confirmar queda cargando y las dos salidas se bloquean. */
+  /** The confirm goes into loading and both exits are blocked. */
   pending?: boolean;
-  /** Cómo se pinta el tile del glifo. */
+  /** How the glyph's tile is painted. */
   tone?: "neutral" | "destructive";
-  /** El único lugar por donde entra un color de marca: el tile. El resto de la
-   *  hoja sale de los tokens del tema. */
+  /** The only place a brand colour gets in: the tile. The rest of the sheet
+   *  comes from the theme's tokens. */
   tileClassName?: string;
   placement?: "bottom" | "center";
-  /** Adónde vuelve el foco al cerrar. */
+  /** Where focus returns on close. */
   triggerRef?: RefObject<HTMLElement | null>;
-  /** Atrapa el foco y bloquea el scroll de atrás. Por default sí, salvo que
-   *  la hoja esté portaleada a un marco (`container`): ahí es una muestra
-   *  adentro de una página que se sigue usando, y el atrape se llevaría el
-   *  foco de todo lo que hay alrededor. */
+  /** Traps focus and blocks the scroll behind it. On by default, unless the
+   *  sheet is portalled into a frame (`container`): there it's a sample inside
+   *  a page that's still in use, and the trap would take focus away from
+   *  everything around it. */
   modal?: boolean;
-  /** Marco al que se portalea. Con esto la hoja se posiciona `absolute` adentro
-   *  del elemento en vez de sobre la ventana — sirve para mostrarla dentro de
-   *  una pantalla de teléfono dibujada. El marco tiene que ser `relative` y
+  /** The frame it's portalled into. With this the sheet positions itself
+   *  `absolute` inside the element instead of over the window — useful for
+   *  showing it inside a drawn phone screen. The frame has to be `relative` and
    *  `overflow: hidden`. */
   container?: HTMLElement | null;
-  /** Fija la densidad de la hoja para puntero fino. Sin esto sigue al
-   *  `SizeProvider` de arriba. En un dispositivo táctil no se lee: ahí la
-   *  densidad es siempre compacta. */
+  /** Pins the sheet's density for a fine pointer. Without this it follows the
+   *  `SizeProvider` above. On a touch device it isn't read: there the density is
+   *  always compact. */
   size?: SizeVariant;
 }
 
 // ---------------------------------------------------------------------------
-// El cruce entre pasos
+// The crossover between steps
 // ---------------------------------------------------------------------------
 
-/* La dirección la pone quien dispara el cambio: adelante entra por la derecha,
-   atrás por la izquierda. Sin eso los dos lados del recorrido se ven iguales y
-   volver no se distingue de avanzar. */
+/* The direction is set by whoever fires the change: forward comes in from the
+   right, back from the left. Without that both directions of travel look the
+   same and going back can't be told apart from moving on. */
 const stepVariants = {
   enter: (direction: number) => ({ opacity: 0, x: direction * 12 }),
   center: { opacity: 1, x: 0 },
   exit: (direction: number) => ({ opacity: 0, x: direction * -12 }),
 };
 
-/** Mide el alto del paso montado. Devuelve un ref estable y el alto en px.
+/** Measures the mounted step's height. Returns a stable ref and the height in
+ *  px.
  *
- *  El ref es el mismo callback en todos los renders —uno nuevo por render hace
- *  que React desmonte y vuelva a montar el ref, y cada vuelta invalida la
- *  medición—, y no suelta el observer cuando lo llaman con `null`: durante el
- *  cruce los dos pasos están montados, así que el nodo que se va lo llamaría
- *  con `null` después de que el que entra ya se anotó, y soltaría la medición
- *  del que se está quedando. */
+ *  The ref is the same callback on every render —a new one per render makes
+ *  React unmount and remount the ref, and each round trip invalidates the
+ *  measurement—, and it doesn't release the observer when called with `null`:
+ *  during the crossover both steps are mounted, so the outgoing node would call
+ *  it with `null` after the incoming one has already signed up, and would drop
+ *  the measurement of the one that's staying. */
 function useMeasuredHeight() {
   const [height, setHeight] = useState<number | null>(null);
   const observer = useRef<ResizeObserver | null>(null);
@@ -229,9 +234,9 @@ export function MobileActionConfirmation({
   onSkip,
   confirmLabel,
   finalConfirmLabel,
-  cancelLabel = "Cancelar",
-  backLabel = "Atrás",
-  skipLabel = "Saltar",
+  cancelLabel = "Cancel",
+  backLabel = "Back",
+  skipLabel = "Skip",
   pending = false,
   tone = "neutral",
   tileClassName,
@@ -241,11 +246,11 @@ export function MobileActionConfirmation({
   modal,
   size,
 }: MobileActionConfirmationProps) {
-  // En un teléfono la densidad no se negocia: compacta, gane lo que gane
-  // afuera. Un escalón default en una columna de 360px deja la descripción en
-  // el doble de renglones y empuja las acciones abajo del pliegue del pulgar,
-  // y el salto al pulgar hace que compacto siga dando 44px de acción — o sea
-  // que lo que se achica es el aire, nunca el objetivo táctil.
+  // On a phone the density isn't negotiable: compact, whatever wins outside. A
+  // default step in a 360px column leaves the description at twice the lines
+  // and pushes the actions below the thumb's fold, and the jump to the thumb
+  // keeps compact giving a 44px action — meaning what shrinks is the air, never
+  // the touch target.
   const touch = useTouchPrimary();
   const requested = useSizeVariant(size);
   const variant = touch ? "compact" : requested;
@@ -265,10 +270,11 @@ export function MobileActionConfirmation({
   const first = index === 0;
   const last = index === total - 1;
 
-  // El paso vuelve al primero recién cuando la hoja terminó de salir; hacerlo
-  // al cerrar mostraría el paso 1 durante la salida, que no es donde estaba el
-  // que la cerró. El portal se desmonta solo —eso lo maneja `InsetDialog`—,
-  // así que este timer no libera nada: sólo elige el momento de rebobinar.
+  // The step rewinds to the first one only once the sheet has finished
+  // leaving; doing it on close would show step 1 during the exit, which isn't
+  // where the person who closed it was. The portal unmounts on its own —that's
+  // `InsetDialog`'s job—, so this timer frees nothing: it only picks the moment
+  // to rewind.
   useEffect(() => {
     if (open) return;
     const id = setTimeout(() => {
@@ -306,7 +312,7 @@ export function MobileActionConfirmation({
   const current = steps[index];
   const Glyph = current.icon;
 
-  // Las tres medidas de la hoja salen de la escalera más el salto al pulgar.
+  // The sheet's three measurements come from the ladder plus the thumb jump.
   const action = classes.controlHeight + TOUCH_BUMP * 2; // 52 / 44
   const tile = classes.controlHeight + TOUCH_BUMP; //        44 / 36
   const glyph = classes.icon + TOUCH_BUMP / 2; //            20 / 18
@@ -314,8 +320,8 @@ export function MobileActionConfirmation({
   const stack = compact ? 12 : 16;
 
   const confirmText = last
-    ? current.confirmLabel ?? finalConfirmLabel ?? confirmLabel ?? "Confirmar"
-    : current.confirmLabel ?? confirmLabel ?? "Continuar";
+    ? current.confirmLabel ?? finalConfirmLabel ?? confirmLabel ?? "Confirm"
+    : current.confirmLabel ?? confirmLabel ?? "Continue";
 
   const titleId = `${baseId}-${current.id}-title`;
   const descriptionId = `${baseId}-${current.id}-description`;
@@ -332,17 +338,17 @@ export function MobileActionConfirmation({
       <InsetDialogContent
         placement={placement}
         container={container}
-        // La hoja pregunta y espera una respuesta: `alertdialog` es lo que le
-        // dice al lector de pantalla que interrumpa y lea el título y la
-        // descripción de una, sin esperar a que el foco recorra.
+        // The sheet asks and waits for an answer: `alertdialog` is what tells
+        // the screen reader to interrupt and read the title and the description
+        // in one go, without waiting for focus to walk through.
         role="alertdialog"
         aria-labelledby={titleId}
         aria-describedby={descriptionId}
-        // El foco entra al confirmar y no al primer tabulable: la hoja
-        // pregunta una cosa y esa es la respuesta esperada.
+        // Focus lands on the confirm and not on the first tabbable: the sheet
+        // asks one thing and that's the expected answer.
         initialFocus={confirmRef}
         finalFocus={triggerRef}
-        // Las dos salidas están en el pie; una X arriba sería una tercera.
+        // Both exits are in the footer; an × at the top would be a third.
         showClose={false}
       >
         <SizeProvider size={variant}>
@@ -352,7 +358,7 @@ export function MobileActionConfirmation({
                 className="text-muted-foreground"
                 style={{ fontSize: type.caption }}
               >
-                {showCounter ? `${index + 1} de ${total}` : ""}
+                {showCounter ? `${index + 1} of ${total}` : ""}
               </span>
               {onSkip && (
                 <Button
@@ -362,9 +368,9 @@ export function MobileActionConfirmation({
                   disabled={pending}
                   style={{
                     height: tile,
-                    // El botón se corre su propio padding hacia afuera: así lo
-                    // que se alinea con el carril de la bandeja es la palabra
-                    // y no la caja invisible que la rodea.
+                    // The button pushes its own padding outwards: that way what
+                    // lines up with the tray's rail is the word and not the
+                    // invisible box around it.
                     marginRight: compact ? -12 : -16,
                   }}
                 >
@@ -374,24 +380,24 @@ export function MobileActionConfirmation({
             </InsetDialogHeader>
           )}
 
-          {/* El paso va en la tarjeta y no scrollea: lo que cambia de alto es
-              él mismo, y ese cambio se anima. */}
+          {/* The step goes in the card and doesn't scroll: what changes height
+              is the step itself, and that change is animated. */}
           <InsetDialogBody scrollable={false}>
-            {/* El relleno de la tarjeta es el mismo aire que separa el tile
-                del título, y no el de `InsetDialogGroup`: el grupo está hecho
-                para una tarjeta con varios bloques y su inset, sumado al de la
-                bandeja, le come cuarenta pixeles de renglón a una columna de
-                teléfono. Acá adentro hay un bloque solo. */}
+            {/* The card's padding is the same air that separates the tile from
+                the title, and not `InsetDialogGroup`'s: the group is made for a
+                card with several blocks and its inset, added to the tray's,
+                eats forty pixels of line from a phone-width column. In here
+                there's a single block. */}
             <div style={{ padding: stack }}>
-              {/* Sin `initial` la primera apertura animaría el alto desde
-                  cero, que se ve como una hoja que se despliega. */}
+              {/* Without `initial` the first opening would animate the height
+                  from zero, which looks like a sheet unfolding. */}
               <motion.div
                 className="relative overflow-hidden"
                 initial={false}
                 animate={{ height: bodyHeight ?? "auto" }}
                 transition={spring.moderate}
-                // El paso que entra trae título nuevo: sin esto el lector de
-                // pantalla se queda en el que anunció al abrir.
+                // The incoming step brings a new title: without this the screen
+                // reader stays on the one it announced when opening.
                 aria-live="polite"
               >
                 <AnimatePresence
@@ -452,8 +458,9 @@ export function MobileActionConfirmation({
             </div>
           </InsetDialogBody>
 
-          {/* El riel y las acciones son las dos filas del pie: las dos son del
-              marco, no del paso, y por eso comparten el plano de la bandeja. */}
+          {/* The rail and the actions are the footer's two rows: both belong to
+              the frame, not to the step, which is why they share the tray's
+              plane. */}
           <InsetDialogFooter className="flex-col items-stretch gap-3">
             {showRail && (
               <div
@@ -476,10 +483,9 @@ export function MobileActionConfirmation({
                     />
                   ))}
                 </div>
-                {/* Una sola capa que viaja, como el selector del
-                    WorkspacePanel. Acá el viaje puede ser un `transform`: el
-                    punto no cambia de tamaño entre posiciones, así que no hay
-                    redondeo que deformar. */}
+                {/* A single travelling layer, like WorkspacePanel's selector.
+                    Here the trip can be a `transform`: the dot doesn't change
+                    size between positions, so there's no radius to distort. */}
                 <motion.span
                   className="absolute left-0 top-0 rounded-full bg-foreground"
                   style={{ width: DOT, height: DOT }}
@@ -490,8 +496,9 @@ export function MobileActionConfirmation({
               </div>
             )}
 
-            {/* Las dos salidas, con la que sigue pesando más: la proporción
-                dice cuál es la esperada antes de que se lean las etiquetas. */}
+            {/* The two ways out, with the one that carries on weighing more:
+                the proportion says which is expected before the labels get
+                read. */}
             <div className={cn("flex", classes.gap)}>
               <Button
                 variant="tertiary"

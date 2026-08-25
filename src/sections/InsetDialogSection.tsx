@@ -73,10 +73,10 @@ const LOG: LogEntry[] = [
 ];
 
 const STATUS = [
-  "clasificando el pedido",
-  "leyendo 6 fuentes",
-  "escribiendo el resumen",
-  "verificando las citas",
+  "classifying the request",
+  "reading 6 sources",
+  "writing the summary",
+  "verifying the citations",
 ];
 
 /* Un agente del relevo. Los tres estados se leen sin texto: el que ya pasó
@@ -166,7 +166,7 @@ export function InsetDialogSection() {
     <div className="flex flex-col gap-14">
       <Section
         title="InsetDialog"
-        hint="El diálogo con el contenido embutido en su propia tarjeta: cabecera y pie comparten el plano de la bandeja, y lo del medio se levanta. Movés el control de abajo del relevo para ver crecer el registro."
+        hint="The dialog with its content inset into a card of its own: header and footer share the tray's plane, and what's in between is lifted. Drag the control below the handoff to watch the log grow."
       >
         <div className="flex flex-col gap-4">
           <Frame frame={setHandoffFrame} className="h-[700px]">
@@ -216,7 +216,7 @@ export function InsetDialogSection() {
                     </div>
                     <div className="mt-4 px-2">
                       <Slider
-                        aria-label="Etapa del relevo"
+                        aria-label="Handoff stage"
                         value={stage}
                         onChange={(v) => setStage(v as number)}
                         min={0}
@@ -296,20 +296,20 @@ export function InsetDialogSection() {
               onClick={() => setHandoffOpen(true)}
               disabled={handoffOpen}
             >
-              Volver a abrir
+              Open it again
             </Button>
             <p className="text-[13px] text-muted-foreground">
-              La tarjeta scrollea sola con <code className="text-foreground">scroll-fade</code>;
-              la bandeja no se mueve, y por eso el registro puede crecer sin que el
-              título ni los botones cambien de lugar.
+              The card scrolls on its own with <code className="text-foreground">scroll-fade</code>;
+              the tray doesn't move, which is why the log can grow without the
+              title or the buttons changing place.
             </p>
           </div>
         </div>
       </Section>
 
       <Section
-        title="Los dos planos"
-        hint="El mismo contenido en el diálogo del registry y en este. A la izquierda las tres zonas comparten plano y las separa el aire; a la derecha el contenido se levanta y lo que queda alrededor es el marco. En claro la diferencia es #FAFAFA contra #FFFFFF más el anillo de la tarjeta; en oscuro la separa el color — probá el interruptor de arriba."
+        title="The two planes"
+        hint="The same content in the registry's dialog and in this one. On the left the three zones share a plane and air separates them; on the right the content is lifted and what's left around it is the frame. In light the difference is #FAFAFA against #FFFFFF plus the card's ring; in dark colour separates them — try the switch above."
       >
         <div className="grid gap-4 sm:grid-cols-2">
           <Frame frame={setPlainFrame} className="h-[340px]">
@@ -319,15 +319,15 @@ export function InsetDialogSection() {
                   <DialogTitle>Registry Dialog</DialogTitle>
                 </DialogHeader>
                 <ul className="flex flex-col gap-2 text-[13px] text-muted-foreground">
-                  <li>214 tickets analizados</li>
-                  <li>6 drivers, ordenados por volumen</li>
-                  <li>2 citas pendientes</li>
+                  <li>214 tickets analysed</li>
+                  <li>6 drivers, ranked by volume</li>
+                  <li>2 citations pending</li>
                 </ul>
                 <DialogFooter>
                   <Button variant="tertiary" size="compact">
-                    Cancelar
+                    Cancel
                   </Button>
-                  <Button size="compact">Aceptar</Button>
+                  <Button size="compact">Accept</Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
@@ -346,16 +346,16 @@ export function InsetDialogSection() {
                   <InsetDialogBody scrollable={false}>
                     <InsetDialogGroup>
                       <ul className="flex flex-col gap-2 text-[12px] text-muted-foreground">
-                        <li>214 tickets analizados</li>
-                        <li>6 drivers, ordenados por volumen</li>
-                        <li>2 citas pendientes</li>
+                        <li>214 tickets analysed</li>
+                        <li>6 drivers, ranked by volume</li>
+                        <li>2 citations pending</li>
                       </ul>
                     </InsetDialogGroup>
                   </InsetDialogBody>
                   <InsetDialogFooter>
                     <div className="ml-auto flex items-center gap-2">
-                      <Button variant="tertiary">Cancelar</Button>
-                      <Button>Aceptar</Button>
+                      <Button variant="tertiary">Cancel</Button>
+                      <Button>Accept</Button>
                     </div>
                   </InsetDialogFooter>
                 </InsetDialogContent>

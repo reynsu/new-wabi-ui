@@ -1,30 +1,30 @@
 "use client";
 
 /**
- * LoginBlock — la pantalla de acceso completa de un producto.
+ * LoginBlock — a product's complete sign-in screen.
  *
- * Un block, no un componente: no resuelve una pieza sino una pantalla entera,
- * armada con las piezas del sistema. Dos mitades que hacen trabajos distintos.
- * A la izquierda un plano de marca — degradado, logo y promesa del producto —
- * que no pide nada; a la derecha la única columna donde hay algo que hacer.
- * Esa asimetría es la que dirige la vista: todo lo accionable vive junto.
+ * A block, not a component: it doesn't solve one piece but a whole screen,
+ * assembled from the system's pieces. Two halves doing different jobs. On the
+ * left a brand plane — gradient, logo and the product's promise — that asks for
+ * nothing; on the right the only column where there's anything to do. That
+ * asymmetry is what steers the eye: everything actionable lives together.
  *
- * Tres decisiones que conviene no deshacer sin mirar el resto:
+ * Three decisions worth not undoing without looking at the rest:
  *
- * 1. **Mide su contenedor, no la ventana.** El layout se parte en dos con
- *    container queries (`@container` + `@2xl:`), así que el mismo block sirve a
- *    pantalla completa y adentro del marco angosto del showcase. Con media
- *    queries habría que elegir una de las dos.
+ * 1. **It measures its container, not the window.** The layout splits in two
+ *    with container queries (`@container` + `@2xl:`), so the same block works
+ *    full screen and inside the showcase's narrow frame. With media queries
+ *    you'd have to pick one of the two.
  *
- * 2. **Se pinta en su propio tema.** La clase `.light` / `.dark` va en la raíz
- *    del block, no en el <html>, y los tokens cascadean hacia adentro. Por eso
- *    adentro no se usa ni una utilidad `dark:`: esa variante es
- *    `&:is(.dark *)`, o sea que un block claro adentro de una app oscura
- *    seguiría matcheando y se pintaría mal.
+ * 2. **It paints itself in its own theme.** The `.light` / `.dark` class goes on
+ *    the block's root, not on the <html>, and the tokens cascade inwards.
+ *    That's why not a single `dark:` utility is used inside: that variant is
+ *    `&:is(.dark *)`, which means a light block inside a dark app would still
+ *    match and would paint itself wrong.
  *
- * 3. **El error empuja, no tapa.** Aparece adentro del marco, encima de la
- *    tarjeta, y le corre el contenido hacia abajo. Un toast se iría solo y un
- *    modal taparía los campos que hay que corregir.
+ * 3. **The error pushes, it doesn't cover.** It appears inside the frame, above
+ *    the card, and shifts the content down. A toast would leave on its own and
+ *    a modal would cover the very fields that need fixing.
  */
 
 import {
@@ -42,24 +42,24 @@ import type { IconComponentProps } from "@/lib/icon-context";
 import { cn } from "@/lib/utils";
 import { spring } from "@/lib/springs";
 
-/** El tema que el block se aplica a sí mismo. `system` sigue al sistema
- *  operativo y lo sigue mirando mientras esté montado. */
+/** The theme the block applies to itself. `system` follows the operating system
+ *  and keeps watching it for as long as it's mounted. */
 type LoginBlockTheme = "light" | "dark" | "system";
 
 interface LoginBlockProps {
-  /** La marca del plano izquierdo. Va como nodo y no como src para poder
-   *  entregar un SVG que herede el color del tema. */
+  /** The brand mark on the left-hand plane. It goes as a node and not as a src
+   *  so an SVG can be handed over that inherits the theme's colour. */
   logo?: ReactNode;
-  /** Titular del plano. Corto: entra en dos renglones al ancho del panel. */
+  /** The plane's headline. Short: it fits in two lines at the panel's width. */
   title: string;
-  /** Qué hace el producto, en una o dos oraciones. */
+  /** What the product does, in one or two sentences. */
   description: string;
-  /** Mensaje de error. `null` cierra el aviso; el texto tiene que nombrar el
-   *  problema, no el código de estado. */
+  /** Error message. `null` closes the notice; the text has to name the problem,
+   *  not the status code. */
   error?: string | null;
-  /** Deja los controles quietos mientras el submit está en vuelo. */
+  /** Keeps the controls still while the submit is in flight. */
   pending?: boolean;
-  /** Tema controlado. Sin esta prop el block maneja el suyo. */
+  /** Controlled theme. Without this prop the block manages its own. */
   theme?: LoginBlockTheme;
   defaultTheme?: LoginBlockTheme;
   onThemeChange?: (theme: LoginBlockTheme) => void;
@@ -70,18 +70,19 @@ interface LoginBlockProps {
   className?: string;
 }
 
-/* El plano de marca. Es una superficie oscura en los dos temas — la tapa del
-   libro — pero no la misma: en el tema claro va una clave levantada, con la
-   base varios pasos por encima del casi-negro y los focos más brillantes, así
-   los detalles se leen más claros y el plano no compite con una app clara
-   haciéndose un agujero negro al lado.
+/* The brand plane. It's a dark surface in both themes — the book's cover — but
+   not the same one: in the light theme it takes a raised key, with the base
+   several steps above near-black and the highlights brighter, so the details
+   read lighter and the plane doesn't compete with a light app by turning into a
+   black hole beside it.
 
-   La familia de color no cambia entre claves: ciruela, granate y violeta, en
-   las mismas posiciones. Cambian la altura de la base y el brillo de los focos.
+   The colour family doesn't change between keys: plum, garnet and violet, in
+   the same positions. What changes is the height of the base and the brightness
+   of the highlights.
 
-   La clave se elige acá, con el tema ya resuelto, y no con utilidades `dark:`:
-   esa variante es `&:is(.dark *)` y un block claro colgando de un <html>
-   oscuro la seguiría matcheando. */
+   The key is chosen here, with the theme already resolved, and not with `dark:`
+   utilities: that variant is `&:is(.dark *)` and a light block hanging off a
+   dark <html> would keep matching it. */
 const PANEL_ART = {
   dark: [
     "radial-gradient(120% 78% at 28% 16%, rgba(186, 128, 152, 0.44) 0%, rgba(186, 128, 152, 0) 62%)",
@@ -97,14 +98,14 @@ const PANEL_ART = {
   ].join(", "),
 } as const;
 
-/* La tinta del plano no depende del tema de la app: las dos claves son
-   oscuras, así que lo de encima siempre va claro. Una sola copia, para que no
-   se desincronicen. */
+/* The plane's ink doesn't depend on the app's theme: both keys are dark, so
+   whatever sits on top always goes light. A single copy, so the two can't drift
+   apart. */
 const PANEL_INK = {
   edge: "ring-white/10",
   ink: "text-white",
-  // El secundario sale del propio plano — un blanco con la temperatura del
-  // degradado — y no de un gris neutro, que sobre color se ve sucio.
+  // The secondary comes from the plane itself — a white with the gradient's
+  // temperature — and not from a neutral grey, which looks dirty over colour.
   body: "text-[rgb(238_226_232_/_0.72)]",
   knobOn: "text-white",
   knobOff: "text-white/45 hover:text-white/80",
@@ -112,17 +113,17 @@ const PANEL_INK = {
   focus: "focus-visible:ring-white/70",
 } as const;
 
-/* El resplandor del error: nace en el canto de arriba del marco y se apaga
-   antes de llegar a la tarjeta, así el rojo tiñe el aviso y no el formulario. */
+/* The error's glow: it starts at the frame's top edge and fades out before
+   reaching the card, so the red tints the notice and not the form. */
 const ERROR_GLOW =
   "radial-gradient(120% 100% at 50% 0%, color-mix(in oklab, var(--destructive) 34%, transparent) 0%, transparent 72%)";
 
-/** GitHub no está en lucide desde la v1 — sacaron las marcas comerciales — así
- *  que el logotipo va dibujado acá. Respeta la firma `IconComponentProps` para
- *  poder viajar por la prop `leadingIcon` del Button, que es la única forma
- *  correcta de meterle un ícono: como hijo cae adentro del span de la etiqueta,
- *  y ahí el preflight de Tailwind (`svg { display: block }`) lo apila arriba
- *  del texto en vez de dejarlo al lado. */
+/** GitHub hasn't been in lucide since v1 — they dropped the trademarks — so the
+ *  logo is drawn here. It honours the `IconComponentProps` signature so it can
+ *  travel through the Button's `leadingIcon` prop, which is the only correct
+ *  way to give it an icon: as a child it falls inside the label's span, and
+ *  there Tailwind's preflight (`svg { display: block }`) stacks it above the
+ *  text instead of leaving it alongside. */
 function GitHubMark({ size = 16, className }: IconComponentProps) {
   return (
     <svg
@@ -138,8 +139,8 @@ function GitHubMark({ size = 16, className }: IconComponentProps) {
   );
 }
 
-/** El ícono del aviso. Un círculo lleno con la cruz calada: el hueco toma el
- *  color del marco, así que se lee igual en claro y en oscuro. */
+/** The notice's icon. A filled circle with the cross knocked out: the hole takes
+ *  the frame's colour, so it reads the same in light and in dark. */
 function ErrorMark({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 20 20" aria-hidden="true" className={className}>
@@ -152,10 +153,10 @@ function ErrorMark({ className }: { className?: string }) {
   );
 }
 
-/* Un campo del formulario. Los del registry (InputField) esconden el borde
-   hasta que el cursor se acerca, que es lo correcto adentro de una app llena
-   de controles; acá el formulario es lo único que hay en la pantalla y los
-   campos tienen que verse desde el primer vistazo. Por eso van dibujados. */
+/* A form field. The registry's (InputField) hide the border until the cursor
+   comes near, which is the right thing inside an app full of controls; here the
+   form is the only thing on the screen and the fields have to be visible from
+   the first glance. That's why they're drawn. */
 function Field({
   id,
   label,
@@ -181,9 +182,9 @@ function Field({
           "border border-border outline-none transition-colors duration-100",
           "placeholder:text-muted-foreground",
           "hover:border-muted-foreground/70",
-          // Borde por `border` y foco por `ring`: cada uno en su propiedad, así
-          // el anillo se suma al borde en vez de reemplazarlo. Es como marcan
-          // el foco los controles del registry (ver `buttonVariants`).
+          // Border through `border` and focus through `ring`: each in its own
+          // property, so the ring adds to the border instead of replacing it.
+          // It's how the registry's controls mark focus (see `buttonVariants`).
           "focus:ring-2 focus:ring-[color:var(--focus-ring)]",
           "disabled:opacity-50",
         )}
@@ -194,13 +195,13 @@ function Field({
 }
 
 const THEME_OPTIONS = [
-  { value: "light", icon: Sun, label: "Tema claro" },
-  { value: "dark", icon: Moon, label: "Tema oscuro" },
-  { value: "system", icon: Monitor, label: "Seguir al sistema" },
+  { value: "light", icon: Sun, label: "Light theme" },
+  { value: "dark", icon: Moon, label: "Dark theme" },
+  { value: "system", icon: Monitor, label: "Follow the system" },
 ] as const;
 
-/** Sigue a `prefers-color-scheme` y no deja de mirarlo: si el sistema cambia
- *  con el block abierto, el modo `system` tiene que acompañar. */
+/** Follows `prefers-color-scheme` and keeps watching it: if the system changes
+ *  with the block open, `system` mode has to keep up. */
 function useSystemScheme(): "light" | "dark" {
   const [scheme, setScheme] = useState<"light" | "dark">(() =>
     typeof window !== "undefined" &&
@@ -245,8 +246,9 @@ function LoginBlock({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  // useId da ids únicos aunque haya dos blocks en la misma página — pasa en el
-  // showcase, que muestra el estado normal y el de error uno al lado del otro.
+  // useId gives unique ids even with two blocks on the same page — which
+  // happens in the showcase, where the normal state and the error one sit side
+  // by side.
   const fieldId = useId();
 
   const selectTheme = (next: LoginBlockTheme) => {
@@ -261,34 +263,33 @@ function LoginBlock({
 
   return (
     <div
-      // La clase del tema va acá y no en el <html>: los tokens de color están
-      // declarados en `:root, .light` y en `.dark`, así que cascadean a todo
-      // lo que cuelgue de este nodo y a nada más.
+      // The theme's class goes here and not on the <html>: the colour tokens
+      // are declared in `:root, .light` and in `.dark`, so they cascade to
+      // everything hanging off this node and to nothing else.
       className={cn(
         resolved,
         "@container relative isolate h-full bg-surface-1 text-foreground",
         className,
       )}
     >
-      {/* El reparto en dos columnas va en un nodo aparte del `@container`, y no
-          es un detalle de escritura: una container query mide el contenedor
-          para sus *descendientes*, nunca para sí mismo. Con `@2xl:flex-row` en
-          el mismo nodo la regla no matchea nunca y las dos mitades quedan
-          apiladas. */}
+      {/* The two-column split goes on a node separate from the `@container`, and
+          it isn't a writing detail: a container query measures the container for
+          its *descendants*, never for itself. With `@2xl:flex-row` on the same
+          node the rule never matches and the two halves end up stacked. */}
       <div className="flex h-full min-h-full flex-col @2xl:flex-row">
-        {/* Plano de marca. Se esconde cuando el contenedor es angosto: en una
-          columna de teléfono compite con el formulario en vez de acompañarlo. */}
-        {/* No lleva `aria-hidden`: el plano no es decoración. Tiene el titular,
-            la descripción y los tres botones de tema, y marcar como oculto un
-            contenedor con controles enfocables deja que el tabulador aterrice
-            en algo que el lector de pantalla no anuncia. */}
+        {/* Brand plane. It hides when the container is narrow: in a phone-width
+          column it competes with the form instead of accompanying it. */}
+        {/* It carries no `aria-hidden`: the plane isn't decoration. It holds the
+            headline, the description and the three theme buttons, and marking a
+            container with focusable controls as hidden lets the tab key land on
+            something the screen reader doesn't announce. */}
         <aside
           className="relative m-2 hidden shrink-0 overflow-hidden rounded-2xl @2xl:flex @2xl:w-[38%] @2xl:flex-col @2xl:justify-between @2xl:p-7"
           style={{ background: panelArt }}
         >
-          {/* Canto interior: separa el plano del fondo cuando los dos tienen la
-            misma clave — dos oscuros o dos claros — que es donde el degradado
-            solo no alcanza. */}
+          {/* Inner edge: it separates the plane from the background when both are
+            in the same key — two darks or two lights — which is where the
+            gradient alone isn't enough. */}
           <span
             className={cn(
               "pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset",
@@ -305,9 +306,9 @@ function LoginBlock({
                   "text-balance font-medium leading-[1.08] tracking-[-0.03em]",
                   PANEL_INK.ink,
                 )}
-                // Tipografía fluida contra el ancho del contenedor: el mismo
-                // titular tiene que entrar en el marco del showcase y llenar la
-                // pantalla completa sin dos juegos de clases.
+                // Fluid type against the container's width: the same headline
+                // has to fit the showcase's frame and fill the whole screen
+                // without two sets of classes.
                 style={{ fontSize: "clamp(1.375rem, 5.4cqi, 2.5rem)" }}
               >
                 {title}
@@ -338,9 +339,10 @@ function LoginBlock({
                   >
                     {active && (
                       <motion.span
-                        // Un solo fondo compartido que viaja entre los tres, en
-                        // vez de uno que aparece y otro que desaparece: así se
-                        // lee como un selector y no como tres botones sueltos.
+                        // A single shared background travelling between the
+                        // three, instead of one appearing and another
+                        // disappearing: that way it reads as a selector and not
+                        // as three loose buttons.
                         layoutId={`login-theme-${fieldId}`}
                         transition={spring.moderate}
                         className={cn(
@@ -357,11 +359,11 @@ function LoginBlock({
           </div>
         </aside>
 
-        {/* Columna de acceso */}
+        {/* Sign-in column */}
         <div className="flex flex-1 items-center justify-center overflow-y-auto p-6">
           <div className="w-full max-w-[380px]">
-            {/* Marco: envuelve la tarjeta y la línea de registro, y le deja al
-              aviso de error un lugar propio arriba. */}
+            {/* Frame: it wraps the card and the sign-up line, and leaves the
+              error notice a place of its own at the top. */}
             <div className="relative overflow-hidden rounded-[18px] bg-surface-2 p-1 shadow-surface-1">
               <AnimatePresence initial={false}>
                 {error && (
@@ -400,7 +402,7 @@ function LoginBlock({
                   label="Email"
                   type="email"
                   autoComplete="email"
-                  placeholder="vos@correo.com"
+                  placeholder="you@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={pending}
@@ -408,7 +410,7 @@ function LoginBlock({
 
                 <Field
                   id={`${fieldId}-password`}
-                  label="Contraseña"
+                  label="Password"
                   type="password"
                   autoComplete="current-password"
                   value={password}
@@ -420,7 +422,7 @@ function LoginBlock({
                       onClick={onForgotPassword}
                       className="cursor-pointer rounded text-[13px] text-muted-foreground outline-none transition-colors duration-100 hover:text-foreground focus-visible:ring-1 focus-visible:ring-[color:var(--focus-ring)]"
                     >
-                      ¿Olvidaste tu contraseña?
+                      Forgot your password?
                     </button>
                   }
                 />
@@ -430,13 +432,13 @@ function LoginBlock({
                   className="mt-1 w-full"
                   disabled={pending}
                 >
-                  {pending ? "Entrando…" : "Continuar"}
+                  {pending ? "Signing in…" : "Continue"}
                 </Button>
 
                 <div className="flex items-center gap-3 py-1">
                   <span className="h-px flex-1 bg-border" />
                   <span className="text-[11px] font-medium tracking-[0.14em] text-muted-foreground">
-                    O
+                    OR
                   </span>
                   <span className="h-px flex-1 bg-border" />
                 </div>
@@ -449,18 +451,18 @@ function LoginBlock({
                   onClick={onGitHub}
                   disabled={pending}
                 >
-                  Continuar con GitHub
+                  Continue with GitHub
                 </Button>
               </form>
 
               <p className="py-3 text-center text-[13px] text-muted-foreground">
-                ¿Todavía no tenés cuenta?{" "}
+                Don't have an account yet?{" "}
                 <button
                   type="button"
                   onClick={onSignUp}
                   className="cursor-pointer rounded font-medium text-foreground outline-none transition-opacity duration-100 hover:opacity-70 focus-visible:ring-1 focus-visible:ring-[color:var(--focus-ring)]"
                 >
-                  Registrate
+                  Sign up
                 </button>
               </p>
             </div>

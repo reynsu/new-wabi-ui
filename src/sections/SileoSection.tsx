@@ -18,7 +18,7 @@ const POSITIONS: SileoPosition[] = [
 function fakeRequest(shouldFail: boolean) {
   return new Promise<{ id: number }>((resolve, reject) => {
     setTimeout(() => {
-      if (shouldFail) reject(new Error("El servidor no respondió"));
+      if (shouldFail) reject(new Error("The server didn't respond"));
       else resolve({ id: 42 });
     }, 1400);
   });
@@ -39,15 +39,15 @@ export function SileoSection() {
     <div className="flex flex-col gap-14">
       <Section
         title="Los cinco tipos"
-        hint="sileo.success / error / warning / info / action. Cada uno devuelve el id del toast, que sirve para descartarlo después."
+        hint="sileo.success / error / warning / info / action. Each returns the toast's id, which is what you dismiss it with later."
       >
         <Row>
           <Button
             onClick={() =>
               remember(
                 sileo.success({
-                  title: "Componentes instalados",
-                  description: "24 del registry, sobre Base UI.",
+                  title: "Components installed",
+                  description: "24 from the registry, on top of Base UI.",
                 })
               )
             }
@@ -59,7 +59,7 @@ export function SileoSection() {
             onClick={() =>
               remember(
                 sileo.error({
-                  title: "No se pudo abrir la ventana",
+                  title: "The window couldn't be opened",
                   description: "InvalidStateError: no window.",
                 })
               )
@@ -72,8 +72,8 @@ export function SileoSection() {
             onClick={() =>
               remember(
                 sileo.warning({
-                  title: "Faltan tokens de interacción",
-                  description: "bg-hover no se generó; el resalte va invisible.",
+                  title: "Interaction tokens are missing",
+                  description: "bg-hover wasn't generated; the highlight paints invisible.",
                 })
               )
             }
@@ -85,8 +85,8 @@ export function SileoSection() {
             onClick={() =>
               remember(
                 sileo.info({
-                  title: "El registry publica dos sabores",
-                  description: "Pedí siempre el prefijo base/.",
+                  title: "The registry publishes two flavours",
+                  description: "Always ask for the base/ prefix.",
                 })
               )
             }
@@ -97,8 +97,8 @@ export function SileoSection() {
       </Section>
 
       <Section
-        title="Con acción"
-        hint="button: { title, onClick } agrega un botón dentro del toast. El toast queda abierto hasta que se resuelve."
+        title="With an action"
+        hint="button: { title, onClick } adds a button inside the toast. The toast stays open until it's dealt with."
       >
         <Row>
           <Button
@@ -106,26 +106,26 @@ export function SileoSection() {
             onClick={() =>
               remember(
                 sileo.action({
-                  title: "Se borró la nota",
-                  description: "Podés recuperarla antes de que se cierre.",
+                  title: "The note was deleted",
+                  description: "You can get it back before this closes.",
                   duration: 6000,
                   button: {
-                    title: "Deshacer",
+                    title: "Undo",
                     onClick: () =>
-                      sileo.success({ title: "Nota recuperada" }),
+                      sileo.success({ title: "Note restored" }),
                   },
                 })
               )
             }
           >
-            Toast con acción
+            Toast with an action
           </Button>
         </Row>
       </Section>
 
       <Section
-        title="Encadenado a una promesa"
-        hint="sileo.promise encadena carga, éxito y error en un solo toast, y devuelve la promesa original para poder seguir encadenando."
+        title="Chained to a promise"
+        hint="sileo.promise chains loading, success and error into a single toast, and returns the original promise so you can keep chaining."
       >
         <Row>
           <Button
@@ -133,32 +133,32 @@ export function SileoSection() {
             onClick={() =>
               sileo
                 .promise(fakeRequest(false), {
-                  loading: { title: "Publicando el registry…" },
+                  loading: { title: "Publishing the registry…" },
                   success: (data) => ({
-                    title: "Publicado",
-                    description: `Deploy #${data.id} en producción.`,
+                    title: "Published",
+                    description: `Deploy #${data.id} is in production.`,
                   }),
                   error: (err) => ({
-                    title: "Falló el deploy",
+                    title: "The deploy failed",
                     description: String(err),
                   }),
                 })
                 .catch(() => {
-                  /* ya lo informa el toast */
+                  /* the toast already reports it */
                 })
             }
           >
-            Promesa que resuelve
+            A promise that resolves
           </Button>
           <Button
             variant="tertiary"
             onClick={() =>
               sileo
                 .promise(fakeRequest(true), {
-                  loading: { title: "Publicando el registry…" },
-                  success: { title: "Publicado" },
+                  loading: { title: "Publishing the registry…" },
+                  success: { title: "Published" },
                   error: (err) => ({
-                    title: "Falló el deploy",
+                    title: "The deploy failed",
                     description: String(err),
                   }),
                 })
@@ -168,14 +168,14 @@ export function SileoSection() {
                 })
             }
           >
-            Promesa que falla
+            A promise that fails
           </Button>
         </Row>
       </Section>
 
       <Section
-        title="Posiciones"
-        hint="Seis. El Toaster de la app está en bottom-right, pero cada toast puede pedir la suya."
+        title="Positions"
+        hint="Six of them. The app's Toaster is at bottom-right, but every toast can ask for its own."
       >
         <Row>
           {POSITIONS.map((p) => (
@@ -194,8 +194,8 @@ export function SileoSection() {
       </Section>
 
       <Section
-        title="Apariencia"
-        hint="fill cambia el color de la píldora, roundness su radio y duration cuánto vive. Con duration: null se queda hasta que lo cierren."
+        title="Appearance"
+        hint="fill changes the pill's colour, roundness its radius and duration how long it lives. With duration: null it stays until it's closed."
       >
         <Row>
           <Button
@@ -203,7 +203,7 @@ export function SileoSection() {
             onClick={() =>
               remember(
                 sileo.show({
-                  title: "Relleno y radio propios",
+                  title: "Its own fill and radius",
                   fill: "#8b5cf6",
                   roundness: 24,
                 })
@@ -217,49 +217,49 @@ export function SileoSection() {
             onClick={() =>
               remember(
                 sileo.show({
-                  title: "Este no se va solo",
-                  description: "duration: null — descartalo con el botón de abajo.",
+                  title: "This one doesn't leave on its own",
+                  description: "duration: null — dismiss it with the button below.",
                   duration: null,
                 })
               )
             }
           >
-            Persistente
+            Persistent
           </Button>
         </Row>
       </Section>
 
       <Section
         title="Control"
-        hint="dismiss(id) cierra uno; clear() los cierra todos."
+        hint="dismiss(id) closes one; clear() closes them all."
       >
         <Row>
           <Button
             variant="tertiary"
             onClick={() => lastId.current && sileo.dismiss(lastId.current)}
           >
-            Descartar el último
+            Dismiss the last one
           </Button>
           <Button variant="tertiary" onClick={() => sileo.clear()}>
-            Limpiar todos
+            Clear them all
           </Button>
           <Badge color="teal" size="compact">
-            {count} lanzados
+            {count} fired
           </Badge>
         </Row>
       </Section>
 
-      <Section title="Nota de integración">
+      <Section title="A note on integration">
         <p className="text-[13px] text-muted-foreground">
-          El <code>Toaster</code> se monta una vez en <code>App.tsx</code> y
-          recibe <code>theme</code> explícito atado al toggle de la cabecera. Su
-          modo <code>"system"</code> sigue al sistema operativo, que no es lo que
-          decide el tema acá — lo decide la clase <code>.dark</code> en{" "}
-          <code>&lt;html&gt;</code>, así que quedaría desincronizado.
+          The <code>Toaster</code> is mounted once in <code>App.tsx</code> and
+          takes an explicit <code>theme</code> tied to the header's toggle. Its
+          <code>"system"</code> mode follows the operating system, which isn't
+          what decides the theme here — the <code>.dark</code> class on{" "}
+          <code>&lt;html&gt;</code> does, so it would drift out of sync.
         </p>
         <p className="text-[13px] text-muted-foreground">
-          Sileo trae su propio CSS y lo inyecta solo en <code>document.head</code>
-          , así que no hay ningún import de estilos que mantener.
+          Sileo brings its own CSS and injects it into <code>document.head</code>
+          {" "}by itself, so there's no style import to maintain.
         </p>
       </Section>
     </div>

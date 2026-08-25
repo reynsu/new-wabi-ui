@@ -1,18 +1,18 @@
 "use client";
 
 /**
- * WindowControls — la barra de iconos que controla el estado de la ventana y
- * del sidebar, con un TravelTooltip compartido.
+ * WindowControls — the bar of icons that drives the window's and the sidebar's
+ * state, with a shared TravelTooltip.
  *
- * Los tres botones operan sobre estado real, no simulado:
- *   sidebar          useSidebar() del registry
- *   pantalla completa Fullscreen API
- *   ventana flotante  Document Picture-in-Picture
+ * The three buttons operate on real state, not simulated:
+ *   sidebar          the registry's useSidebar()
+ *   full screen      Fullscreen API
+ *   floating window  Document Picture-in-Picture
  *
- * Cada etiqueta refleja el estado actual ("Ocultar" ⇄ "Mostrar"), así que al
- * pulsar con el tooltip abierto la píldora se remide y se ajusta al texto
- * nuevo sin cerrarse. Es el mismo mecanismo del traslado entre botones, pero
- * disparado por un cambio de estado en vez de por el puntero.
+ * Every label reflects the current state ("Hide" ⇄ "Show"), so pressing one
+ * with the tooltip open remeasures the pill and fits it to the new text without
+ * closing. It's the same mechanism as the travel between buttons, but fired by
+ * a change of state instead of by the pointer.
  */
 
 import { useCallback, useEffect, useState, type ReactNode } from "react";
@@ -40,13 +40,13 @@ import { TravelTooltip, TravelTooltipItem } from "@/components/travel-tooltip";
 import { cn } from "@/lib/utils";
 import type { SizeVariant } from "@/lib/size-context";
 
-/* ───────────────────────── Pantalla completa ───────────────────────── */
+/* ───────────────────────── Full screen ───────────────────────── */
 
 function useFullscreen(target?: () => Element | null) {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  // El usuario puede salir con Escape sin tocar el botón, así que el estado se
-  // deriva del evento del navegador y no de lo que hicimos nosotros.
+  // The user can leave with Escape without touching the button, so the state is
+  // derived from the browser's event and not from what we did.
   useEffect(() => {
     const sync = () => setIsFullscreen(document.fullscreenElement !== null);
     sync();
@@ -63,8 +63,8 @@ function useFullscreen(target?: () => Element | null) {
         await el.requestFullscreen();
       }
     } catch {
-      // Se rechaza cuando no hay gesto de usuario o una política lo bloquea.
-      // El listener de arriba deja el estado como esté realmente.
+      // It rejects when there's no user gesture or a policy blocks it. The
+      // listener above leaves the state as it really is.
     }
   }, [target]);
 
@@ -76,7 +76,7 @@ function useFullscreen(target?: () => Element | null) {
   };
 }
 
-/* ───────────────────────── Ventana flotante ───────────────────────── */
+/* ───────────────────────── Floating window ───────────────────────── */
 
 interface DocumentPiP {
   requestWindow: (options?: {
@@ -92,10 +92,10 @@ function getPiP(): DocumentPiP | null {
     .documentPictureInPicture ?? null;
 }
 
-/** Clona los estilos del documento principal dentro de la ventana flotante.
- *  Sin esto sale sin CSS: es un documento aparte, no hereda nada. En dev Vite
- *  inyecta <style>, en build quedan como <link>, así que hay que cubrir los
- *  dos casos. */
+/** Clones the main document's styles into the floating window. Without this it
+ *  comes out with no CSS: it's a separate document and inherits nothing. In dev
+ *  Vite injects <style>, in a build they end up as <link>, so both cases have to
+ *  be covered. */
 function copyStyles(target: Window) {
   for (const sheet of Array.from(document.styleSheets)) {
     try {
@@ -106,7 +106,7 @@ function copyStyles(target: Window) {
       style.textContent = rules;
       target.document.head.appendChild(style);
     } catch {
-      // Hoja de otro origen: no se pueden leer sus reglas, se enlaza.
+      // A cross-origin sheet: its rules can't be read, so it gets linked.
       if (!sheet.href) continue;
       const link = target.document.createElement("link");
       link.rel = "stylesheet";
@@ -114,17 +114,18 @@ function copyStyles(target: Window) {
       target.document.head.appendChild(link);
     }
   }
-  // El tema vive en una clase de <html>, que la ventana nueva no hereda.
+  // The theme lives in a class on <html>, which the new window doesn't
+  // inherit.
   target.document.documentElement.className =
     document.documentElement.className;
 }
 
 function useFloatingWindow(content: ReactNode) {
   const [pipWindow, setPipWindow] = useState<Window | null>(null);
-  // Que la API exista no garantiza que funcione: dentro de un panel embebido
-  // (no una ventana de primer nivel) requestWindow rechaza con
-  // InvalidStateError. Sólo se sabe intentándolo, así que el primer fallo
-  // marca el botón como no disponible en vez de dejarlo muerto y en silencio.
+  // The API existing doesn't guarantee it works: inside an embedded panel (not
+  // a top-level window) requestWindow rejects with InvalidStateError. The only
+  // way to know is to try, so the first failure marks the button as unavailable
+  // instead of leaving it dead and silent.
   const [unavailable, setUnavailable] = useState(false);
   const supported = getPiP() !== null && content != null && !unavailable;
 
@@ -145,18 +146,18 @@ function useFloatingWindow(content: ReactNode) {
       const w = await pip.requestWindow({ width: 320, height: 180 });
       copyStyles(w);
       w.document.body.style.margin = "0";
-      // Cerrar desde la cruz de la ventana también tiene que limpiar el estado.
+      // Closing from the window's own × has to clear the state too.
       w.addEventListener("pagehide", () => setPipWindow(null), { once: true });
       setPipWindow(w);
     } catch {
-      // Sin gesto de usuario, bloqueado por política, o un contexto que no
-      // puede abrir ventanas. En cualquier caso el botón deja de ofrecer algo
-      // que no va a pasar.
+      // No user gesture, blocked by policy, or a context that can't open
+      // windows. Either way the button stops offering something that isn't
+      // going to happen.
       setUnavailable(true);
     }
   }, []);
 
-  // Si el componente se desmonta con la ventana abierta, se cierra con él.
+  // If the component unmounts with the window open, it closes with it.
   useEffect(() => () => pipWindow?.close(), [pipWindow]);
 
   const portal = pipWindow
@@ -166,21 +167,20 @@ function useFloatingWindow(content: ReactNode) {
   return { isOpen: pipWindow !== null, open, close, supported, portal };
 }
 
-/* ───────────────────────── Botones ───────────────────────── */
+/* ───────────────────────── Buttons ───────────────────────── */
 
-/** Cada control es un botón suelto con su propia superficie, no tres iconos
- *  dentro de una píldora compartida. `tertiary` aporta el anillo de 1px que lo
- *  delimita, y rounded-full lo vuelve circular — que es la convención para
- *  controles de ventana. Es el único punto donde el componente se aparta a
- *  propósito del sistema de formas: shape.button daría 8px en modo "rounded",
- *  y acá el círculo es parte de la identidad del control. */
+/** Each control is a loose button with a surface of its own, not three icons
+ *  inside a shared pill. `tertiary` supplies the 1px ring that bounds it, and
+ *  rounded-full makes it circular — which is the convention for window
+ *  controls. It's the one place where the component deliberately steps away
+ *  from the shape system: shape.button would give 8px in "rounded" mode, and
+ *  here the circle is part of the control's identity. */
 const CONTROL_CLASS = "rounded-full";
 
-/* ───────────────────────── Botón del sidebar ───────────────────────── */
+/* ───────────────────────── The sidebar button ───────────────────────── */
 
-/** Aparte para que el hook sólo corra cuando se pide el botón: useSidebar()
- *  lanza fuera de un SidebarProvider, y el resto de los controles no lo
- *  necesitan. */
+/** Kept apart so the hook only runs when the button is asked for: useSidebar()
+ *  throws outside a SidebarProvider, and the other controls don't need it. */
 function SidebarControl({ _index }: { _index?: number }) {
   const { open, toggleSidebar, side, isMobile, openMobile } = useSidebar();
   const visible = isMobile ? openMobile : open;
@@ -195,17 +195,17 @@ function SidebarControl({ _index }: { _index?: number }) {
         : PanelLeftOpen;
 
   return (
-    // TravelTooltip inyecta _index en este componente, no en el item que
-    // devuelve, así que hay que reenviarlo a mano.
+    // TravelTooltip injects _index into this component, not into the item it
+    // returns, so it has to be forwarded by hand.
     <TravelTooltipItem
       _index={_index}
-      label={visible ? "Ocultar panel lateral" : "Mostrar panel lateral"}
+      label={visible ? "Hide side panel" : "Show side panel"}
     >
       <Button
         variant="tertiary"
         size="icon"
         className={CONTROL_CLASS}
-        aria-label={visible ? "Ocultar panel lateral" : "Mostrar panel lateral"}
+        aria-label={visible ? "Hide side panel" : "Show side panel"}
         aria-pressed={visible}
         onClick={toggleSidebar}
       >
@@ -215,7 +215,7 @@ function SidebarControl({ _index }: { _index?: number }) {
   );
 }
 
-/* ───────────────────────── Botón "Más…" ───────────────────────── */
+/* ───────────────────────── The "More…" button ───────────────────────── */
 
 interface MoreControlProps {
   fullscreen: ReturnType<typeof useFullscreen>;
@@ -234,19 +234,19 @@ function MoreControl({
 }: MoreControlProps) {
   const [open, setOpen] = useState(false);
 
-  // El menú se despliega justo donde iría la píldora, así que mientras está
-  // abierto el item se silencia en vez de dibujar los dos encima.
+  // The menu unfolds exactly where the pill would go, so while it's open the
+  // item is silenced instead of drawing both on top of each other.
   let i = 0;
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
-      <TravelTooltipItem _index={_index} label="Más…" suppressed={open}>
+      <TravelTooltipItem _index={_index} label="More…" suppressed={open}>
         <DropdownTrigger
           render={
             <Button
               variant="tertiary"
               size="icon"
               className={CONTROL_CLASS}
-              aria-label="Más opciones"
+              aria-label="More options"
             />
           }
         >
@@ -259,8 +259,8 @@ function MoreControl({
           index={i++}
           label={
             fullscreen.isFullscreen
-              ? "Salir de pantalla completa"
-              : "Pantalla completa"
+              ? "Exit full screen"
+              : "Full screen"
           }
           disabled={!fullscreen.supported}
           onSelect={fullscreen.toggle}
@@ -270,8 +270,8 @@ function MoreControl({
             index={i++}
             label={
               floating.isOpen
-                ? "Cerrar ventana flotante"
-                : "Usar ventana flotante"
+                ? "Close floating window"
+                : "Use floating window"
             }
             disabled={!floating.supported}
             onSelect={floating.isOpen ? floating.close : floating.open}
@@ -291,22 +291,34 @@ function MoreControl({
 /* ───────────────────────── WindowControls ───────────────────────── */
 
 interface WindowControlsProps {
-  /** Incluye el botón que abre y cierra el sidebar. Requiere estar dentro de
-   *  un SidebarProvider — el hook lanza si no lo hay. @default true */
+  /** Includes the button that opens and closes the sidebar. Requires being
+   *  inside a SidebarProvider — the hook throws if there isn't one.
+   *  @default true */
   sidebar?: boolean;
-  /** Qué elemento va a pantalla completa. Por defecto, el documento entero. */
+  /** Which element goes full screen. The whole document by default. */
   fullscreenTarget?: () => Element | null;
-  /** Contenido de la ventana flotante. Sin esto el botón no se renderiza:
-   *  una ventana vacía no le sirve a nadie. */
+  /** The floating window's content. Without this the button isn't rendered: an
+   *  empty window is no use to anyone. */
   floatingContent?: ReactNode;
-  /** Acción del primer botón. Sin esto, ese botón no se renderiza. */
+  /** The first button's action. Without this, that button isn't rendered. */
   onCompose?: () => void;
-  /** Etiqueta del primer botón. @default "Nueva nota" */
+  /** The first button's label. @default "New note" */
   composeLabel?: string;
-  /** Items extra para el menú "Más…". Recibe el índice desde el que seguir,
-   *  porque MenuItem los necesita contiguos para su resalte por proximidad. */
+  /** Extra items for the "More…" menu. It takes the index to carry on from,
+   *  because MenuItem needs them contiguous for its proximity highlight. */
   moreItems?: (startIndex: number) => ReactNode;
-  /** Fija la barra a un escalón de la escalera de tamaños. */
+  /** Includes the "More…" menu, which is where full screen and the floating
+   *  window live. Switch it off when the bar is made only of the app's own
+   *  controls: a menu with two browser items has no reason to keep them
+   *  company. @default true */
+  more?: boolean;
+  /** The app's own controls, inside the same travelling tooltip. They go before
+   *  the menu and the sidebar button — the app's things first, the window's
+   *  after. They're written as `TravelTooltipItem`, so the highlight crosses
+   *  from one to the next without closing, which is the reason the bar is a
+   *  single one and not three loose buttons with three tooltips. */
+  children?: ReactNode;
+  /** Pins the bar to a step of the size ladder. */
   size?: SizeVariant;
   className?: string;
 }
@@ -316,8 +328,10 @@ function WindowControls({
   fullscreenTarget,
   floatingContent,
   onCompose,
-  composeLabel = "Nueva nota",
+  composeLabel = "New note",
   moreItems,
+  more = true,
+  children,
   size,
   className,
 }: WindowControlsProps) {
@@ -327,8 +341,8 @@ function WindowControls({
   return (
     <>
       <div className={cn("inline-flex", className)}>
-        {/* side="bottom" fijo: estos controles viven en la barra superior de
-            una ventana, donde hacia arriba no hay lugar. */}
+        {/* side="bottom" fixed: these controls live in a window's top bar,
+            where there's no room above. */}
         <TravelTooltip side="bottom" size={size}>
           {onCompose ? (
             <TravelTooltipItem label={composeLabel}>
@@ -348,10 +362,10 @@ function WindowControls({
             <TravelTooltipItem
               label={
                 !floating.supported
-                  ? "Este navegador no abre ventanas flotantes"
+                  ? "This browser doesn't open floating windows"
                   : floating.isOpen
-                    ? "Cerrar ventana flotante"
-                    : "Usar ventana flotante"
+                    ? "Close floating window"
+                    : "Use floating window"
               }
             >
               <Button
@@ -360,8 +374,8 @@ function WindowControls({
                 className={cn(CONTROL_CLASS, !floating.supported && "opacity-50")}
                 aria-label={
                   floating.isOpen
-                    ? "Cerrar ventana flotante"
-                    : "Usar ventana flotante"
+                    ? "Close floating window"
+                    : "Use floating window"
                 }
                 aria-pressed={floating.isOpen}
                 aria-disabled={!floating.supported}
@@ -378,12 +392,16 @@ function WindowControls({
             </TravelTooltipItem>
           ) : null}
 
-          <MoreControl
-            fullscreen={fullscreen}
-            floating={floating}
-            hasFloating={floatingContent != null}
-            extraItems={moreItems}
-          />
+          {children}
+
+          {more ? (
+            <MoreControl
+              fullscreen={fullscreen}
+              floating={floating}
+              hasFloating={floatingContent != null}
+              extraItems={moreItems}
+            />
+          ) : null}
 
           {sidebar ? <SidebarControl /> : null}
         </TravelTooltip>
