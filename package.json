@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "npm run build:registry && tsc -b && vite build",
     "build:registry": "shadcn build",
+    "publish:registry": "npm run build:registry && node scripts/publish-registry.mjs",
     "lint": "oxlint",
     "preview": "vite preview",
     "fix:fluid": "node scripts/patch-fluid.mjs"

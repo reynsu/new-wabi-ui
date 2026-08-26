@@ -1713,6 +1713,34 @@ El prefijo `base/` está puesto item por item, con la regla de [Agregar
 componentes](#agregar-componentes). Lo único que entra sin él es `card`, que no
 tiene gemelo Base UI.
 
+### Cómo se publica
+
+`registry.json` es la fuente; lo que se instala son los JSON que `shadcn build`
+escribe en `public/r/`. Esa carpeta está en el `.gitignore` —es salida, se
+regenera— y **no se sirve desde este repo**: la URL de la que cuelga todo es el
+`homepage` del `registry.json`, que es un repo aparte con Pages prendido y un
+`.nojekyll` adentro, sirviendo esos archivos y nada más.
+
+```bash
+npm run publish:registry
+```
+
+Construye y empuja la salida al repo que dice `homepage`. Tres cosas que hace y
+conviene saber:
+
+  · **el destino sale de `homepage`**, no está escrito dos veces: si el registry
+    se muda, el script lo sigue en vez de publicar donde ya no es;
+  · **espeja, no mezcla**: un archivo que dejó de estar en el build se borra
+    allá. `shadcn build` no limpia lo que quedó de un item renombrado, y un
+    `range-calendar.json` viejo en el sitio instala un componente que ya no
+    existe;
+  · **no toca nada que no sea `r/`**: el `.nojekyll` —que es lo que hace que
+    Pages sirva una carpeta que si no trataría como entrada de Jekyll— y el
+    README de allá son asunto suyo.
+
+Pages tarda un minuto en reconstruir; hasta que termina, la URL sigue
+devolviendo lo anterior.
+
 ### Del otro lado
 
 En el `components.json` del proyecto que consume:
