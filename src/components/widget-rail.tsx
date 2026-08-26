@@ -114,6 +114,18 @@ interface WidgetRailProps {
   /** Removes a widget. Passed straight through to the board — the rail doesn't
    *  own the list either. */
   onWidgetClose?: (id: string) => void;
+  /** Rearranges the widgets. Passed straight through as well: the board does
+   *  the dragging, the rail is only where it happens. Without it the cards
+   *  don't drag. */
+  onWidgetReorder?: (ids: string[]) => void;
+  /** Takes a card dragged in from somewhere else — a tray in the panel, say.
+   *  Passed straight through to the board, and it needs a shared
+   *  `WidgetDragProvider` above the panel and the rail. Without it the rail is
+   *  not a destination. */
+  onWidgetAdd?: (id: string, index: number, data: unknown) => boolean | void;
+  /** One of its widgets was taken by another board. Without it they can be
+   *  rearranged but they can't leave. */
+  onWidgetRemove?: (id: string) => void;
   /** Closes the board. Passed straight through: the rail is the place and
    *  doesn't decide what's shown in it. Whoever mounts it usually answers by
    *  no longer mounting it. */
@@ -134,6 +146,9 @@ function WidgetRail({
   widgets,
   preview,
   onWidgetClose,
+  onWidgetReorder,
+  onWidgetAdd,
+  onWidgetRemove,
   onBoardClose,
   controlRef,
   onResizingChange,
@@ -423,7 +438,10 @@ function WidgetRail({
             }
       }
       className={cn(
-        "m-2 ml-0 hidden shrink-0 flex-col overflow-y-auto xl:flex",
+        // `overflow-hidden` and not `auto`: what scrolls is the board's own
+        // list, with the system's scrollbar. Here it only keeps the width
+        // animation from spilling.
+        "m-2 ml-0 hidden shrink-0 flex-col overflow-hidden xl:flex",
         !cabe && "pointer-events-none",
         className,
       )}
@@ -448,14 +466,17 @@ function WidgetRail({
              there are several of them and they need a common frame; the preview
              is one thing and it is the frame. Above and below it does breathe,
              which is where it competes with nothing. */
-          className={cn("flex min-h-full flex-col", preview && "py-2")}
+          className={cn("flex min-h-0 flex-1 flex-col", preview && "py-2")}
         >
           {preview ?? (
             <WidgetBoard
               widgets={widgets}
               onWidgetClose={onWidgetClose}
+              onReorder={onWidgetReorder}
+              onAdd={onWidgetAdd}
+              onRemove={onWidgetRemove}
               onClose={onBoardClose}
-              className="h-auto min-h-full"
+              className="h-full"
             />
           )}
         </motion.div>
