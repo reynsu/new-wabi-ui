@@ -60,6 +60,30 @@ const VACIO: WidgetDefinition[] = [
   },
 ];
 
+/* El board arregla mientras la mano se mueve y avisa al soltar; el dueño de la
+   lista es este estado. Es el mismo cableado que hace App con el riel. */
+function Reordenable() {
+  const [orden, setOrden] = useState(ESCALERA);
+
+  return (
+    <div className="flex flex-col gap-3">
+      <WidgetBoard
+        widgets={orden}
+        onReorder={(ids) =>
+          setOrden((lista) =>
+            ids
+              .map((id) => lista.find((w) => w.id === id))
+              .filter((w) => w !== undefined),
+          )
+        }
+      />
+      <p className="text-[12px] text-muted-foreground">
+        onReorder → {orden.map((w) => w.id.replace("demo-", "")).join(" · ")}
+      </p>
+    </div>
+  );
+}
+
 export function WidgetBoardSection() {
   const [puestos, setPuestos] = useState(true);
 
@@ -82,6 +106,13 @@ export function WidgetBoardSection() {
         hint="1x1, 2x1 and 2x2 on fixed-height rows. The rail is narrow and everything falls into one column there; with width, the ladder shows."
       >
         <WidgetBoard widgets={ESCALERA} />
+      </Section>
+
+      <Section
+        title="Rearranging it"
+        hint="Drag a tile from one place to another — here, and in the real board on the right. The card follows the hand, the neighbours make room, and the board hands back the ids when it lands. The cell that carries the drag is WidgetCard, which has a page of its own."
+      >
+        <Reordenable />
       </Section>
 
       <Section

@@ -977,6 +977,20 @@ hay riel**: un botón que no hace nada es peor que uno que no está.
 | cerrado con «Close» | no | 80.4% |
 | reabierto desde la barra | sí | 55% |
 
+### La caja que scrollea recorta el anillo
+
+El primer escalón de `shadow-surface-*` es un **anillo de 1px pintado por fuera**
+de la caja. La grilla del board vive en una caja con `overflow-y: auto`, y basta
+un eje distinto de `visible` para que el otro también recorte: con la grilla al
+ras de esa caja, cada tarjeta perdía el borde de arriba —el de la primera fila—
+y los dos laterales. El de abajo se veía porque tenía contenido debajo, así que
+lo que quedaba dibujado era exactamente «sin borde superior y sin laterales».
+
+La caja se sale de su lugar cuatro píxeles (`RING_ROOM`) y se los devuelve como
+padding: la grilla cae en el mismo sitio de siempre y el anillo tiene dónde
+pintarse. Cuatro y no más porque tiene que seguir entrando en el `GAP` de 16 del
+board, que es lo que lo mantiene adentro de su propio marco.
+
 ### El header del mosaico
 
 Arriba de cada vistazo va un header chico: el ícono, el nombre en gris y, en la
@@ -1350,6 +1364,151 @@ que hace falta es quién dijo qué, y que el propio se distinga del ajeno.
 
 ---
 
+## El calendario y sus tres caras
+
+No es una grilla con modo rango: **la respuesta es el sujeto** y la grilla es una
+de las formas de decirla. Las otras dos son los campos de arriba —¿cuál estoy
+completando?— y los atajos de abajo, que para la mayoría de la gente son la
+respuesta más rápida de las tres.
+
+| | qué contesta |
+|---|---|
+| los campos | de cuándo a cuándo —o qué día y a qué hora—, y cuál está abierto |
+| la grilla | dónde cae eso en el mes |
+| los atajos | un finde, una semana, mañana — sin contar nada |
+
+Hay tres exports y **una sola implementación**:
+
+| export | la respuesta | qué cambia |
+|---|---|---|
+| `RangeCalendar` | una estadía | dos puntas, la banda entre ellas, un contador de noches |
+| `DatePicker` | un día | una punta, sin banda, y el contador dice qué *es* ese día |
+| `DateTimePicker` | un momento | el mismo día, y el segundo campo se lleva el plano a las horas |
+
+Son uno y no tres porque partirlos obligaría a mantener tres veces la misma
+anatomía —las marcas que viajan, el cruce de mes, el teclado, los dos planos,
+las escaleras de forma y de tamaño— para terminar eligiendo por lo más de
+afuera: cuántas puntas tiene la respuesta. Eso acá es una prop.
+
+### La banda es por fila, no por día
+
+Lo obvio es pintarle un fondo a cada celda seleccionada y redondear las dos
+puntas. Eso **no se puede animar**: un rango que crece un día es un elemento que
+aparece, no una forma que se estira. Acá cada semana pinta una sola píldora
+posicionada por porcentaje —`left` y `width` sobre siete columnas—, así estirar
+el rango la hace *crecer*, y crece desde el check-in porque el estado de entrada
+ancla ahí.
+
+Cuando el rango pasa a la semana siguiente son dos píldoras, una por fila, cada
+una con sus dos puntas redondeadas. No hay una banda continua que cruce el
+salto de línea: en un calendario ese salto es real, y dibujarlo como si no lo
+fuera obliga a inventar esquinas que no existen.
+
+### Las puntas viajan
+
+El círculo lleno lleva `layoutId`, así que mover el check-in lo **desliza** por
+el mes en vez de apagar un círculo y prender otro. El círculo neutro debajo del
+puntero es el mismo truco con un escalón más rápido: persigue al cursor, y eso
+es lo que hace que pasar el mouse por la grilla se sienta como arrastrar un
+objeto y no como prender celdas. Las horas usan esas dos mismas marcas, y por
+eso elegir una hora se siente igual que elegir un día.
+
+Los dos `layoutId` llevan adentro el mes y un `useId`. El mes, porque viajar
+dentro de un mes es la gracia y viajar entre dos sería un círculo volando por
+encima de una grilla que se va para el otro lado. El `useId`, porque dos
+calendarios en la misma pantalla serían el mismo objeto en dos lugares — el
+mismo cuidado que en `widget-drag`.
+
+### Pasar el mouse *es* el preview
+
+Mientras el campo abierto es el check-out, la banda llega hasta el día que está
+debajo del puntero y el contador dice cuántas noches serían. No hay nada
+confirmado —eso lo hace el clic—, pero la respuesta a «¿cuánto duraría esto?»
+ya está en pantalla, que es toda la pregunta. Con el teclado pasa lo mismo: el
+foco mueve el preview, así que las flechas cuentan igual que el puntero. Las
+caras de un día no previsualizan nada: no hay una segunda punta a la que
+llegar.
+
+### El alto del plano se mide
+
+Un mes de cinco filas al lado de uno de seis es un salto de 40px, y la lista de
+horas es más alta que los dos. El contenedor anima hacia el alto **medido** de
+lo que entra —`useMeasuredHeight`, el mismo cruce que en `PeekCard`—, así la
+tarjeta se acomoda con el deslizamiento y no después. Se nota mejor que en
+ningún lado con cuatro horarios sueltos: el plano se achica hasta ellos.
+
+### Los campos dicen para qué es el plano
+
+En `DateTimePicker` el segundo campo no abre un popup propio: **convierte el
+plano en las tres columnas de la hora**, y elegir el día avanza hasta ahí igual
+que elegir el check-in avanza al check-out. Un solo estado —qué campo está
+abierto— maneja el subrayado y el plano, así que los dos no pueden
+contradecirse.
+
+### Tres columnas, y el reloj entero
+
+La hora se elige como en una rueda: una columna de horas, una de minutos y,
+donde el reloj tiene dos mitades, una de AM/PM. Están **el reloj entero** —de
+00 a 12 y de 00 a 59— y lo que no se puede elegir va apagado, no sacado: es el
+mismo trato que el mes hace con `minDate`, que muestra todos los días y apaga
+los que ya pasaron. Una columna que listara sólo lo disponible cambiaría de
+largo cada vez que se mueve otra, y el lugar al que ibas a hacer clic estaría
+en otra parte.
+
+Arriba de las dos columnas de números va un rótulo —`HORA`, `MIN`, en la misma
+caja que los rótulos de los campos— porque en reposo las horas y los minutos
+son dos columnas idénticas de dos dígitos. La mitad del día dice sola lo que es
+y no lleva ninguno. Los rótulos son props (`hourLabel`, `minuteLabel`), como
+todo el texto visible del componente.
+
+**El 00 y el 12 no son la misma fila dos veces.** En un reloj de doce horas la
+medianoche es `00` y el mediodía es `12`, así que `12` está apagado mientras se
+ve AM y `00` mientras se ve PM. Una fila por hora del día, y ningún par de
+filas que signifique el mismo momento — que es justo lo que un selector de
+doce horas suele hacer mal.
+
+Cada clic confirma **un horario entero**: cambiar la hora se lleva los minutos
+donde estaban, y si ese horario exacto no se ofrece toma el más cercano que esa
+hora sí tenga. Por eso el campo de arriba se completa mientras se elige y no
+hay un tercer estado que mantener sincronizado.
+
+Qué horarios existen sigue saliendo de `timeStep` —cada minuto, por defecto— y
+`timeRange`, o de `times` suelto en minutos desde medianoche. Que el reloj
+tenga doce horas y una columna de mitad del día, o veinticuatro y ninguna, lo
+contesta el locale —`Intl` ya lo sabe— y no una prop.
+
+### Un momento es un `Date`, no una fecha más una hora
+
+`DateTimePicker` devuelve un solo `Date` con las dos mitades adentro. El costo
+es una ambigüedad —un valor exactamente a medianoche se lee como un día al que
+todavía no le eligieron la hora— y vale la pena: la alternativa son dos props y
+un llamador que tiene que rearmar un momento que nunca estuvo partido. La hora,
+además, sobrevive a cambiar de día: se contestó aparte y mover el día no es
+motivo para volver a preguntarla.
+
+### Dos planos, y una sola variable de color
+
+El mes se apoya en su propio plano levantado y los campos, el contador y los
+atajos quedan en la tarjeta de abajo: la grilla es la parte a la que se le
+apunta, el resto es lo que produjo. Los dos escalones los da `Elevated`, que
+además publica el nivel hacia adentro — el calendario funciona igual metido en
+un diálogo.
+
+El acento —la banda, las puntas, la hora elegida y el subrayado del campo— sale
+de `--calendar-accent`, con `#3b82f6` de fábrica, que es el azul que `Badge` ya
+pinta. Una variable y no cuatro constantes: cambiar el acento tiene que mover
+todas las marcas juntas o dejan de leerse como la misma cosa. `--calendar-band`
+pisa sólo el relleno de la banda, para un tema donde el 12% del acento no
+alcanza.
+
+### Las flechas del mes
+
+El diseño del que salió esto no las tenía. Están igual: un mes al que sólo se
+llega escribiendo es un mes al que no se llega. Son lo más callado del plano
+—`ghost` en el escalón compacto— y viven al final de la línea del mes.
+
+---
+
 ## Blocks propios
 
 Un block no es un componente: no resuelve una pieza sino una pantalla entera,
@@ -1537,7 +1696,7 @@ y un commit en ese repo.
 |---|---|---|
 | `tokens` | `registry:theme` | los tokens y las utilidades que ningún item de `@fluid` instala — ver abajo |
 | `use-measured-height` | `registry:hook` | el hook propio, el que mide el alto que `PeekCard` anima |
-| `animated-empty`, `travel-tooltip`, `inset-dialog`, `mobile-action-confirmation`, `peek-card`, `widget`, `widget-board`, `widget-rail`, `lateral-preview`, `preview-context`, `filter-menu`, `workspace-panel`, `workspace-context`, `window-controls` | `registry:component` | van a `components/`, al lado de `ui/` y no adentro, igual que acá |
+| `animated-empty`, `travel-tooltip`, `inset-dialog`, `mobile-action-confirmation`, `peek-card`, `calendar`, `widget`, `widget-board`, `widget-rail`, `lateral-preview`, `preview-context`, `filter-menu`, `workspace-panel`, `workspace-context`, `window-controls` | `registry:component` | van a `components/`, al lado de `ui/` y no adentro, igual que acá |
 | `login-block` | `registry:block` | el block |
 
 Las dependencias de `@fluid` van por **URL absoluta**

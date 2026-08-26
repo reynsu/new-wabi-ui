@@ -330,6 +330,33 @@
       "docs": "The registry publishes `card` compiled for Next.js: it imports next/link. Outside Next you have to swap that import for an anchor —or for your router's Link— or the build won't resolve."
     },
     {
+      "name": "calendar",
+      "type": "registry:component",
+      "title": "RangeCalendar · DatePicker · DateTimePicker",
+      "description": "Three faces of the same month: a stay with the band between its two ends, a single day, and a day whose second field turns the plane into the clock's three columns: hour, minutes and AM/PM.",
+      "dependencies": [
+        "framer-motion"
+      ],
+      "registryDependencies": [
+        "utils",
+        "@wabi/tokens",
+        "@wabi/use-measured-height",
+        "https://www.fluidfunctionalism.com/r/base/button.json",
+        "https://www.fluidfunctionalism.com/r/elevated.json",
+        "https://www.fluidfunctionalism.com/r/springs.json",
+        "https://www.fluidfunctionalism.com/r/shape-context.json",
+        "https://www.fluidfunctionalism.com/r/size-context.json",
+        "https://www.fluidfunctionalism.com/r/surface-context.json"
+      ],
+      "files": [
+        {
+          "path": "src/components/calendar.tsx",
+          "type": "registry:component"
+        }
+      ],
+      "docs": "One implementation, three exports: `RangeCalendar` (two ends and a counter of nights), `DatePicker` (one day, and the counter says what the day is) and `DateTimePicker` (`DatePicker` with `time`, whose second field takes the plane over to three columns: the hour, the minutes and AM/PM). The subject is the answer and not the grid, so the fields (`fields`) and the presets (`presets`) turn off independently and what's left is a month to drop in a popover. Dates are plain `Date`s at local midnight and the labels come from `Intl`, so the locale is a prop and not a translation file — and a moment is one `Date` carrying the day and the hour, with the one ambiguity that a value at exactly midnight reads as an hour not yet picked. The columns are the whole clock —00 to 12, 00 to 59, and the half of the day— and what can't be picked is greyed rather than removed, the same deal the month makes with `minDate`. Which times those are comes from `timeStep` (every minute by default) plus `timeRange`, or outright from `times` in minutes from midnight. On a twelve-hour clock midnight is `00` and noon is `12`, so `12` is greyed under AM and `00` under PM: one row per hour of the day, and no two rows meaning the same moment. The two columns of numbers are captioned from `hourLabel` and `minuteLabel`, like every other visible string here. Whether the clock has twelve hours and a half-of-the-day column or twenty-four and none of it is the locale's answer, read from `Intl` — not a prop. The accent —band, endpoints, chosen hour and the field's underline— is the `--calendar-accent` variable: set it on the calendar or above it and every mark moves together; `--calendar-band` overrides the band's fill on its own, for a theme where 12% of the accent isn't enough. `minDate` defaults to today; pass `null` for a calendar that reaches backwards."
+    },
+    {
       "name": "widget",
       "type": "registry:component",
       "title": "Widget",
@@ -340,6 +367,7 @@
       "registryDependencies": [
         "utils",
         "@wabi/tokens",
+        "@wabi/widget-card",
         "@wabi/peek-card",
         "@wabi/workspace-context",
         "https://www.fluidfunctionalism.com/r/elevated.json",
@@ -357,10 +385,51 @@
       "docs": "It hangs off a WorkspaceProvider — that's who opens the tab — so without one it throws. And a widget is drawn once per screen: the layoutId that makes the move comes from its id, and two tiles of the same widget mounted at once are the same object as far as Framer is concerned, so it crosses them. That's why the tile leaves a gap while its view is the active tab: it's what lets the board stay mounted off to the side. The tile carries a header with the name and, if you pass onClose, the button that takes it off the board; what opens the widget is a surface covering the card and not a button around everything, because a button can't contain another one."
     },
     {
+      "name": "widget-drag",
+      "type": "registry:component",
+      "title": "WidgetDragProvider",
+      "description": "One drag for the whole shell: the context that lets a card leave one board and land in another — a tray in the panel, the board in the rail.",
+      "dependencies": [
+        "@dnd-kit/core",
+        "@dnd-kit/sortable"
+      ],
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "src/components/widget-drag.tsx",
+          "type": "registry:component"
+        }
+      ],
+      "docs": "Mount it above every board that has to share cards; a board that only sorts its own cells needs nothing, because `WidgetGrid` mounts a context of its own when there isn't one above. The provider routes and the boards decide: each one signs up with what it's willing to do —reorder its own cells, accept a foreign one, release one that left— and a drop is the provider calling the right pair. Nothing is removed from anywhere until the other end has said yes, so a board that takes no `onAdd`, or one that answers `false` because the payload isn't something it can hold, sends the card back. What travels between regions is a DragOverlay in a portal: a cell that left its box would be cut off by the panel's own scroll exactly when it starts crossing. A copy lands under an id the provider mints, because two cells with one id would be a collision for the sort and, when the cell holds a widget, the same object in two places for Framer; the board that receives is handed that id and adds the card under it. What the overlay draws while a copy travels goes in a LayoutGroup of its own, so the original and the copy of it in the air don't share a layoutId."
+    },
+    {
+      "name": "widget-card",
+      "type": "registry:component",
+      "title": "WidgetCard",
+      "description": "The wrapper that places something on the board: it takes the span, it signs up with the grid and it carries the drag. Whatever goes inside is not its business — a widget's tile, a figure, three lines of text.",
+      "dependencies": [
+        "@dnd-kit/core",
+        "@dnd-kit/sortable",
+        "@dnd-kit/utilities"
+      ],
+      "registryDependencies": [
+        "utils",
+        "@wabi/tokens",
+        "@wabi/widget-drag"
+      ],
+      "files": [
+        {
+          "path": "src/components/widget-card.tsx",
+          "type": "registry:component"
+        }
+      ],
+      "docs": "The dragging is @dnd-kit's: useSortable for the cell, and the context that routes it is @wabi/widget-drag's — one for a lone board, one for the whole shell when a card has to travel between regions. `WidgetGrid` is what a board wraps its cells in: it owns the arrangement, signs up with the drag and draws the outline of where a card coming from elsewhere would land. Two things are the house's and not the library's: the activator is bound on the capture phase, because a widget's tile stops pointerdown from bubbling (whatever must not start a drag says so with `data-no-drag`), and the sensors carry the house's numbers — 4px of travel for a pointer, a 350ms hold for a finger, so the board still scrolls on a phone. A grid that neither sorts nor lets a card leave draws cards that never call the hook: no node registered, no tab stop, no cursor promising a gesture. `data` is what a card carries for the board that takes it. `copy` decides whether the original stays: by default a card moves —it lands on the other board and leaves the one it came from— and with `copy` it's a source instead, so the original stays where it was and what lands is one of its own under a new id (`name-copy`, and a number after that if there's one already). Sorting inside its own board is unchanged, because there's nothing there to duplicate into. What travels is the card's `data` and what it draws, not the React state inside its children: a copy mounts fresh, so anything it has to be born with goes in `data`."
+    },
+    {
       "name": "widget-board",
       "type": "registry:component",
       "title": "WidgetBoard",
-      "description": "The grid of tiles: a size ladder from 1x1 to 2x2, layout driven by a container query, and the AnimatedEmpty when there are none.",
+      "description": "The grid of cells: a size ladder from 1x1 to 2x2, layout driven by a container query, drag and drop to rearrange it, and the AnimatedEmpty when there are none.",
       "dependencies": [
         "framer-motion",
         "lucide-react"
@@ -368,6 +437,7 @@
       "registryDependencies": [
         "utils",
         "@wabi/widget",
+        "@wabi/widget-card",
         "@wabi/animated-empty"
       ],
       "files": [
@@ -376,7 +446,7 @@
           "type": "registry:component"
         }
       ],
-      "docs": "Meant to live beside the panel as a region of the shell, not inside a tab. It measures its container and not the window: the layout comes from @container, so in a narrow rail it falls into one column and with width it shows the size ladder. It doesn't own the list: it reports through onWidgetClose and whoever uses it drops the widget from `widgets`. Without that callback the tiles show no close button. With onClose it draws a button reading «Close» at the top right, whether the board is full or empty: the board doesn't own its place and only reports."
+      "docs": "Meant to live beside the panel as a region of the shell, not inside a tab. It measures its container and not the window: the layout comes from @container, so in a narrow rail it falls into one column and with width it shows the size ladder. It doesn't own the list: it reports through onWidgetClose and whoever uses it drops the widget from `widgets`. Without that callback the tiles show no close button. With onClose it draws a button reading «Close» at the top right, whether the board is full or empty: the board doesn't own its place and only reports. Every cell is a `WidgetCard` —dnd-kit underneath— so the board is rearranged by dragging wherever it takes an `onReorder`: it keeps the arrangement while the hand is moving and hands back the ids when the card lands, and whoever owns the list sorts it. With `onAdd` it also becomes a destination for cards dragged in from another board —returning `false` refuses one— and with `onRemove` its own cards can leave; both need a shared @wabi/widget-drag provider above the two boards. Cells that aren't widgets go in as `WidgetCard` children: anything with an id can share the grid. With `copy` the cards it builds for its widgets are sources rather than pieces: the original stays and a copy lands on the other board, which is what turns a board into a palette — and `onRemove` never fires, because nothing leaves. Cards passed as children carry their own `copy`. The list scrolls and the region around it doesn't: the header stays put and the grid moves, with no scrollbar at all. `scroll-fade` is the cue — the cells dissolve towards whichever edge still has more — and `scrollbar-hide` drops the track, because one pinned to the edge of a column this narrow either rides over a tile or eats the air that keeps the grid centred. Same treatment as the WorkspacePanel's tab row."
     },
     {
       "name": "widget-rail",
@@ -394,7 +464,7 @@
           "type": "registry:component"
         }
       ],
-      "docs": "It hangs off a SidebarProvider — it needs to be able to fold it when the drag hits the limit — and it stands to the right of the panel: it measures its previous sibling in the DOM to know how much the two are splitting, so it goes after it. It isn't grabbed by the edge: through controlRef it exposes a handle with beginResize(event), nudge(delta) and step, and whoever resizes is the control that uses it — in this app, a button in the panel's bar. Through the `preview` prop it shows something else instead of the board — a LateralPreview, usually — and the board comes back when you remove it; while it lasts the rail widens by 140px, the preview rests against its borders, and if there's no room for that the sidebar folds. It reports through onResizingChange while the drag lasts. If the ceiling falls below a widget's width, the rail hides instead of showing a strip. onBoardClose is passed straight through to the board: the rail is the place and doesn't decide what's shown in it."
+      "docs": "It hangs off a SidebarProvider — it needs to be able to fold it when the drag hits the limit — and it stands to the right of the panel: it measures its previous sibling in the DOM to know how much the two are splitting, so it goes after it. It isn't grabbed by the edge: through controlRef it exposes a handle with beginResize(event), nudge(delta) and step, and whoever resizes is the control that uses it — in this app, a button in the panel's bar. Through the `preview` prop it shows something else instead of the board — a LateralPreview, usually — and the board comes back when you remove it; while it lasts the rail widens by 140px, the preview rests against its borders, and if there's no room for that the sidebar folds. It reports through onResizingChange while the drag lasts. If the ceiling falls below a widget's width, the rail hides instead of showing a strip. onWidgetReorder, onWidgetAdd, onWidgetRemove and onBoardClose are passed straight through to the board — with the last three, a widget can be dragged in from a tray in the panel and back out again: the rail is the place and doesn't decide what's shown in it."
     },
     {
       "name": "lateral-preview",

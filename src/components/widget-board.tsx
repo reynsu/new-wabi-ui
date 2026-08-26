@@ -4,7 +4,7 @@
  * WidgetBoard — the grid of tiles, and where the views come from.
  *
  * It's every widget's `glance` step at once: the screen you look at without
- * opening anything. Three decisions:
+ * opening anything. Five decisions:
  *
  * 1. **It measures its container, not the window.** The board lives inside the
  *    panel, whose width changes with the sidebar: a viewport `md:` would give
@@ -21,9 +21,31 @@
  *    normal state of a freshly opened app, not an error: it comes in
  *    choreographed and with the figure floating, which is exactly the case
  *    `float` exists for.
+ *
+ * 4. **The list scrolls without a bar.** Not the region around it either: the
+ *    header stays put —there's a way out of the board in it— and what moves is
+ *    the grid. What says there's more is `scroll-fade`, the cells dissolving
+ *    towards the edge that still has some; the bar itself is hidden, because a
+ *    track pinned to the edge of a column this narrow either rides over a tile
+ *    or eats the air that keeps the grid centred in the rail. It's the same
+ *    treatment as the panel's tab row and the `PeekCard`'s rail.
+ *
+ * 5. **It arranges, it doesn't own.** Every cell is a `WidgetCard`, and cards
+ *    can be dragged from one place to another — but only where there's an
+ *    `onReorder` to report to, same rule as the close buttons. The board keeps
+ *    the arrangement while the hand is moving and hands back the list of ids
+ *    when the card lands; whoever passes `widgets` is still the one who owns
+ *    the list. Anything else can be dropped in as a `WidgetCard` child: the
+ *    board arranges cells, and what's inside a cell is not its business.
  */
 
-import type { ReactNode } from "react";
+import {
+  Children,
+  isValidElement,
+  useMemo,
+  type ReactElement,
+  type ReactNode,
+} from "react";
 import { AnimatePresence } from "framer-motion";
 import { LayoutPanelTop, Plus } from "lucide-react";
 
@@ -35,18 +57,16 @@ import {
   AnimatedEmptyMedia,
   AnimatedEmptyTitle,
 } from "@/components/animated-empty";
-import { WidgetTile, type WidgetDefinition, type WidgetSpan } from "@/components/widget";
+import { WidgetTile, type WidgetDefinition } from "@/components/widget";
+import {
+  WidgetCard,
+  WidgetGrid,
+  type WidgetCardProps,
+  type WidgetCell,
+  type WidgetSpan,
+} from "@/components/widget-card";
 import { useTypeScale } from "@/lib/size-context";
 import { cn } from "@/lib/utils";
-
-/** The ladder's classes, written out literally because Tailwind can't compile a
- *  class built from an expression. Spans only kick in at `@md`: below that the
- *  board is a single column and every tile is the same size. */
-const SPAN: Record<WidgetSpan, string> = {
-  "1x1": "@md:col-span-1 @md:row-span-1",
-  "2x1": "@md:col-span-2 @md:row-span-1",
-  "2x2": "@md:col-span-2 @md:row-span-2",
-};
 
 /**
  * A row's height. A `2x2` is two of these plus the gap in between.
@@ -64,8 +84,52 @@ const ROW = 192;
  *  grid would read as off-centre inside the rail. */
 const GAP = 16;
 
+/** Air the scrolling box gives back to the cards, and takes off its own margin
+ *  so nothing moves.
+ *
+ *  A plane's first shadow layer is a 1px ring painted *outside* its box, and
+ *  this box clips: `overflow-y: auto` makes the horizontal axis clip too, so a
+ *  grid flush with its scroller loses the top edge of the first row and the
+ *  side edges of every card — the bottom survives because there's content
+ *  under it, which is exactly the "no top, no sides" a card ends up drawing.
+ *  Bleeding the scroller out by this much and padding it back in leaves the
+ *  grid in the same place with room for the ring; it stays inside the board
+ *  because it's smaller than `GAP`. */
+const RING_ROOM = 4;
+
+
 interface WidgetBoardProps {
-  widgets: WidgetDefinition[];
+  /** The widgets, in the order they're drawn. Optional: a board can be made
+   *  only of `WidgetCard` children. */
+  widgets?: WidgetDefinition[];
+  /** Cells that aren't widgets — `WidgetCard`s with anything inside. They're
+   *  drawn after the widgets and rearrange along with them: to the board a
+   *  cell is a cell. A child without an `id` is ignored, because an id is what
+   *  the order is made of. */
+  children?: ReactNode;
+  /** Reorders. The board doesn't own the list —it takes it through props— so
+   *  it hands back the ids in their new order and whoever uses it sorts
+   *  `widgets`. Without this callback nothing drags: no grab cursor, no tab
+   *  stop, no listeners. */
+  onReorder?: (ids: string[]) => void;
+  /** Takes a card dropped from another board. It gets the id, the place it
+   *  landed in and whatever the card was carrying —for a widget, its
+   *  descriptor— and returning `false` refuses it, which sends the card back
+   *  where it came from. Without this the board isn't a destination: a card
+   *  from elsewhere can hover over it and nothing will happen.
+   *
+   *  It needs a shared `WidgetDragProvider` above both boards; two boards each
+   *  with their own context can only sort their own cells. */
+  onAdd?: (id: string, index: number, data: unknown) => boolean | void;
+  /** One of its cards was taken by another board. Without this its cards can
+   *  be rearranged but they can't leave. */
+  onRemove?: (id: string) => void;
+  /** The cards it builds for `widgets` are sources: dropping one on another
+   *  board leaves the original here and lands a copy of it there, under an id
+   *  of its own. It's what turns a board into a palette — and with it,
+   *  `onRemove` never fires, because nothing ever leaves. Cards passed as
+   *  children carry their own `copy`. @default false */
+  copy?: boolean;
   /** Removes a widget from the board. The board doesn't own the array —it takes
    *  it through props—, so it only reports: whoever uses it drops the widget
    *  from `widgets`. Without this callback the tiles have no close button, same
@@ -85,13 +149,56 @@ interface WidgetBoardProps {
 }
 
 function WidgetBoard({
-  widgets,
+  widgets = [],
+  children,
+  onReorder,
+  onAdd,
+  onRemove,
+  copy = false,
   onWidgetClose,
   onClose,
   action,
   className,
 }: WidgetBoardProps) {
   const typeScale = useTypeScale();
+
+  /* The cells, in the order they arrive: first the widgets —each wrapped in
+     the card that places it— and then whatever came in as a child. From here
+     on the board only knows ids and spans; what a cell draws is the cell's
+     business. */
+  const cells = useMemo<WidgetCell[]>(() => {
+    const fromWidgets = widgets.map((w) => ({
+      id: w.id,
+      label: w.label,
+      span: w.span ?? ("1x1" as WidgetSpan),
+      node: (
+        /* The descriptor travels with the card: it's what the board on the
+           other end needs to make the widget its own. */
+        <WidgetCard id={w.id} span={w.span} label={w.label} data={w} copy={copy}>
+          <WidgetTile
+            widget={w}
+            onClose={onWidgetClose && (() => onWidgetClose(w.id))}
+          />
+        </WidgetCard>
+      ),
+    }));
+
+    const fromChildren = Children.toArray(children)
+      .filter(
+        (child): child is ReactElement<WidgetCardProps> =>
+          isValidElement<WidgetCardProps>(child) &&
+          typeof child.props.id === "string",
+      )
+      .map((child) => ({
+        id: child.props.id,
+        label: child.props.label ?? child.props.id,
+        span: child.props.span ?? ("1x1" as WidgetSpan),
+        node: child,
+      }));
+
+    return [...fromWidgets, ...fromChildren];
+  }, [widgets, children, onWidgetClose, copy]);
+
 
   return (
     <div
@@ -136,9 +243,27 @@ function WidgetBoard({
         </header>
       )}
 
-      <div className="min-h-0 flex-1">
+      {/* The board's own list: the header above it doesn't move —there's a way
+          out of the board in it— and what scrolls is the grid.
+
+          It scrolls with no bar at all. `scroll-fade` is the whole cue: the
+          cells dissolve towards whichever edge still has more, which is the
+          same thing a bar would say and the only thing worth saying in a
+          column this narrow — a track pinned to the edge of a 328px cell is
+          either riding over a tile or eating the air that keeps the grid
+          centred in the rail. It's the treatment the panel's tab row and the
+          `PeekCard`'s rail already use: `scrollbar-hide` keeps the scroll and
+          drops the furniture.
+
+          It bleeds `RING_ROOM` past its slot and pads the same amount back in:
+          a scrolling box clips, and a grid flush with it loses the ring its
+          cards paint outside themselves. See the constant. */}
+      <div
+        className="min-h-0 flex-1 overflow-y-auto scrollbar-hide scroll-fade"
+        style={{ margin: -RING_ROOM, padding: RING_ROOM }}
+      >
       <AnimatePresence mode="wait" initial={false}>
-        {widgets.length === 0 ? (
+        {cells.length === 0 && !onAdd ? (
           <AnimatedEmpty key="empty" variant="dashed" className="h-full">
             <AnimatedEmptyHeader>
               <AnimatedEmptyMedia variant="figure" badge={<Plus />} float>
@@ -157,20 +282,22 @@ function WidgetBoard({
             {action && <AnimatedEmptyContent>{action}</AnimatedEmptyContent>}
           </AnimatedEmpty>
         ) : (
-          <div
+          <WidgetGrid
             key="grid"
+            cells={cells}
+            onReorder={onReorder}
+            onAdd={onAdd}
+            onRemove={onRemove}
             className="grid grid-cols-1 @md:grid-cols-2 @4xl:grid-cols-4"
-            style={{ gridAutoRows: `${ROW}px`, gap: GAP }}
-          >
-            {widgets.map((w) => (
-              <WidgetTile
-                key={w.id}
-                widget={w}
-                onClose={onWidgetClose && (() => onWidgetClose(w.id))}
-                className={SPAN[w.span ?? "1x1"]}
-              />
-            ))}
-          </div>
+            style={{
+              gridAutoRows: `${ROW}px`,
+              gap: GAP,
+              /* An empty board that takes cards still has to be somewhere to
+                 drop them: with no cells the grid measures zero and there'd be
+                 nothing to aim at. */
+              minHeight: cells.length === 0 ? ROW : undefined,
+            }}
+          />
         )}
       </AnimatePresence>
       </div>

@@ -31,11 +31,13 @@
  *    That's the difference from `WorkspaceTab.content`, which is a node because
  *    by then opening that tab is already decided.
  *
- * 3. **Size is a ladder, not a drag.** `1x1`, `2x1`, `2x2` on a grid that
- *    responds to its container's width. A draggable grid brings its own
- *    library, its own styles and a second source of truth about layout — and it
- *    contradicts the house rule: density is a decision of the region, not of
- *    the user rearranging boxes.
+ * 3. **Size is a ladder; order is a drag.** `1x1`, `2x1`, `2x2` on a grid that
+ *    responds to its container's width — how big a widget is stays a decision
+ *    of the region, not something the hand stretches. Where it sits is another
+ *    matter: `WidgetCard` lets the board be rearranged by dragging, and it
+ *    does it on the motion the app already has, without a grid library and
+ *    without a second source of truth about layout — the order is a list of
+ *    ids, and the owner of the list is whoever passes it in.
  *
  * 4. **The tile climbs any layer's two steps.** `Elevated` applies them and
  *    publishes that level inwards, so a menu opened inside a widget keeps
@@ -70,6 +72,9 @@ import { motion, useReducedMotion } from "framer-motion";
 import { X } from "lucide-react";
 
 import { PeekCard, type PeekCardTab } from "@/components/peek-card";
+// The span belongs to the cell, and the cell is the card's: a widget only
+// declares how much room it asks for.
+import type { WidgetSpan } from "@/components/widget-card";
 import { useWorkspace } from "@/components/workspace-context";
 import type { WorkspaceTab } from "@/components/workspace-panel";
 import { Elevated } from "@/lib/elevated";
@@ -82,9 +87,6 @@ import { cn } from "@/lib/utils";
 /** Steps the widget's plane climbs over the board's substrate: the two of any
  *  layer that rests on it, like a popup. */
 const PLANE_RISE = 2;
-
-/** How much of the grid the tile takes. */
-type WidgetSpan = "1x1" | "2x1" | "2x2";
 
 interface WidgetDefinition {
   /** Unique and stable. It's also the id of the tab it opens, so tapping the
@@ -117,6 +119,9 @@ function WidgetClose({ label, onClose }: { label: string; onClose: () => void })
     <button
       type="button"
       aria-label={`Remove ${label}`}
+      // The card reads presses on the capture phase, so stopping the bubble
+      // isn't enough to keep a drag from starting on the ×.
+      data-no-drag
       onPointerDown={(e) => e.stopPropagation()}
       onClick={(e) => {
         e.stopPropagation();

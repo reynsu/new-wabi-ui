@@ -15,8 +15,11 @@ import {
   PanelRight,
   PanelTop,
   IdCard,
+  Grip,
   Smartphone,
   PanelsTopLeft,
+  CalendarRange,
+  CalendarClock,
   Sliders,
   Sun,
   TextCursorInput,
@@ -49,6 +52,7 @@ import {
   useWorkspace,
 } from "@/components/workspace-context";
 import type { WorkspaceTab } from "@/components/workspace-panel";
+import type { WidgetDefinition } from "@/components/widget";
 import { AgentSection } from "@/sections/AgentSection";
 import { AnimatedEmptySection } from "@/sections/AnimatedEmptySection";
 import { ControlsSection } from "@/sections/ControlsSection";
@@ -58,16 +62,20 @@ import { InsetDialogSection } from "@/sections/InsetDialogSection";
 import { LateralPreviewSection } from "@/sections/LateralPreviewSection";
 import { LoginBlockSection } from "@/sections/LoginBlockSection";
 import { MobileActionConfirmationSection } from "@/sections/MobileActionConfirmationSection";
+import { DatePickerSection } from "@/sections/DatePickerSection";
 import { PeekCardSection } from "@/sections/PeekCardSection";
+import { RangeCalendarSection } from "@/sections/RangeCalendarSection";
 import { SurfacesSection } from "@/sections/SurfacesSection";
 import { SystemSection } from "@/sections/SystemSection";
 import { TravelTooltipSection } from "@/sections/TravelTooltipSection";
 import { SileoSection } from "@/sections/SileoSection";
 import { PreviewProvider, usePreview } from "@/components/preview-context";
 import { WidgetRail, type WidgetRailControl } from "@/components/widget-rail";
+import { WidgetDragProvider } from "@/components/widget-drag";
 import { cn } from "@/lib/utils";
 import { WIDGETS } from "@/widgets";
 import { WidgetBoardSection } from "@/sections/WidgetBoardSection";
+import { WidgetCardSection } from "@/sections/WidgetCardSection";
 import { WindowControlsSection } from "@/sections/WindowControlsSection";
 import { WorkspacePanelSection } from "@/sections/WorkspacePanelSection";
 
@@ -124,13 +132,16 @@ const GROUPS = [
     label: "Our components",
     pages: [
       { id: "animated-empty", label: "AnimatedEmpty", icon: PackageOpen, count: 5, render: () => <AnimatedEmptySection /> },
+      { id: "date-picker", label: "DatePicker", icon: CalendarClock, count: 7, render: () => <DatePickerSection /> },
       { id: "filter-menu", label: "FilterMenu", icon: ListFilter, count: 4, render: () => <FilterMenuSection /> },
       { id: "inset-dialog", label: "InsetDialog", icon: PanelTop, count: 2, render: () => <InsetDialogSection /> },
       { id: "lateral-preview", label: "LateralPreview", icon: PanelRight, count: 3, render: () => <LateralPreviewSection /> },
       { id: "mobile-action-confirmation", label: "MobileActionConfirmation", icon: Smartphone, count: 3, render: () => <MobileActionConfirmationSection /> },
       { id: "peek-card", label: "PeekCard", icon: IdCard, count: 4, render: () => <PeekCardSection /> },
+      { id: "range-calendar", label: "RangeCalendar", icon: CalendarRange, count: 5, render: () => <RangeCalendarSection /> },
       { id: "travel-tooltip", label: "TravelTooltip", icon: MousePointer2, count: 1, render: () => <TravelTooltipSection /> },
-      { id: "widget-board", label: "WidgetBoard", icon: LayoutGrid, count: 3, render: () => <WidgetBoardSection /> },
+      { id: "widget-board", label: "WidgetBoard", icon: LayoutGrid, count: 5, render: () => <WidgetBoardSection /> },
+      { id: "widget-card", label: "WidgetCard", icon: Grip, count: 7, render: () => <WidgetCardSection /> },
       { id: "window-controls", label: "WindowControls", icon: PanelsTopLeft, count: 1, render: () => <WindowControlsSection /> },
       { id: "workspace-panel", label: "WorkspacePanel", icon: LayoutPanelTop, count: 1, render: () => <WorkspacePanelSection /> },
     ],
@@ -258,12 +269,16 @@ function Showcase() {
         <SidebarFooter>
           <div className="flex items-center gap-2 px-2 py-1">
             <p className="min-w-0 text-[12px] text-muted-foreground">
-              24 from the registry + 10 in-house + 1 block + Sileo
+              24 from the registry + 13 in-house + 1 block + Sileo
             </p>
           </div>
         </SidebarFooter>
       </Sidebar>
 
+      {/* Un solo contexto de arrastre para el panel y el riel: sin esto cada
+          board tendría el suyo y una tarjeta no podría cruzar de uno al otro.
+          Va acá y no más adentro porque tiene que contener a los dos. */}
+      <WidgetDragProvider>
       {/* El panel no vive adentro del contenido: es el contenido. Reemplaza al
           SidebarInset —que aportaba una tarjeta más, con su fondo, su sombra y
           su padding alrededor de otra tarjeta— y se lleva su papel: el `<main>`
@@ -398,11 +413,49 @@ function Showcase() {
         onWidgetClose={(id) =>
           setWidgets((lista) => lista.filter((w) => w.id !== id))
         }
+        /* El board arregla mientras la mano se mueve y devuelve los ids al
+           soltar; el dueño de la lista sigue siendo este estado. Se reordena
+           contra lo que hay: un id que ya no está —se cerró el widget a mitad
+           del tirón— no puede reaparecer por venir en el arreglo. */
+        onWidgetReorder={(ids) =>
+          setWidgets((lista) =>
+            ids
+              .map((id) => lista.find((w) => w.id === id))
+              .filter((w) => w !== undefined),
+          )
+        }
+        /* El riel es destino: una tarjeta arrastrada desde el panel entra acá
+           con el descriptor que traía. Se rechaza —`false`— lo que no sea un
+           widget o lo que ya esté puesto: el board del otro lado se entera y
+           devuelve la tarjeta a su lugar en vez de perderla.
+
+           El id manda sobre el del descriptor: en una copia son distintos —el
+           original se queda con el suyo— y el que vale es el que da el board,
+           que es el único que sabe que no choca con nada. */
+        onWidgetAdd={(id, index, data) => {
+          const widget = data as WidgetDefinition | undefined;
+          if (!widget?.id) return false;
+          let puesto = false;
+          setWidgets((lista) => {
+            if (lista.some((w) => w.id === id)) return lista;
+            puesto = true;
+            const llega = { ...widget, id };
+            return [...lista.slice(0, index), llega, ...lista.slice(index)];
+          });
+          return puesto;
+        }}
+        /* Y también origen: un widget arrastrado del riel a una bandeja del
+           panel se va de la lista. Es lo mismo que hace cerrarlo, con la
+           diferencia de que del otro lado alguien lo recibió. */
+        onWidgetRemove={(id) =>
+          setWidgets((lista) => lista.filter((w) => w.id !== id))
+        }
         controlRef={riel}
         onResizingChange={setRedimensionando}
       />
         )}
       </AnimatePresence>
+      </WidgetDragProvider>
 
       {/* theme explícito y no "system": la app alterna el tema con la clase
           .dark en <html>, mientras que "system" seguiría al sistema operativo
