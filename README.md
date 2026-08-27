@@ -1619,12 +1619,19 @@ una tarjeta encima.
 
 Por eso **hay un solo plano opaco y no dos**. El hermano envuelve la tarjeta en
 un marco con superficie propia —allá se apoya sobre la página—; acá cualquier
-cosa opaca a ese nivel es un agujero en la imagen. El marco queda transparente,
-la sombra pasa a la tarjeta, el aviso de error se mete adentro de ella —arriba
-no hay superficie: un aviso impreso sobre una foto es un epígrafe— y la línea
-de «¿todavía no tenés cuenta?» queda sobre el plano, con **la tinta del plano**
-y no con el gris de las superficies, que mezclado para un fondo claro se lee
-apagado sobre uno oscuro.
+cosa opaca a ese nivel es un agujero en la imagen. El marco queda transparente
+y la sombra pasa a la tarjeta.
+
+Y por eso también **todo lo que es texto vive adentro de la tarjeta**: el aviso
+de error arriba del formulario y la línea de «¿todavía no tenés cuenta?» abajo
+de todo. Afuera no hay superficie, sólo el plano, y una línea impresa sobre una
+foto es un epígrafe. La de abajo va afuera del scroll y no adentro, así no se va
+con el formulario cuando la tarjeta se queda corta.
+
+El aire entre la tarjeta y los bordes es chico —ocho píxeles— a propósito:
+alcanza para que se vea el plano pasando por los costados, que es lo que dice
+que la pantalla es una sola imagen con una tarjeta encima, y no tanto como para
+que la tarjeta se lea como un diálogo tirado sobre una página.
 
 Es una variante y no una pantalla nueva: los campos, el aviso, los proveedores,
 los tres botones de tema y el arte del plano **se importan de `LoginBlock`**, así

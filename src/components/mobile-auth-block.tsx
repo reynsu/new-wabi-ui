@@ -104,11 +104,16 @@ const scrimFor = (foot: number) =>
     "rgba(0,0,0,0.48) 100%)",
   ].join(" ");
 
-/** The air around the card. One number, used by the layout and by the scrim's
- *  ramp: if they disagreed, the ramp would land a few pixels off the card's
- *  edge and the seam would be back. The floor's own inset takes the home bar
- *  into account on top of this. */
-const CARD_INSET = 12;
+/** The air around the card. Small on purpose: enough for the plane to be seen
+ *  running past the card's edges —which is what says the screen is one image
+ *  with a card on it— and not so much that the card reads as a dialog dropped
+ *  on a page. The floor's own inset takes the home bar into account on top of
+ *  this.
+ *
+ *  One number, used by the layout and by the scrim's ramp: if they disagreed,
+ *  the ramp would land a few pixels off the card's edge and the seam it exists
+ *  to avoid would be back. */
+const CARD_INSET = 8;
 
 interface MobileAuthBlockProps extends LoginBlockProps {
   /** What goes behind everything. Left alone it's the same plane the desktop
@@ -365,31 +370,22 @@ function MobileAuthBlock({
           </form>
         </div>
 
+        {/* The way to the other half of the product, and it stays on the card:
+            outside there's only the plane, and a line of text printed on a
+            photograph is a caption — the same reason the notice lives in here.
+            Below the scroller and not inside it, so it doesn't scroll away with
+            the form. */}
+        <p className="shrink-0 px-4 pb-4 text-center text-[13px] text-muted-foreground">
+          Don't have an account yet?{" "}
+          <button
+            type="button"
+            onClick={onSignUp}
+            className="cursor-pointer rounded font-medium text-foreground outline-none transition-opacity duration-100 hover:opacity-70 focus-visible:ring-1 focus-visible:ring-[color:var(--focus-ring)]"
+          >
+            Sign up
+          </button>
+        </p>
       </div>
-
-      {/* Under the card, on the plane. It takes the plane's ink and not the
-          surface's muted grey: a grey mixed for a light surface reads as
-          switched off over a dark one, and this line is the way to the other
-          half of the product. */}
-      <p
-        className={cn(
-          "shrink-0 px-4 pt-3 text-center text-[13px]",
-          PANEL_INK.body,
-        )}
-      >
-        Don't have an account yet?{" "}
-        <button
-          type="button"
-          onClick={onSignUp}
-          className={cn(
-            "cursor-pointer rounded font-medium outline-none transition-opacity duration-100 hover:opacity-70 focus-visible:ring-1",
-            PANEL_INK.ink,
-            PANEL_INK.focus,
-          )}
-        >
-          Sign up
-        </button>
-      </p>
       </motion.div>
     </div>
   );
