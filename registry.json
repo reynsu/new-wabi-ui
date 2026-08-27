@@ -357,6 +357,32 @@
       "docs": "One implementation, three exports: `RangeCalendar` (two ends and a counter of nights), `DatePicker` (one day, and the counter says what the day is) and `DateTimePicker` (`DatePicker` with `time`, whose second field takes the plane over to three columns: the hour, the minutes and AM/PM). The subject is the answer and not the grid, so the fields (`fields`) and the presets (`presets`) turn off independently and what's left is a month to drop in a popover. Dates are plain `Date`s at local midnight and the labels come from `Intl`, so the locale is a prop and not a translation file — and a moment is one `Date` carrying the day and the hour, with the one ambiguity that a value at exactly midnight reads as an hour not yet picked. The columns are the whole clock —00 to 12, 00 to 59, and the half of the day— and what can't be picked is greyed rather than removed, the same deal the month makes with `minDate`. Which times those are comes from `timeStep` (every minute by default) plus `timeRange`, or outright from `times` in minutes from midnight. On a twelve-hour clock midnight is `00` and noon is `12`, so `12` is greyed under AM and `00` under PM: one row per hour of the day, and no two rows meaning the same moment. The two columns of numbers are captioned from `hourLabel` and `minuteLabel`, like every other visible string here. Whether the clock has twelve hours and a half-of-the-day column or twenty-four and none of it is the locale's answer, read from `Intl` — not a prop. The accent —band, endpoints, chosen hour and the field's underline— is the `--calendar-accent` variable: set it on the calendar or above it and every mark moves together; `--calendar-band` overrides the band's fill on its own, for a theme where 12% of the accent isn't enough. `minDate` defaults to today; pass `null` for a calendar that reaches backwards."
     },
     {
+      "name": "timeline",
+      "type": "registry:component",
+      "title": "Timeline",
+      "description": "Lo que pasó, en el orden en que pasó: hitos con su estado o un feed de actividad, con el riel dibujándose hacia abajo.",
+      "dependencies": [
+        "framer-motion"
+      ],
+      "registryDependencies": [
+        "utils",
+        "@wabi/tokens",
+        "https://www.fluidfunctionalism.com/r/elevated.json",
+        "https://www.fluidfunctionalism.com/r/springs.json",
+        "https://www.fluidfunctionalism.com/r/shape-context.json",
+        "https://www.fluidfunctionalism.com/r/size-context.json",
+        "https://www.fluidfunctionalism.com/r/icon-context.json",
+        "https://www.fluidfunctionalism.com/r/surface-context.json"
+      ],
+      "files": [
+        {
+          "path": "src/components/timeline.tsx",
+          "type": "registry:component"
+        }
+      ],
+      "docs": "Two shapes of the same object, and the prop is `variant`: `milestones` puts the time under the title because the row is a paragraph, `feed` puts it against the right edge because the row is a sentence. Each item draws the piece of rail below it —not the list— so an entry that arrives brings its own and `group-last` retires the one that stopped being last, with no index arithmetic and no cloning of children. State is weight and not colour (a ring, a filled dot with a halo of the interaction tokens, a hairline); colour is what `Badge` is for and it means a category. An `icon` replaces the dot: a feed says what kind of thing happened, and the state of something already done is always done. What hangs off an entry goes in `TimelineNote`, a step up with `Elevated` rather than a quote border. It renders an `<ol>`, because the order is the content."
+    },
+    {
       "name": "widget",
       "type": "registry:component",
       "title": "Widget",

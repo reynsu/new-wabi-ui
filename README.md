@@ -1509,6 +1509,80 @@ llega escribiendo es un mes al que no se llega. Son lo más callado del plano
 
 ---
 
+## Lo que pasó, en el orden en que pasó
+
+Dos cosas se llaman timeline y son el mismo objeto: una lista de **hitos**,
+donde cada uno está en algún punto de un camino y la pregunta es hasta dónde
+llegamos; y un **feed**, donde cada entrada es algo que alguien hizo y la
+pregunta es qué hay de nuevo. Misma anatomía —un riel, un nodo sobre él, una
+línea de texto y a veces un cuerpo— y lo único en lo que no se ponen de acuerdo
+es dónde va la hora. Eso es el `variant`.
+
+| | dónde va la hora | por qué |
+|---|---|---|
+| `milestones` | debajo del título | la fila es un párrafo, y la fecha es su epígrafe |
+| `feed` | contra el borde derecho | la fila es una oración, y la oración es la fila |
+
+### Cada ítem dibuja su pedazo de riel
+
+Lo obvio es una sola línea por detrás de todo, posicionada del primer nodo al
+último. Se rompe apenas la lista cambia: una entrada que llega tiene que
+alargar la línea debajo suyo, y una línea que es del contenedor sólo puede
+saltar.
+
+Acá el segmento va de un nodo al siguiente y **es del ítem de arriba**: el que
+llega trae el suyo, y el que dejó de ser el último se lo pinta solo porque
+`group-last` deja de esconderlo. Sin aritmética de índices y sin clonar hijos
+para avisarles dónde están.
+
+Eso obligó a mover el aire entre filas: si el `padding-bottom` está en el ítem,
+queda **fuera** de la caja de la grilla, la columna del nodo no se estira sobre
+él y el riel corta veinte píxeles antes del nodo siguiente. El aire va adentro,
+en la columna del contenido, y la del nodo se estira sobre toda la fila.
+
+### La línea se dibuja, no aparece
+
+El segmento escala desde su borde de arriba, así que el timeline se lee como
+escribiéndose hacia abajo en vez de aparecer entero. Es el único lugar donde
+este componente pide un tiempo propio: el texto de la fila aterriza primero y
+la línea llega al nodo siguiente después, que es el orden en el que el ojo los
+lee igual.
+
+### El estado es peso, no color
+
+`done`, `current` y `upcoming` son el mismo círculo en tres pesos —un anillo,
+un punto lleno con un halo de los tokens de interacción, un pelo del mismo
+grosor que el riel— y la fila entera de lo que no pasó se corre a
+`text-muted-foreground`.
+
+El color es algo que este sistema gasta en los badges, donde quiere decir una
+categoría; gastarlo también en tres estados deja al que lee decidiendo de cuál
+de las dos cosas le habla un círculo verde. El que lo necesita pone un `Badge`
+en `badge`, que es donde el color del sistema vive.
+
+El agujero del anillo va **transparente**: es el plano sobre el que cayó el
+timeline, y nombrar un color ahí sería adivinar un sustrato que en este sistema
+es una escalera.
+
+### Un ícono le gana al estado
+
+Una entrada de feed dice qué clase de cosa pasó —un comentario, una etiqueta,
+un merge— y eso es un ícono en una burbuja, no un punto en un camino. Así que
+`icon` reemplaza al punto en vez de sumarse: dos marcas en los mismos 28px son
+una marca de más, y el estado de algo que alguien ya hizo es siempre `done`.
+
+Lo que cuelga de una entrada va en `TimelineNote`, que es un escalón con
+`Elevated` y no un borde izquierdo ni una itálica — por el mismo motivo que el
+resto del sistema: una comilla es una convención que hay que saber, un plano se
+ve.
+
+Y es un `<ol>`, porque el orden es el contenido: un timeline cuyos ítems se
+pueden leer en cualquier orden no es uno. Lo que ande con teclado o con voz
+recibe «lista, 6 ítems» y el número de cada uno gratis, que ningún `div` con
+una línea a la izquierda va a decir nunca.
+
+---
+
 ## Blocks propios
 
 Un block no es un componente: no resuelve una pieza sino una pantalla entera,
@@ -1696,7 +1770,7 @@ y un commit en ese repo.
 |---|---|---|
 | `tokens` | `registry:theme` | los tokens y las utilidades que ningún item de `@fluid` instala — ver abajo |
 | `use-measured-height` | `registry:hook` | el hook propio, el que mide el alto que `PeekCard` anima |
-| `animated-empty`, `travel-tooltip`, `inset-dialog`, `mobile-action-confirmation`, `peek-card`, `calendar`, `widget`, `widget-board`, `widget-rail`, `lateral-preview`, `preview-context`, `filter-menu`, `workspace-panel`, `workspace-context`, `window-controls` | `registry:component` | van a `components/`, al lado de `ui/` y no adentro, igual que acá |
+| `animated-empty`, `travel-tooltip`, `inset-dialog`, `mobile-action-confirmation`, `peek-card`, `calendar`, `timeline`, `widget`, `widget-board`, `widget-rail`, `lateral-preview`, `preview-context`, `filter-menu`, `workspace-panel`, `workspace-context`, `window-controls` | `registry:component` | van a `components/`, al lado de `ui/` y no adentro, igual que acá |
 | `login-block` | `registry:block` | el block |
 
 Las dependencias de `@fluid` van por **URL absoluta**
