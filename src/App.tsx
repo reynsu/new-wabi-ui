@@ -20,6 +20,7 @@ import {
   PanelsTopLeft,
   CalendarRange,
   CalendarClock,
+  GitCommitVertical,
   Sliders,
   Sun,
   TextCursorInput,
@@ -66,6 +67,7 @@ import { DatePickerSection } from "@/sections/DatePickerSection";
 import { PeekCardSection } from "@/sections/PeekCardSection";
 import { RangeCalendarSection } from "@/sections/RangeCalendarSection";
 import { SurfacesSection } from "@/sections/SurfacesSection";
+import { TimelineSection } from "@/sections/TimelineSection";
 import { SystemSection } from "@/sections/SystemSection";
 import { TravelTooltipSection } from "@/sections/TravelTooltipSection";
 import { SileoSection } from "@/sections/SileoSection";
@@ -139,6 +141,7 @@ const GROUPS = [
       { id: "mobile-action-confirmation", label: "MobileActionConfirmation", icon: Smartphone, count: 3, render: () => <MobileActionConfirmationSection /> },
       { id: "peek-card", label: "PeekCard", icon: IdCard, count: 4, render: () => <PeekCardSection /> },
       { id: "range-calendar", label: "RangeCalendar", icon: CalendarRange, count: 5, render: () => <RangeCalendarSection /> },
+      { id: "timeline", label: "Timeline", icon: GitCommitVertical, count: 5, render: () => <TimelineSection /> },
       { id: "travel-tooltip", label: "TravelTooltip", icon: MousePointer2, count: 1, render: () => <TravelTooltipSection /> },
       { id: "widget-board", label: "WidgetBoard", icon: LayoutGrid, count: 5, render: () => <WidgetBoardSection /> },
       { id: "widget-card", label: "WidgetCard", icon: Grip, count: 7, render: () => <WidgetCardSection /> },
@@ -269,7 +272,7 @@ function Showcase() {
         <SidebarFooter>
           <div className="flex items-center gap-2 px-2 py-1">
             <p className="min-w-0 text-[12px] text-muted-foreground">
-              24 from the registry + 13 in-house + 1 block + Sileo
+              24 from the registry + 14 in-house + 1 block + Sileo
             </p>
           </div>
         </SidebarFooter>
