@@ -1592,7 +1592,7 @@ armada con las piezas del registry y de `components/`. Viven en el mismo
 | block | qué es |
 |---|---|
 | `LoginBlock` | la pantalla de acceso completa: plano de marca a la izquierda, formulario y proveedores a la derecha |
-| `MobileAuthBlock` | la misma pantalla para el teléfono: el plano de fondo y lo accionable en una hoja contra el piso |
+| `MobileAuthBlock` | la misma pantalla para el teléfono: el plano de punta a punta y lo accionable en una tarjeta que flota contra el piso |
 
 ### La misma pantalla, para la forma que se agarra con una mano
 
@@ -1605,9 +1605,17 @@ propio `LoginBlock` lo retira abajo de 672px: lo que queda es correcto, y es un
 formulario en una página.
 
 `MobileAuthBlock` no lo retira: **la partición deja de ser de lado a lado y pasa
-a ser de profundidad**. El plano ocupa todo el fondo y lo accionable se junta en
-una hoja contra el piso, que es donde llega el pulgar — el mismo motivo por el
-que `MobileActionConfirmation` aterriza ahí.
+a ser de profundidad**. El plano —el mismo de `LoginBlock`, en sus mismas dos
+claves— ocupa la pantalla entera, de punta a punta y debajo de todo, y lo
+accionable se junta en una **tarjeta que flota** contra el piso, que es donde
+llega el pulgar — el mismo motivo por el que `MobileActionConfirmation`
+aterriza ahí.
+
+Flota y no está soldada al borde: una hoja pegada al piso parte la imagen al
+medio, y lo que queda arriba se lee como un encabezado sobre un formulario, que
+es la partición en dos columnas otra vez, apilada. Con el plano corriendo por
+abajo y saliendo por los costados, la pantalla sigue siendo una sola imagen con
+una tarjeta encima.
 
 Es una variante y no una pantalla nueva: los campos, el aviso, los proveedores,
 los tres botones de tema y el arte del plano **se importan de `LoginBlock`**, así
@@ -1625,11 +1633,11 @@ productos.
     depende del formulario, así que medir contra la pantalla es medir contra
     algo que no se sabe;
   · **el que cede es el héroe.** Con poco alto se comprime el logo y el titular,
-    no el formulario, que es la razón por la que la pantalla existe: la hoja se
-    queda con su tamaño hasta su techo y recién ahí scrollea adentro suyo.
+    no el formulario, que es la razón por la que la pantalla existe: la tarjeta
+    se queda con su tamaño hasta su techo y recién ahí scrollea adentro suyo.
     Medido en un marco de 420px: el héroe baja a 59px, la hoja se queda en 361 y
     el formulario scrollea 14;
-  · **no hay manija.** La hoja no se arrastra —no hay nada abajo ni a dónde
+  · **no hay manija.** La tarjeta no se arrastra —no hay nada abajo ni a dónde
     mandarla— y una manija es la promesa de un gesto. Es la regla de la casa, la
     misma por la que un board sin `onReorder` no dibuja el cursor de agarre.
 

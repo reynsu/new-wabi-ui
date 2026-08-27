@@ -628,7 +628,7 @@
       "name": "mobile-auth-block",
       "type": "registry:block",
       "title": "MobileAuthBlock",
-      "description": "La misma pantalla de acceso para la forma que se agarra con una mano: el plano ocupa todo el fondo y lo accionable se junta en una hoja contra el piso.",
+      "description": "La misma pantalla de acceso para la forma que se agarra con una mano: el plano de LoginBlock corre por toda la pantalla y lo accionable se junta en una tarjeta que flota contra el piso.",
       "dependencies": [
         "framer-motion"
       ],
@@ -645,7 +645,7 @@
           "type": "registry:block"
         }
       ],
-      "docs": "It's a variant of `LoginBlock` and not a second screen: the fields, the notice, the providers, the theme knobs and the plane's art are imported from it, so a change to a field lands on both. It brings `login-block` with it for that reason. The split stops being horizontal and becomes depth — the plane takes the whole background, `background` replaces it with an image or a video, and everything actionable comes together on a sheet against the floor, where the thumb reaches. On a short screen the hero is what gives; the sheet holds its size until its ceiling and then scrolls inside itself. Like its sibling it paints itself in its own theme, so not one `dark:` utility is used inside."
+      "docs": "It's a variant of `LoginBlock` and not a second screen: the fields, the notice, the providers, the theme knobs and the plane's art are imported from it, so a change to a field lands on both. It brings `login-block` with it for that reason. The split stops being horizontal and becomes depth — the plane takes the whole screen, edge to edge and under everything, and what's actionable comes together on a card that floats at the floor, where the thumb reaches, with the plane running under it and out its sides. `background` swaps the plane for an image, a video or a canvas, and it lands in the same place. On a short screen the hero is what gives; the card holds its size until its ceiling and then scrolls inside itself. Like its sibling it paints itself in its own theme, so not one `dark:` utility is used inside."
     },
     {
       "name": "login-block",

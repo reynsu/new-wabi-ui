@@ -10,33 +10,39 @@
  * exists to accompany, ends up above the fold competing with the form.
  *
  * So the split stops being horizontal and becomes depth: the plane takes the
- * **whole** screen as its background, and everything actionable comes together
- * on a sheet anchored to the floor. Same product, same pieces —the same fields,
+ * **whole** screen —edge to edge, and under everything— and what's actionable
+ * comes together on a card that floats at the floor, with the plane running
+ * under it and out its sides. Same product, same pieces —the same fields,
  * the same notice, the same providers, the same theme knobs— and it is a
  * variant and not a redesign: they're imported from `LoginBlock`, so a change
  * to a field lands on both screens at once.
  *
  * Five decisions worth not undoing without looking at the rest:
  *
- * 1. **The sheet is anchored to the floor, not centred.** It's where the thumb
- *    reaches, which is the same reason `MobileActionConfirmation` lands there.
- *    A form centred on a 700px-tall screen puts its submit button in the one
- *    place the hand has to be rearranged to touch.
+ * 1. **The card sits at the floor, and floats.** At the floor because that's
+ *    where the thumb reaches —the same reason `MobileActionConfirmation` lands
+ *    there— and a form centred on a 700px-tall screen puts its submit button in
+ *    the one place the hand has to be rearranged to touch. Floating, with the
+ *    plane running under it and out its sides, because the plane *is* the
+ *    screen here: a sheet welded to the bottom edge cuts the image in half and
+ *    what's left reads as a header over a form, which is the two-column split
+ *    again, stacked.
  *
- * 2. **The background is the plane, and it can be a photograph.** Left alone it
- *    paints the same gradient as the desktop block's plane —they're siblings,
- *    and siblings that don't look alike are two products— and `background`
- *    takes anything else: an `<img>`, a video, a canvas. Whatever goes there,
- *    a scrim goes over it, because the ink above is white and a photograph
- *    isn't a promise about its own brightness.
+ * 2. **The background is `LoginBlock`'s plane, edge to edge.** The same
+ *    gradient the desktop block paints on its left-hand side, in the same two
+ *    keys — they're siblings, and siblings that don't look alike are two
+ *    products. It covers the whole screen and every other layer sits on it.
+ *    `background` swaps it for anything else —an `<img>`, a video, a canvas—
+ *    and whatever lands there gets the scrims, because the ink above is white
+ *    and a photograph isn't a promise about its own brightness.
  *
- * 3. **The hero gives, the sheet doesn't.** What's above —the logo, the
+ * 3. **The hero gives, the card doesn't.** What's above —the logo, the
  *    headline, the sentence— is the part that can lose room on a short screen,
- *    and it's what shrinks. The sheet keeps its size until it hits its ceiling
+ *    and it's what shrinks. The card keeps its size until it hits its ceiling
  *    and only then scrolls inside itself: the form is the reason the screen
  *    exists.
  *
- * 4. **No grab handle.** The sheet doesn't drag —there's nothing under it and
+ * 4. **No grab handle.** The card doesn't drag —there's nothing under it and
  *    nowhere to send it— and a handle is a promise of a gesture. The house
  *    rule, the same one that keeps a board with no `onReorder` from drawing a
  *    grab cursor: an affordance that leads nowhere is worse than no affordance.
@@ -223,14 +229,20 @@ function MobileAuthBlock({
         </div>
       </div>
 
-      {/* The sheet. It comes up on `spring.slow`, the step this system keeps
-          for a change of context — the same one the mobile sheet and the
-          dialog take. */}
+      {/* The card. It comes up on `spring.slow`, the step this system keeps for
+          a change of context — the same one the mobile sheet and the dialog
+          take. */}
       <motion.div
         initial={{ y: 24, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={spring.slow}
-        className="relative flex max-h-[86%] shrink-0 flex-col overflow-hidden rounded-t-[26px] bg-surface-2 p-1 shadow-surface-4"
+        className={cn(
+          "relative flex max-h-[86%] shrink-0 flex-col overflow-hidden rounded-[26px] bg-surface-2 p-1 shadow-surface-6",
+          // It floats: the plane runs under it and out the sides, so the screen
+          // stays one image with a card on it. The floor's own inset is the
+          // bigger one and takes the home bar into account.
+          "mx-3 mt-0 mb-[max(0.75rem,env(safe-area-inset-bottom))]",
+        )}
       >
         {/* The notice pushes, it doesn't cover: it lands inside the frame and
             above the card, and moves the form down. A toast would leave on its
@@ -263,10 +275,8 @@ function MobileAuthBlock({
           )}
         </AnimatePresence>
 
-        {/* The card, and what scrolls when the sheet runs out of room. The
-            floor's corners stay square: it's the edge of the screen, and a
-            radius there would draw a card floating over nothing. */}
-        <div className="min-h-0 flex-1 overflow-y-auto rounded-t-[22px] bg-surface-3 shadow-surface-1 scroll-fade">
+        {/* The card, and what scrolls when it runs out of room. */}
+        <div className="min-h-0 flex-1 overflow-y-auto rounded-[22px] bg-surface-3 shadow-surface-1 scroll-fade">
           <form
             onSubmit={handleSubmit}
             className="flex flex-col gap-4 px-5 pt-5 pb-4"
@@ -326,10 +336,8 @@ function MobileAuthBlock({
           </form>
         </div>
 
-        {/* Under the card and inside the frame, like its sibling's — plus the
-            phone's own floor, which on a device with a home bar isn't the
-            bottom of the screen. */}
-        <p className="shrink-0 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] text-center text-[13px] text-muted-foreground">
+        {/* Under the card and inside the frame, like its sibling's. */}
+        <p className="shrink-0 px-4 py-3 text-center text-[13px] text-muted-foreground">
           Don't have an account yet?{" "}
           <button
             type="button"

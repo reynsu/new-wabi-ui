@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { LoginBlock } from "@/components/login-block";
 import { MobileAuthBlock } from "@/components/mobile-auth-block";
+import { cn } from "@/lib/utils";
 import { Section } from "./Shared";
 
 /* La marca del producto inventado, la misma que usa LoginBlock: los dos blocks
@@ -80,7 +81,7 @@ export function MobileAuthBlockSection() {
     <div className="flex flex-col gap-14">
       <Section
         title="MobileAuthBlock"
-        hint="The same sign-in screen for the shape held in one hand: the plane takes the whole background and everything actionable comes together on a sheet against the floor, where the thumb reaches. The pieces are LoginBlock's own — same fields, same notice, same providers — so a change to a field lands on both screens."
+        hint="The same sign-in screen for the shape held in one hand: LoginBlock's plane runs the whole screen, edge to edge, and what's actionable comes together on a card floating at the floor, where the thumb reaches — with the plane running under it and out its sides. The pieces are LoginBlock's own — same fields, same notice, same providers — so a change to a field lands on both screens."
       >
         <div className="flex flex-wrap items-start gap-6">
           <Phone>
@@ -129,23 +130,60 @@ export function MobileAuthBlockSection() {
       </Section>
 
       <Section
-        title="With a photograph"
-        hint="Left alone the background is the same plane the desktop block paints on its left-hand side. `background` takes anything else — an image, a video, a canvas — and the scrim goes over whatever lands there, because the ink above is white and a photograph isn't a promise about its own brightness."
+        title="The plane runs the whole screen"
+        hint="It's LoginBlock's own — the same gradient, in the same two keys — edge to edge, with the card floating on it. In its light key the plane climbs several steps above near-black so it doesn't turn into a black hole beside a light app: that decision is the sibling's, and it travels with the art."
       >
-        <Phone>
-          <MobileAuthBlock
-            logo={<AtlasflowMark />}
-            title="Every deploy, from anywhere"
-            description="Sign in and pick up where the desk left off."
-            defaultTheme="dark"
-            background={<img src={PHOTO} alt="" />}
-          />
-        </Phone>
+        <div className="flex flex-wrap items-start gap-6">
+          <div className="flex flex-col gap-2">
+            <Phone>
+              <MobileAuthBlock
+                logo={<AtlasflowMark />}
+                title={COPY.title}
+                description={COPY.description}
+                defaultTheme="light"
+              />
+            </Phone>
+            <p className="text-center text-[12px] text-muted-foreground">
+              Light key
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Phone>
+              <MobileAuthBlock
+                logo={<AtlasflowMark />}
+                title={COPY.title}
+                description={COPY.description}
+                defaultTheme="dark"
+              />
+            </Phone>
+            <p className="text-center text-[12px] text-muted-foreground">
+              Dark key
+            </p>
+          </div>
+
+          <div className="flex min-w-[220px] flex-1 flex-col gap-3">
+            <p className="text-[13px] text-muted-foreground">
+              `background` swaps the plane for anything else — an image, a
+              video, a canvas — and it lands in the same place: under
+              everything, edge to edge, with the scrims over it.
+            </p>
+            <Phone className="h-[320px] w-[150px]">
+              <MobileAuthBlock
+                logo={<AtlasflowMark />}
+                title="Every deploy"
+                description="From anywhere."
+                defaultTheme="dark"
+                background={<img src={PHOTO} alt="" />}
+              />
+            </Phone>
+          </div>
+        </div>
       </Section>
 
       <Section
         title="Why it exists"
-        hint="Its sibling at the same width: below 672px of container LoginBlock withdraws the brand plane, because in a phone-width column it would compete with the form instead of accompanying it. What's left is right, and it's a form on a page. The mobile block keeps the plane by moving the split from side to side into depth."
+        hint="Its sibling at the same width: below 672px of container LoginBlock withdraws the brand plane, because in a phone-width column it would compete with the form instead of accompanying it. What's left is right, and it's a form on a page. The mobile block keeps the plane by moving the split from side to side into depth — the plane underneath, the card on top."
       >
         <div className="flex flex-wrap items-start gap-6">
           <div className="flex flex-col gap-2">
@@ -185,9 +223,20 @@ export function MobileAuthBlockSection() {
  *  del showcase. Las proporciones son las de un teléfono de hoy —cerca de
  *  19.5:9— porque la decisión que el block toma, qué cede cuando falta alto, no
  *  se ve en un rectángulo cómodo. */
-function Phone({ children }: { children: React.ReactNode }) {
+function Phone({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
-    <div className="h-[640px] w-[300px] shrink-0 overflow-hidden rounded-[28px] bg-surface-1 shadow-surface-3">
+    <div
+      className={cn(
+        "h-[640px] w-[300px] shrink-0 overflow-hidden rounded-[28px] bg-surface-1 shadow-surface-3",
+        className,
+      )}
+    >
       {children}
     </div>
   );
