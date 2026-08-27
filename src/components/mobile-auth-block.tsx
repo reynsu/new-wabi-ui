@@ -275,7 +275,13 @@ function MobileAuthBlock({
           // anything opaque at this level is a hole in the image.
         )}
       >
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[26px] bg-surface-3 shadow-surface-6">
+      {/* The top corners are the rounder pair. They're the free edge —the one
+          that reads as the card having come up from the floor— and a wider
+          radius there is what makes it read that way; the bottom pair stays
+          tighter because it sits a few pixels inside the phone's own corner,
+          and two curves that close to each other have to be nested, not
+          matched. */}
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-t-[32px] rounded-b-[24px] bg-surface-3 shadow-surface-6">
         {/* The notice pushes, it doesn't cover: it lands at the top of the card
             and moves the form down. A toast would leave on its own and a modal
             would cover the fields that need fixing. It's inside the card and
