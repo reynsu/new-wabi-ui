@@ -1635,12 +1635,18 @@ productos.
   · **el fondo puede ser una foto.** Solo, pinta el mismo degradado que el plano
     del hermano; `background` toma cualquier otra cosa —un `<img>`, un video, un
     canvas—;
-  · **hay dos velos y cada uno está anclado a lo que protege**, no a la
-    pantalla: uno arriba para el logo y otro al pie del héroe para el titular.
-    La primera versión tenía uno solo medido contra la pantalla, y su extremo
-    oscuro caía **debajo de la hoja**, protegiendo nada — el alto de la hoja
-    depende del formulario, así que medir contra la pantalla es medir contra
-    algo que no se sabe;
+  · **el velo es uno solo y nunca termina donde se lo pueda ver terminar.**
+    Tiene que hacer dos trabajos a dos alturas —el logo contra el techo, el
+    titular justo arriba de la tarjeta— y soltar en el medio, o la imagen deja
+    de ser una imagen. Anclarlo al héroe parece la salida y fue lo que hubo un
+    rato: llegaba a su punto más oscuro exactamente en el borde de abajo del
+    héroe y ahí cortaba, y como el plano sigue por debajo, ese escalón imprimía
+    **una línea a lo ancho de la pantalla** justo en el canto de la tarjeta. La
+    tarjeta dejaba de flotar y pasaba a ser la mitad de abajo de una partición.
+    Ahora el velo cubre todo y la rampa se coloca contra el **alto medido** de
+    la tarjeta: oscurece en los 140px de arriba de ella —donde está el titular,
+    mida lo que mida— y de ahí para abajo se queda quieto, detrás y al costado
+    de la tarjeta, donde ya no hay borde que ver;
   · **el que cede es el héroe.** Con poco alto se comprime el logo y el titular,
     no el formulario, que es la razón por la que la pantalla existe: la tarjeta
     se queda con su tamaño hasta su techo y recién ahí scrollea adentro suyo.

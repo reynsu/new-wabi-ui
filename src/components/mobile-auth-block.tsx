@@ -69,26 +69,46 @@ import {
   type LoginBlockProps,
   type LoginBlockTheme,
 } from "@/components/login-block";
+import { useMeasuredHeight } from "@/hooks/use-measured-height";
 import { spring } from "@/lib/springs";
 import { cn } from "@/lib/utils";
 
-/* The scrims. There are two because the ink is in two places, and each one is
-   anchored to what it protects rather than to the screen: the sheet's height
-   depends on the form, so a single gradient measured against the screen puts
-   its dark end wherever the sheet happens to start — which the first version of
-   this did, and the dark end landed *under* the sheet, protecting nothing.
+/**
+ * The scrim: one layer over the whole screen, and it never ends where anyone
+ * can see it end.
+ *
+ * It has to do two jobs at two heights —the logo against the ceiling, the
+ * headline just above the card— and in between it has to let go, or the image
+ * stops being an image. The obvious way to get the second one is a gradient
+ * anchored to the hero, which is what this did for a while: it reached its
+ * darkest exactly at the hero's bottom edge and stopped there, and since the
+ * plane keeps going underneath, that step printed **a line across the screen**
+ * at the card's top edge. The card stopped floating and started being the
+ * bottom half of a split.
+ *
+ * So the layer covers everything and the ramp is placed against the card's
+ * measured height: it darkens over the 140px above the card —where the
+ * headline lives, whatever the card measures— and then *stays* at that value
+ * down to the floor, where it's behind the card and beside it, and there's no
+ * edge left to see.
+ *
+ * Black and not a tint, so it doesn't argue with the colour of what it falls on.
+ */
+const scrimFor = (foot: number) =>
+  [
+    "linear-gradient(180deg,",
+    "rgba(0,0,0,0.46) 0px,",
+    "rgba(0,0,0,0.10) 24%,",
+    `rgba(0,0,0,0.10) calc(100% - ${foot}px - 140px),`,
+    `rgba(0,0,0,0.48) calc(100% - ${foot}px),`,
+    "rgba(0,0,0,0.48) 100%)",
+  ].join(" ");
 
-   Black and not a tint, so they don't argue with the colour of what they fall
-   on, and both let go in the middle so the image is still an image. */
-
-/** For the logo and the knobs, against the ceiling. */
-const TOP_SCRIM =
-  "linear-gradient(180deg, rgba(0,0,0,0.46) 0%, rgba(0,0,0,0.10) 46%, rgba(0,0,0,0) 100%)";
-
-/** For the headline, at the foot of the hero — which is where the hero ends,
- *  whatever the sheet below it measures. */
-const HERO_SCRIM =
-  "linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.22) 46%, rgba(0,0,0,0.48) 100%)";
+/** The air around the card. One number, used by the layout and by the scrim's
+ *  ramp: if they disagreed, the ramp would land a few pixels off the card's
+ *  edge and the seam would be back. The floor's own inset takes the home bar
+ *  into account on top of this. */
+const CARD_INSET = 12;
 
 interface MobileAuthBlockProps extends LoginBlockProps {
   /** What goes behind everything. Left alone it's the same plane the desktop
@@ -122,6 +142,12 @@ function MobileAuthBlock({
   const [password, setPassword] = useState("");
   const fieldId = useId();
 
+  /* Where the card starts, which is what the scrim's ramp is placed against —
+     see the note on `scrimFor`. Measured and not guessed: the card's height is
+     the form's, and the form is whatever whoever uses this put in it. */
+  const [cardRef, cardHeight] = useMeasuredHeight<HTMLDivElement>();
+  const foot = (cardHeight ?? 0) + CARD_INSET;
+
   const selectTheme = (next: LoginBlockTheme) => {
     if (themeProp === undefined) setUncontrolledTheme(next);
     onThemeChange?.(next);
@@ -153,8 +179,8 @@ function MobileAuthBlock({
       </div>
       <span
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-1/3"
-        style={{ background: TOP_SCRIM }}
+        className="pointer-events-none absolute inset-0 -z-10"
+        style={{ background: scrimFor(foot) }}
       />
 
       {/* The hero. `min-h-0` is what makes it the one that gives on a short
@@ -162,14 +188,6 @@ function MobileAuthBlock({
           focusable, and marking a container with controls as hidden lets the
           tab key land on something the screen reader doesn't announce. */}
       <div className="relative flex min-h-0 flex-1 flex-col justify-between gap-6 overflow-hidden p-6 pb-8">
-        {/* The headline's own scrim: it ends where the hero ends, so it lands
-            on the text no matter how tall the sheet under it is. */}
-        <span
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-2/3"
-          style={{ background: HERO_SCRIM }}
-        />
-
         <div className="flex items-start justify-between gap-4">
           <div className={PANEL_INK.ink}>{logo}</div>
 
@@ -233,16 +251,23 @@ function MobileAuthBlock({
           a change of context — the same one the mobile sheet and the dialog
           take. */}
       <motion.div
+        ref={cardRef}
         initial={{ y: 24, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={spring.slow}
+        style={{
+          marginInline: CARD_INSET,
+          // The floor's inset is the same air, unless the device asks for more:
+          // on a phone with a home bar the bottom of the screen isn't the
+          // bottom of the screen.
+          marginBottom: `max(${CARD_INSET}px, env(safe-area-inset-bottom))`,
+        }}
         className={cn(
           "relative flex max-h-[86%] shrink-0 flex-col",
           // No plane of its own: this is the group —the card and the line under
           // it— and the plane has to keep running behind both. Its sibling's
           // frame is a surface because over there it sits on the page; here
           // anything opaque at this level is a hole in the image.
-          "mx-3 mt-0 mb-[max(0.75rem,env(safe-area-inset-bottom))]",
         )}
       >
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[26px] bg-surface-3 shadow-surface-6">
