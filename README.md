@@ -1592,6 +1592,76 @@ armada con las piezas del registry y de `components/`. Viven en el mismo
 | block | qué es |
 |---|---|
 | `LoginBlock` | la pantalla de acceso completa: plano de marca a la izquierda, formulario y proveedores a la derecha |
+| `MobileAuthBlock` | la misma pantalla para el teléfono: el plano de punta a punta y lo accionable en una tarjeta que flota contra el piso |
+
+### La misma pantalla, para la forma que se agarra con una mano
+
+`LoginBlock` parte la pantalla en dos: un plano de marca que no pide nada a la
+izquierda y la única columna donde hay algo que hacer a la derecha. Esa
+asimetría es lo que guía el ojo, y **en un teléfono no hay lugar para ella**:
+dos columnas se vuelven dos pantallas de scroll, y el plano —que está para
+acompañar— termina arriba del pliegue compitiendo con el formulario. Por eso el
+propio `LoginBlock` lo retira abajo de 672px: lo que queda es correcto, y es un
+formulario en una página.
+
+`MobileAuthBlock` no lo retira: **la partición deja de ser de lado a lado y pasa
+a ser de profundidad**. El plano —el mismo de `LoginBlock`, en sus mismas dos
+claves— ocupa la pantalla entera, de punta a punta y debajo de todo, y lo
+accionable se junta en una **tarjeta que flota** contra el piso, que es donde
+llega el pulgar — el mismo motivo por el que `MobileActionConfirmation`
+aterriza ahí.
+
+Flota y no está soldada al borde: una hoja pegada al piso parte la imagen al
+medio, y lo que queda arriba se lee como un encabezado sobre un formulario, que
+es la partición en dos columnas otra vez, apilada. Con el plano corriendo por
+abajo y saliendo por los costados, la pantalla sigue siendo una sola imagen con
+una tarjeta encima.
+
+Por eso **hay un solo plano opaco y no dos**. El hermano envuelve la tarjeta en
+un marco con superficie propia —allá se apoya sobre la página—; acá cualquier
+cosa opaca a ese nivel es un agujero en la imagen. El marco queda transparente
+y la sombra pasa a la tarjeta.
+
+Y por eso también **todo lo que es texto vive adentro de la tarjeta**: el aviso
+de error arriba del formulario y la línea de «¿todavía no tenés cuenta?» abajo
+de todo. Afuera no hay superficie, sólo el plano, y una línea impresa sobre una
+foto es un epígrafe. La de abajo va afuera del scroll y no adentro, así no se va
+con el formulario cuando la tarjeta se queda corta.
+
+El aire entre la tarjeta y los bordes es chico —ocho píxeles— a propósito:
+alcanza para que se vea el plano pasando por los costados, que es lo que dice
+que la pantalla es una sola imagen con una tarjeta encima, y no tanto como para
+que la tarjeta se lea como un diálogo tirado sobre una página.
+
+Es una variante y no una pantalla nueva: los campos, el aviso, los proveedores,
+los tres botones de tema y el arte del plano **se importan de `LoginBlock`**, así
+que un cambio en un campo cae en las dos. Dos copias de un campo de formulario
+es exactamente como dos pantallas del mismo producto terminan pareciendo dos
+productos.
+
+  · **el fondo puede ser una foto.** Solo, pinta el mismo degradado que el plano
+    del hermano; `background` toma cualquier otra cosa —un `<img>`, un video, un
+    canvas—;
+  · **el velo es uno solo y nunca termina donde se lo pueda ver terminar.**
+    Tiene que hacer dos trabajos a dos alturas —el logo contra el techo, el
+    titular justo arriba de la tarjeta— y soltar en el medio, o la imagen deja
+    de ser una imagen. Anclarlo al héroe parece la salida y fue lo que hubo un
+    rato: llegaba a su punto más oscuro exactamente en el borde de abajo del
+    héroe y ahí cortaba, y como el plano sigue por debajo, ese escalón imprimía
+    **una línea a lo ancho de la pantalla** justo en el canto de la tarjeta. La
+    tarjeta dejaba de flotar y pasaba a ser la mitad de abajo de una partición.
+    Ahora el velo cubre todo y la rampa se coloca contra el **alto medido** de
+    la tarjeta: oscurece en los 140px de arriba de ella —donde está el titular,
+    mida lo que mida— y de ahí para abajo se queda quieto, detrás y al costado
+    de la tarjeta, donde ya no hay borde que ver;
+  · **el que cede es el héroe.** Con poco alto se comprime el logo y el titular,
+    no el formulario, que es la razón por la que la pantalla existe: la tarjeta
+    se queda con su tamaño hasta su techo y recién ahí scrollea adentro suyo.
+    Medido en un marco de 420px: el héroe baja a 59px, la hoja se queda en 361 y
+    el formulario scrollea 14;
+  · **no hay manija.** La tarjeta no se arrastra —no hay nada abajo ni a dónde
+    mandarla— y una manija es la promesa de un gesto. Es la regla de la casa, la
+    misma por la que un board sin `onReorder` no dibuja el cursor de agarre.
 
 ### Mide su contenedor, no la ventana
 

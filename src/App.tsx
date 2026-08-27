@@ -21,6 +21,7 @@ import {
   CalendarRange,
   CalendarClock,
   GitCommitVertical,
+  KeyRound,
   Sliders,
   Sun,
   TextCursorInput,
@@ -62,6 +63,7 @@ import { InputsSection } from "@/sections/InputsSection";
 import { InsetDialogSection } from "@/sections/InsetDialogSection";
 import { LateralPreviewSection } from "@/sections/LateralPreviewSection";
 import { LoginBlockSection } from "@/sections/LoginBlockSection";
+import { MobileAuthBlockSection } from "@/sections/MobileAuthBlockSection";
 import { MobileActionConfirmationSection } from "@/sections/MobileActionConfirmationSection";
 import { DatePickerSection } from "@/sections/DatePickerSection";
 import { PeekCardSection } from "@/sections/PeekCardSection";
@@ -156,6 +158,7 @@ const GROUPS = [
     label: "Our blocks",
     pages: [
       { id: "login-block", label: "LoginBlock", icon: LogIn, count: 1, render: () => <LoginBlockSection /> },
+      { id: "mobile-auth-block", label: "MobileAuthBlock", icon: KeyRound, count: 3, render: () => <MobileAuthBlockSection /> },
     ],
   },
 ] as const;
@@ -272,7 +275,7 @@ function Showcase() {
         <SidebarFooter>
           <div className="flex items-center gap-2 px-2 py-1">
             <p className="min-w-0 text-[12px] text-muted-foreground">
-              24 from the registry + 14 in-house + 1 block + Sileo
+              24 from the registry + 14 in-house + 2 blocks + Sileo
             </p>
           </div>
         </SidebarFooter>

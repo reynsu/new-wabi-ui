@@ -473,5 +473,26 @@ function LoginBlock({
   );
 }
 
-export { LoginBlock };
+/* The pieces travel to `MobileAuthBlock`, which is this same screen for the
+   other shape: the same plane, the same fields, the same notice and the same
+   way of resolving the theme. Kept here and exported —rather than moved to a
+   third file— because they're this block's anatomy and the mobile one is the
+   guest; and exported at all, rather than copied over there, because two
+   copies of a form field is exactly how two screens of the same product end up
+   looking like two products. */
+export {
+  LoginBlock,
+  Field,
+  GitHubMark,
+  ErrorMark,
+  PANEL_ART,
+  PANEL_INK,
+  ERROR_GLOW,
+  THEME_OPTIONS,
+};
+// The hook goes with them: resolving `system` means watching the media query
+// for as long as the block is mounted, and a second implementation of that is
+// a second thing that can stop watching.
+// oxlint-disable-next-line react/only-export-components
+export { useSystemScheme };
 export type { LoginBlockProps, LoginBlockTheme };
