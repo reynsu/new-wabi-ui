@@ -1592,6 +1592,46 @@ armada con las piezas del registry y de `components/`. Viven en el mismo
 | block | qué es |
 |---|---|
 | `LoginBlock` | la pantalla de acceso completa: plano de marca a la izquierda, formulario y proveedores a la derecha |
+| `MobileAuthBlock` | la misma pantalla para el teléfono: el plano de fondo y lo accionable en una hoja contra el piso |
+
+### La misma pantalla, para la forma que se agarra con una mano
+
+`LoginBlock` parte la pantalla en dos: un plano de marca que no pide nada a la
+izquierda y la única columna donde hay algo que hacer a la derecha. Esa
+asimetría es lo que guía el ojo, y **en un teléfono no hay lugar para ella**:
+dos columnas se vuelven dos pantallas de scroll, y el plano —que está para
+acompañar— termina arriba del pliegue compitiendo con el formulario. Por eso el
+propio `LoginBlock` lo retira abajo de 672px: lo que queda es correcto, y es un
+formulario en una página.
+
+`MobileAuthBlock` no lo retira: **la partición deja de ser de lado a lado y pasa
+a ser de profundidad**. El plano ocupa todo el fondo y lo accionable se junta en
+una hoja contra el piso, que es donde llega el pulgar — el mismo motivo por el
+que `MobileActionConfirmation` aterriza ahí.
+
+Es una variante y no una pantalla nueva: los campos, el aviso, los proveedores,
+los tres botones de tema y el arte del plano **se importan de `LoginBlock`**, así
+que un cambio en un campo cae en las dos. Dos copias de un campo de formulario
+es exactamente como dos pantallas del mismo producto terminan pareciendo dos
+productos.
+
+  · **el fondo puede ser una foto.** Solo, pinta el mismo degradado que el plano
+    del hermano; `background` toma cualquier otra cosa —un `<img>`, un video, un
+    canvas—;
+  · **hay dos velos y cada uno está anclado a lo que protege**, no a la
+    pantalla: uno arriba para el logo y otro al pie del héroe para el titular.
+    La primera versión tenía uno solo medido contra la pantalla, y su extremo
+    oscuro caía **debajo de la hoja**, protegiendo nada — el alto de la hoja
+    depende del formulario, así que medir contra la pantalla es medir contra
+    algo que no se sabe;
+  · **el que cede es el héroe.** Con poco alto se comprime el logo y el titular,
+    no el formulario, que es la razón por la que la pantalla existe: la hoja se
+    queda con su tamaño hasta su techo y recién ahí scrollea adentro suyo.
+    Medido en un marco de 420px: el héroe baja a 59px, la hoja se queda en 361 y
+    el formulario scrollea 14;
+  · **no hay manija.** La hoja no se arrastra —no hay nada abajo ni a dónde
+    mandarla— y una manija es la promesa de un gesto. Es la regla de la casa, la
+    misma por la que un board sin `onReorder` no dibuja el cursor de agarre.
 
 ### Mide su contenedor, no la ventana
 
