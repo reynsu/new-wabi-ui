@@ -237,16 +237,20 @@ function MobileAuthBlock({
         animate={{ y: 0, opacity: 1 }}
         transition={spring.slow}
         className={cn(
-          "relative flex max-h-[86%] shrink-0 flex-col overflow-hidden rounded-[26px] bg-surface-2 p-1 shadow-surface-6",
-          // It floats: the plane runs under it and out the sides, so the screen
-          // stays one image with a card on it. The floor's own inset is the
-          // bigger one and takes the home bar into account.
+          "relative flex max-h-[86%] shrink-0 flex-col",
+          // No plane of its own: this is the group —the card and the line under
+          // it— and the plane has to keep running behind both. Its sibling's
+          // frame is a surface because over there it sits on the page; here
+          // anything opaque at this level is a hole in the image.
           "mx-3 mt-0 mb-[max(0.75rem,env(safe-area-inset-bottom))]",
         )}
       >
-        {/* The notice pushes, it doesn't cover: it lands inside the frame and
-            above the card, and moves the form down. A toast would leave on its
-            own and a modal would cover the fields that need fixing. */}
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[26px] bg-surface-3 shadow-surface-6">
+        {/* The notice pushes, it doesn't cover: it lands at the top of the card
+            and moves the form down. A toast would leave on its own and a modal
+            would cover the fields that need fixing. It's inside the card and
+            not above it because above it there's no surface any more — only the
+            plane, and a notice printed on a photograph is a caption. */}
         <AnimatePresence initial={false}>
           {error && (
             <motion.div
@@ -275,8 +279,8 @@ function MobileAuthBlock({
           )}
         </AnimatePresence>
 
-        {/* The card, and what scrolls when it runs out of room. */}
-        <div className="min-h-0 flex-1 overflow-y-auto rounded-[22px] bg-surface-3 shadow-surface-1 scroll-fade">
+        {/* What scrolls when the card runs out of room. */}
+        <div className="min-h-0 flex-1 overflow-y-auto scroll-fade">
           <form
             onSubmit={handleSubmit}
             className="flex flex-col gap-4 px-5 pt-5 pb-4"
@@ -336,17 +340,31 @@ function MobileAuthBlock({
           </form>
         </div>
 
-        {/* Under the card and inside the frame, like its sibling's. */}
-        <p className="shrink-0 px-4 py-3 text-center text-[13px] text-muted-foreground">
-          Don't have an account yet?{" "}
-          <button
-            type="button"
-            onClick={onSignUp}
-            className="cursor-pointer rounded font-medium text-foreground outline-none transition-opacity duration-100 hover:opacity-70 focus-visible:ring-1 focus-visible:ring-[color:var(--focus-ring)]"
-          >
-            Sign up
-          </button>
-        </p>
+      </div>
+
+      {/* Under the card, on the plane. It takes the plane's ink and not the
+          surface's muted grey: a grey mixed for a light surface reads as
+          switched off over a dark one, and this line is the way to the other
+          half of the product. */}
+      <p
+        className={cn(
+          "shrink-0 px-4 pt-3 text-center text-[13px]",
+          PANEL_INK.body,
+        )}
+      >
+        Don't have an account yet?{" "}
+        <button
+          type="button"
+          onClick={onSignUp}
+          className={cn(
+            "cursor-pointer rounded font-medium outline-none transition-opacity duration-100 hover:opacity-70 focus-visible:ring-1",
+            PANEL_INK.ink,
+            PANEL_INK.focus,
+          )}
+        >
+          Sign up
+        </button>
+      </p>
       </motion.div>
     </div>
   );

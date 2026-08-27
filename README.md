@@ -1617,6 +1617,15 @@ es la partición en dos columnas otra vez, apilada. Con el plano corriendo por
 abajo y saliendo por los costados, la pantalla sigue siendo una sola imagen con
 una tarjeta encima.
 
+Por eso **hay un solo plano opaco y no dos**. El hermano envuelve la tarjeta en
+un marco con superficie propia —allá se apoya sobre la página—; acá cualquier
+cosa opaca a ese nivel es un agujero en la imagen. El marco queda transparente,
+la sombra pasa a la tarjeta, el aviso de error se mete adentro de ella —arriba
+no hay superficie: un aviso impreso sobre una foto es un epígrafe— y la línea
+de «¿todavía no tenés cuenta?» queda sobre el plano, con **la tinta del plano**
+y no con el gris de las superficies, que mezclado para un fondo claro se lee
+apagado sobre uno oscuro.
+
 Es una variante y no una pantalla nueva: los campos, el aviso, los proveedores,
 los tres botones de tema y el arte del plano **se importan de `LoginBlock`**, así
 que un cambio en un campo cae en las dos. Dos copias de un campo de formulario

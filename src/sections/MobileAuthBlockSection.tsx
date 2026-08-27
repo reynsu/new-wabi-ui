@@ -99,8 +99,9 @@ export function MobileAuthBlockSection() {
           <div className="flex min-w-[220px] flex-1 flex-col gap-3">
             <p className="text-[13px] text-muted-foreground">
               The notice pushes the form down instead of covering it — the same
-              rule as its sibling, and the reason it lands inside the frame and
-              not on top of the fields that need fixing.
+              rule as its sibling. It lands at the top of the card and not above
+              it: above there's no surface any more, only the plane, and a
+              notice printed on a photograph is a caption.
             </p>
             <div className="flex flex-wrap gap-2">
               <Button
